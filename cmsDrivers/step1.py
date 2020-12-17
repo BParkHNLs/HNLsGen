@@ -84,7 +84,10 @@ process.maxEvents = cms.untracked.PSet(
 )
 
 # Input source
-process.source = cms.Source("EmptySource")
+process.source = cms.Source(
+  "EmptySource",
+  firstLuminosityBlock = cms.untracked.uint32(options.seedOffset),
+)
 
 process.options = cms.untracked.PSet(
 

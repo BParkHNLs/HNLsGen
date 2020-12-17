@@ -79,7 +79,10 @@ process.maxEvents = cms.untracked.PSet(
 )
 
 # Input source
-process.source = cms.Source("EmptySource")
+process.source = cms.Source(
+  "EmptySource",
+  firstLuminosityBlock = cms.untracked.uint32(options.seedOffset),
+)
 
 process.options = cms.untracked.PSet(
 
@@ -148,7 +151,7 @@ process.SingleMuFilter = cms.EDFilter("PythiaFilterMotherGrandMother",
     #Status = cms.untracked.int32(1),
     MotherID = cms.untracked.int32(443), # require muon to come from J/psi decay B+/B- decay
     #GrandMotherIDs = cms.untracked.vint32(521,511), # require B+/- or B0 mother 
-    GrandMotherIDs = cms.untracked.vint32(521), # require B+/- or B0 mother 
+    GrandMotherIDs = cms.untracked.vint32(521,521), # require B+/- 
 )
 
 process.generator = cms.EDFilter("Pythia8GeneratorFilter",
