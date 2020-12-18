@@ -27,7 +27,12 @@ if __name__ == "__main__":
   opt = getOptions()
   print('===> Resubmission for production {}'.format(opt.ver))
   os.chdir(opt.ver)
-  f = open('./jobs.txt', 'r')
+  
+  if opt.iteration==1:
+    f = open('./jobs.txt', 'r')
+  else:
+    f = open('./resubjobs_{j}.txt'.format(j=opt.iteration-1), 'r')  
+  
   fo= open('./resubjobs_{i}.txt'.format(i=opt.iteration), 'w')
   for line in f: 
     #### Operations per Job

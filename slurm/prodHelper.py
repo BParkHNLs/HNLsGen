@@ -452,7 +452,7 @@ def getOptions():
   parser.add_argument('-v','--ver', type=str, dest='ver', help='version of production, e.g. V00_v00', default='V00_v00')
   parser.add_argument('-n','--nevts', type=int, dest='nevts', help='total number of events to be generated', default=10)
   parser.add_argument('--time', type=str, dest='time', help='allowed time for each job', default='08')
-  parser.add_argument('--mem', type=str, dest='mem', help='allowed memory for each job in [MB]', default='3500')
+  parser.add_argument('--mem', type=str, dest='mem', help='allowed memory for each job in [MB]', default='4500')
   parser.add_argument('--njobs', type=int, dest='njobs', help='number of parallel jobs to submit', default=10)
   parser.add_argument('--points', type=str, dest='pointFile', help='name of file contaning information on scan to be run', default='points.py')
   parser.add_argument('--npremixfiles', type=str, dest='npremixfiles', help='number of premixing files to be randomly chosen', default=20)
