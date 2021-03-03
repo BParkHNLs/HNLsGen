@@ -1,0 +1,17 @@
+Alias myB+ B+
+Alias myB- B-
+
+ChargeConj myB+ myB-
+
+Decay myB+
+1.0               mu+    hnl    PHSP;
+Enddecay
+CDecay myB-
+
+Decay hnl
+0.5     pi-    mu+    PHSP;
+0.5     pi+    mu-    PHSP;
+Enddecay
+
+
+End
