@@ -244,7 +244,8 @@ process.generator = cms.EDFilter("Pythia8GeneratorFilter",
             'SoftQCD:doubleDiffractive = off',         # default is off
             'PTFilter:filter = on',                    # default is off  # could not find **ANYWHERE** in the Pythia code PTFilter 
             'PTFilter:quarkToFilter = 5',                               # it's something that exists in CMSSW only, see Py8InterfaceBase.cc
-            'PTFilter:scaleToFilter = 1.0'            # default is 0.4 
+            'PTFilter:scaleToFilter = 1.0',            # default is 0.4 
+            '9900015:all = hnl hnl 2 0 0 3.0 0.0 0.0 0.0 184', # add the definition of the new particle in pythia
            
             ### settings to generate back-to-back b-jet production
             ### tip https://twiki.cern.ch/twiki/bin/view/CMS/EvtGenInterface#Tips_for_Pythia8   
