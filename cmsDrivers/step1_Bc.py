@@ -49,6 +49,11 @@ options.register('doMajorana',
                   VarParsing.multiplicity.singleton, 
                   VarParsing.varType.bool, 
                   'HNL is majorana particle, otherwise dirac' )
+options.register('doElectron',    
+                  False, 
+                  VarParsing.multiplicity.singleton, 
+                  VarParsing.varType.bool, 
+                  'HNL can decay to epi too, otherwise mupi only' )
 #options.register ("doDirac",
 #                  1, # default value
 #                  VarParsing.multiplicity.singleton, # singleton or list
@@ -212,7 +217,10 @@ process.generator = cms.EDFilter("Pythia8HadronizerFilter",
             #https://twiki.cern.ch/twiki/bin/view/CMSPublic/SWGuideEdmFileInPath 
 
             ### The decay file 
-            user_decay_file = cms.vstring('HNLsGen/evtGenData/HNLdecay_mass{m}_{dm}_Bc.DEC'.format(m=options.mass, dm='maj' if options.doMajorana else 'dirac')),
+            user_decay_file = cms.vstring('HNLsGen/evtGenData/HNLdecay_mass{m}_{dm}_{de}_Bc.DEC'.format(\
+                                             m=options.mass, 
+                                             dm='maj' if options.doMajorana else 'dirac'
+                                             de='emu' if options.doElectron else 'mu')),
 
         ),
         parameterSets = cms.vstring('EvtGen130')
