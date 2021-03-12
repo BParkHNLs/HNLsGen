@@ -187,7 +187,7 @@ process.SingleMuFilter = cms.EDFilter("PythiaFilterMotherSister",
     #MinPt = cms.untracked.double(0.0), # <=== keep it a bit lower than the pt cut at reco level... 
     MaxEta = cms.untracked.double(1.55),
     MinEta = cms.untracked.double(-1.55),
-    MinPt = cms.untracked.double(6.8), # <=== keep it a bit lower than the pt cut at reco level... #### FIXME should be raised to 6.5 - 7
+    MinPt = cms.untracked.double(6.8), 
     ParticleID = cms.untracked.int32(13), # abs value is taken
     #Status = cms.untracked.int32(1),
     MotherIDs = cms.untracked.vint32(521, 511, 531), # require muon to come from B+/B- decay
