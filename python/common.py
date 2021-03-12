@@ -1,4 +1,4 @@
-from decays import HNLDecays
+from python.decays import HNLDecays
 
 import numpy as np
 import math
@@ -87,7 +87,8 @@ class Point(object):
     else:
       self.orig_vv = self.vv 
       self.orig_ctau = self.ctau
-
+    
+    self.name = '{:.1f}_{:.1f}'.format(self.mass,self.vv)
   #def getExpMedian():
     rv = expon(scale=self.ctau) 
     self.median = rv.median()
