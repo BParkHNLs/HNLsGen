@@ -412,7 +412,7 @@ class Job(object):
           dsmf=self.doskipmuonfilter,
           ddf=self.dodisplfilter,
           dmj=self.domajorana,
-          de=self.doelectron
+          de=self.doelectron,
           nevtsjob=nevtsjob_toset,
           nthr=self.nthr,
           jop2=self.jop2,
