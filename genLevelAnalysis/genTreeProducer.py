@@ -38,6 +38,7 @@ branches = [
     'hnl_phi',
     'hnl_mass',
     'hnl_q',
+    'hnl_qprop',
     'hnl_pdgid',
     #'hnl_ct_lhe', # from LHE information
     'hnl_ct_reco', # from Lxyz = ct\gamma\beta --> ct = Lxyz/(\gamma\beta)
@@ -118,24 +119,32 @@ new_vvs = [
     1e-08, 
     5e-08, 
     1e-07, 
+    2e-07, 
     5e-07, 
+    8e-07, 
     1e-06, 
-    3e-06, 
-    6e-06, 
+    2e-06, 
+    5e-06, 
     8e-06, 
     1e-05, 
     2e-05, 
     3e-05, 
     4e-05, 
     5e-05, 
+    6e-05, 
     7e-05, 
+    8e-05, 
+    9e-05, 
     0.0001, 
     0.0002, 
-    0.00025, 
     0.0003, 
+    0.0004, 
     0.0005, 
-    0.0012,
-    0.001,
+    0.0006, 
+    0.0007, 
+    0.0008, 
+    0.0009,
+    0.0010,
 ]
 
 # add weight branches
@@ -187,15 +196,18 @@ def getpT(input):
    return input.pT
 
 
-def runGenTreeProducer(infiles='./step*root',outfilename='out.root',this_mass=1,this_ctau=500,this_vv=0.0013,doBtoD=False):
+def runGenTreeProducer(infiles='./step*root',outfilename='out.root',this_mass=1,this_ctau=500,this_vv=0.0013,doBtoD=False,doFromMini=False):
   # input and output
   files = glob.glob(infiles)
+
   if len(files)==0: raise RuntimeError('No files to be run!, glob expression = {}'.format(infiles))
   outfile = ROOT.TFile.Open(outfilename, 'recreate')
 
   handles = OrderedDict()
-  handles['genP'] = ('genParticles' , Handle('std::vector<reco::GenParticle>'))
-  #handles['genp_packed'] = ('packedGenParticles' , Handle('std::vector<pat::PackedGenParticle>'))
+  if doFromMini:
+    handles['genP'] = ('packedGenParticles' , Handle('std::vector<pat::PackedGenParticle>')) # does not seem to be working quite well
+  else:
+    handles['genP'] = ('genParticles' , Handle('std::vector<reco::GenParticle>'))
   #handles['lhe']         = ('externalLHEProducer', Handle('LHEEventProduct'))
   
   # output file and tree gymnastics
@@ -223,7 +235,18 @@ def runGenTreeProducer(infiles='./step*root',outfilename='out.root',this_mass=1,
     the_hns = [ip for ip in event.genP if abs(ip.pdgId())==9900015 and ip.isLastCopy()] 
     if len(the_hns):
        event.the_hn = the_hns[0] # one per event
-    
+   
+#    print( '\n\nNEW EVENT run={} event={}'.format( event.eventAuxiliary().run(),event.eventAuxiliary().event() ))
+#    if event.the_hn:
+#      print('FOUND HNL, status={} isLastCopy()={} vx={:10} vy={:10} vz={:10} pt={:10} eta={:10} phi={:10}'.format(event.the_hn.status(), event.the_hn.isLastCopy(), event.the_hn.vx(), event.the_hn.vy(), event.the_hn.vz(), event.the_hn.pt(), event.the_hn.eta(), event.the_hn.phi()))
+#      for iD in range(event.the_hn.numberOfDaughters()):
+#        print('         , daughter pdg={:10}, status={:10} isLastCopy={:10} vx={:10} vy={:10} vz={:10} pt={:10} eta={:10} phi={:10}'.format(event.the_hn.daughter(iD).pdgId(),event.the_hn.daughter(iD).status(), event.the_hn.daughter(iD).isLastCopy(), event.the_hn.daughter(iD).vx(), event.the_hn.daughter(iD).vy(), event.the_hn.daughter(iD).vz(), event.the_hn.daughter(iD).pt(), event.the_hn.daughter(iD).eta(), event.the_hn.daughter(iD).phi()))
+#      for iM in range(event.the_hn.numberOfMothers()):
+#        print('         , mother  pdg={:10}, status={:10} isLastCopy={:10} vx={:10} vy={:10} vz={:10} pt={:10} eta={:10} phi={:10}'.format(event.the_hn.mother(iM).pdgId(),event.the_hn.mother(iM).status(), event.the_hn.mother(iM).isLastCopy(), event.the_hn.mother(iM).vx(), event.the_hn.mother(iM).vy(), event.the_hn.mother(iM).vz(), event.the_hn.mother(iM).pt(), event.the_hn.mother(iM).eta(), event.the_hn.mother(iM).phi()))
+#        for iDM in range(event.the_hn.mother(iM).numberOfDaughters()):
+#          print('                   daughter pdg={:10}, status={:10} isLastCopy={:10} vx={:10} vy={:10} vz={:10} pt={:10} eta={:10} phi={:10}'.format(event.the_hn.mother(iM).daughter(iDM).pdgId(), event.the_hn.mother(iM).daughter(iDM).status(), event.the_hn.mother(iM).daughter(iDM).isLastCopy(), event.the_hn.mother(iM).daughter(iDM).vx(), event.the_hn.mother(iM).daughter(iDM).vy(), event.the_hn.mother(iM).daughter(iDM).vz(), event.the_hn.mother(iM).daughter(iDM).pt(), event.the_hn.mother(iM).daughter(iDM).eta(), event.the_hn.mother(iM).daughter(iDM).phi()))
+
+
     # find the B mother  
     event.the_hn.mothers = [event.the_hn.mother(jj) for jj in range(event.the_hn.numberOfMothers())]
     the_b_mothers = sorted([ii for ii in event.the_hn.mothers if (abs(ii.pdgId())==521 or abs(ii.pdgId())==511 or abs(ii.pdgId())==531 or abs(ii.pdgId())==541)], key = lambda x : x.pt(), reverse=True)
@@ -445,6 +468,7 @@ def runGenTreeProducer(infiles='./step*root',outfilename='out.root',this_mass=1,
     
     # hnl charge
     tofill['hnl_q'      ] = event.the_hn.lep.charge() + event.the_hn.pi.charge() 
+    tofill['hnl_qprop']   = event.the_hn.charge()
     
     if len(the_pls) and len(the_lep_daughters):
       tofill['Lz'        ] = event.Lz
@@ -472,9 +496,11 @@ def getOptions():
    from argparse import ArgumentParser
    parser = ArgumentParser(description='options for Gen tree producer', add_help=True)
    parser.add_argument('--pl', type=str, dest='pl', help='production label', default='V02_muFromB_pt5_eta1p6_njt30')
-   parser.add_argument('--expr', type=str, dest='expr', help='file regular expression', default='step1*root')
+   #parser.add_argument('--expr', type=str, dest='expr', help='file regular expression', default='step1*root')
    parser.add_argument('--points', type=str, dest='pointFile', help='name of file contaning information on scan to be run', default='points.py')
    parser.add_argument('--doBtoD', dest='doBtoD', help='do exclusive decay B->DmuHNL', action='store_true', default=False)
+   parser.add_argument('--doFromMini', dest='doFromMini', help='run on the miniAOD, as opposed to the GEN-SIM', action='store_true', default=False)
+   parser.add_argument('--doSaveScratch', dest='doSaveScratch', help='save on scratch, not on work', action='store_true', default=False)
    return parser.parse_args()
   
 
@@ -488,11 +514,13 @@ if __name__ == "__main__":
   for p in ps.points:
 
     user = os.environ["USER"] 
-    expr = '/pnfs/psi.ch/cms/trivcat/store/user/{usr}/BHNLsGen/{pl}/mass{m}_ctau{ctau}/{ex}'.format(usr=user,pl=opt.pl,m=p.mass,ctau=p.ctau,ex=opt.expr)
+    fileExpr = 'step1*nj*root' if not opt.doFromMini else 'step4*root'
+    expr = '/pnfs/psi.ch/cms/trivcat/store/user/{usr}/BHNLsGen/{pl}/mass{m}_ctau{ctau}/{ex}'.format(usr=user,pl=opt.pl,m=p.mass,ctau=p.ctau,ex=fileExpr)
     #expr = '/work/mratti/GEN_HNL_newPythia/CMSSW_10_2_3/src/HNLsGen/slurm/testManyChan_n100_njt1/BPH-step1_numEvent1000.root'
     #expr = '/work/mratti/GEN_HNL_newPythia/CMSSW_10_2_3/src/HNLsGen/slurm/testBc_n10_njt1/BPH-step1_numEvent1000.root'
-    outfilename = './outputfiles/{pl}/mass{m}_ctau{ctau}_miniGenTree.root'.format(pl=opt.pl,m=p.mass,ctau=p.ctau)
-    os.system('mkdir ./outputfiles/{pl}'.format(pl=opt.pl))    
+    opath = './' if not opt.doSaveScratch else '/scratch/mratti/BHNLsGenDump/'
+    outfilename = '{opath}/outputfiles/{pl}/mass{m}_ctau{ctau}_miniGenTree{suffix}.root'.format(opath=opath, pl=opt.pl,m=p.mass,ctau=p.ctau,suffix='_fromMini' if opt.doFromMini else '')
+    os.system('mkdir -p {opath}/outputfiles/{pl}'.format(opath=opath ,pl=opt.pl))    
 
     print('************************************************************************') 
     print('\nGoing to run gen tree producer over')
@@ -501,5 +529,5 @@ if __name__ == "__main__":
     print('   ctau: {} mm'.format(p.ctau))
     print('   VV  : {} \n'.format(p.vv))
 
-    runGenTreeProducer(infiles=expr,outfilename=outfilename,this_mass=p.mass,this_ctau=p.ctau,this_vv=p.vv,doBtoD=opt.doBtoD)
+    runGenTreeProducer(infiles=expr,outfilename=outfilename,this_mass=p.mass,this_ctau=p.ctau,this_vv=p.vv,doBtoD=opt.doBtoD,doFromMini=opt.doFromMini)
 
