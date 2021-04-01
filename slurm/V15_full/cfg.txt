@@ -1,0 +1,17 @@
+Run prodHelper.py with following options
+dobc           : False     
+docontrol      : False     
+dodisplfilter  : True      
+dogenonly      : False     
+domajorana     : True      
+domultijob     : True      
+domultithread  : False     
+doskipmuonfilter: False     
+dosubmit       : True      
+mem            : 4500      
+nevts          : 10        
+njobs          : 10        
+npremixfiles   : 20        
+pointFile      : V15_points.py
+time           : 08        
+ver            : V15_full  
