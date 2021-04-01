@@ -135,6 +135,8 @@ class Job(object):
        'Decay hnl',
        '0.5     mu-    pi+    PHSP;',
        '{maj_decay}',
+       '{el_decay}',
+       '{el_maj_decay}',
        'Enddecay',
        '{cdec}',
        '',
@@ -151,10 +153,15 @@ class Job(object):
 
                          cconj = 'ChargeConj hnl anti_hnl' if not self.domajorana else '',
                          cdec = 'CDecay anti_hnl' if not self.domajorana else '',
-                         maj_decay = '0.5     mu+    pi-    PHSP;' if self.domajorana else '',
+                         maj_decay    =  '0.5     mu+    pi-    PHSP;' if self.domajorana else '',
+                         el_decay     =  '0.5     e-     pi+    PHSP;' if self.doelectron else '',
+                         el_maj_decay =  '0.5     e+     pi-    PHSP;' if self.doelectron and self.domajorana else '',
+
                          )
 
-      with open('../evtGenData/HNLdecay_mass{m}_{dm}_Bc.DEC'.format(m=p.mass, dm='maj' if self.domajorana else 'dirac' ), 'w') as fout:
+      with open('../evtGenData/HNLdecay_mass{m}_{dm}_{de}_Bc.DEC'.format(m=p.mass, 
+                                                                         dm='maj' if self.domajorana else 'dirac', 
+                                                                         de='emu' if self.doelectron else 'mu'), 'w') as fout:
         fout.write(decay_table)
     print('===> Created evtGen decay files for Bc \n')
 
@@ -202,6 +209,8 @@ class Job(object):
        'Decay hnl',
        '0.5     mu-    pi+    PHSP;',
        '{maj_decay}',
+       '{el_decay}',
+       '{el_maj_decay}',
        'Enddecay',
        '{cdec}',
        '',
@@ -231,10 +240,14 @@ class Job(object):
 
                          cconj = 'ChargeConj hnl anti_hnl' if not self.domajorana else '',
                          cdec = 'CDecay anti_hnl' if not self.domajorana else '',
-                         maj_decay = '0.5     mu+    pi-    PHSP;' if self.domajorana else '',
+                         maj_decay    =  '0.5     mu+    pi-    PHSP;' if self.domajorana else '',
+                         el_decay     =  '0.5     e-     pi+    PHSP;' if self.doelectron else '',
+                         el_maj_decay =  '0.5     e+     pi-    PHSP;' if self.doelectron and self.domajorana else '',
                          )
 
-      with open('../evtGenData/HNLdecay_mass{m}_{dm}.DEC'.format(m=p.mass, dm='maj' if self.domajorana else 'dirac' ), 'w') as fout:
+      with open('../evtGenData/HNLdecay_mass{m}_{dm}_{de}.DEC'.format(m=p.mass, 
+                                                                      dm='maj' if self.domajorana else 'dirac', 
+                                                                      de='emu' if self.doelectron else 'mu'), 'w') as fout:
         fout.write(decay_table)
     print('===> Created evtGen decay files\n')
 
@@ -364,7 +377,7 @@ class Job(object):
         'pwd',
         'echo "Going to run step1"',
         'DATE_START_step1=`date +%s`',
-        'cmsRun {jop1} maxEvents={nevtsjob} nThr={nthr} mass={m} ctau={ctau} outputFile=BPH-step1.root seedOffset=$SLURM_ARRAY_TASK_ID doSkipMuonFilter={dsmf} doDisplFilter={ddf} doMajorana={dmj}',
+        'cmsRun {jop1} maxEvents={nevtsjob} nThr={nthr} mass={m} ctau={ctau} outputFile=BPH-step1.root seedOffset=$SLURM_ARRAY_TASK_ID doSkipMuonFilter={dsmf} doDisplFilter={ddf} doMajorana={dmj} doElectron={de} scaleToFilter={stf} ',
         'DATE_END_step1=`date +%s`',
         'if [ $? -eq 0 ]; then echo "Successfully run step 1"; else exit $?; fi',
         'echo "Finished running step1"',
@@ -399,6 +412,8 @@ class Job(object):
           dsmf=self.doskipmuonfilter,
           ddf=self.dodisplfilter,
           dmj=self.domajorana,
+          de=self.doelectron,
+          stf=self.pythiascale,
           nevtsjob=nevtsjob_toset,
           nthr=self.nthr,
           jop2=self.jop2,
@@ -452,7 +467,7 @@ def getOptions():
   parser.add_argument('-v','--ver', type=str, dest='ver', help='version of production, e.g. V00_v00', default='V00_v00')
   parser.add_argument('-n','--nevts', type=int, dest='nevts', help='total number of events to be generated', default=10)
   parser.add_argument('--time', type=str, dest='time', help='allowed time for each job', default='08')
-  parser.add_argument('--mem', type=str, dest='mem', help='allowed memory for each job in [MB]', default='3500')
+  parser.add_argument('--mem', type=str, dest='mem', help='allowed memory for each job in [MB]', default='4500')
   parser.add_argument('--njobs', type=int, dest='njobs', help='number of parallel jobs to submit', default=10)
   parser.add_argument('--points', type=str, dest='pointFile', help='name of file contaning information on scan to be run', default='points.py')
   parser.add_argument('--npremixfiles', type=str, dest='npremixfiles', help='number of premixing files to be randomly chosen', default=20)
@@ -465,6 +480,8 @@ def getOptions():
   parser.add_argument('--dobc', dest='dobc', help='do the Bc generation instead of other B species', action='store_true', default=False)
   parser.add_argument('--docontrol', dest='docontrol', help='do the generation for the control channel B->JpsiK', action='store_true', default=False)
   parser.add_argument('--domajorana', dest='domajorana', help='consider the HNL as a Majorana particle instead of Dirac', action='store_true', default=False)
+  parser.add_argument('--doelectron', dest='doelectron', help='do electron decay in addition to muon', action='store_true', default=False)
+  parser.add_argument('--pythiascale', type=float, dest='pythiascale', help='a parameter in Pythia to scale the pt of the quark (?)', default=1.0)
 
 
   return parser.parse_args()

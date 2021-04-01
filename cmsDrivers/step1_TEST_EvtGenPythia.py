@@ -49,16 +49,6 @@ options.register('doMajorana',
                   VarParsing.multiplicity.singleton, 
                   VarParsing.varType.bool, 
                   'HNL is majorana particle, otherwise dirac' )
-options.register('doElectron',    
-                  False, 
-                  VarParsing.multiplicity.singleton, 
-                  VarParsing.varType.bool, 
-                  'HNL can decay to epi too, otherwise mupi only' )
-options.register('scaleToFilter',
-                 1.0,
-                 VarParsing.multiplicity.singleton,
-                 VarParsing.varType.float,
-                 'Pythia parameter to scale the pt cut on the b quark (?)')
 #options.register ("doDirac",
 #                  1, # default value
 #                  VarParsing.multiplicity.singleton, # singleton or list
@@ -192,10 +182,10 @@ process.SingleMuFilter = cms.EDFilter("PythiaFilterMotherSister",
     #MinPt = cms.untracked.double(0.0), # <=== keep it a bit lower than the pt cut at reco level... 
     MaxEta = cms.untracked.double(1.55),
     MinEta = cms.untracked.double(-1.55),
-    MinPt = cms.untracked.double(6.8), 
+    MinPt = cms.untracked.double(6.8), # <=== keep it a bit lower than the pt cut at reco level... #### FIXME should be raised to 6.5 - 7
     ParticleID = cms.untracked.int32(13), # abs value is taken
     #Status = cms.untracked.int32(1),
-    MotherIDs = cms.untracked.vint32(521, 511, 531), # require muon to come from B+/B- decay
+    MotherIDs = cms.untracked.vint32(521), # require muon to come from B+/B- decay
     SisterID = cms.untracked.int32(9900015), # require HNL sister
     MaxSisterDisplacement = maxDispl, # max Lxyz displacement to generate in mm, -1 for no max
 )
@@ -212,16 +202,16 @@ process.generator = cms.EDFilter("Pythia8GeneratorFilter",
             list_forced_decays = cms.vstring(       
                 'myB+', 
                 'myB-',
-                'myB0',
-                'myB0bar',
-                'myB0s',
-                'myB0sbar',
+#                'myB0',
+#                'myB0bar',
+#                'myB0s',
+#                'myB0sbar',
             ),
             
             ### the list of particles that remain undecayed by Pythia for EvtGen to operate on. 
             ### If the vector has a size 0 or size of 1 with a value of 0, the default list is used. 
             ### These are are hard-coded in: GeneratorInterface/EvtGenInterface/plugins/EvtGen/EvtGenInterface.cc., in the function SetDefault_m_PDGs().            
-            operates_on_particles = cms.vint32(521, -521, 511, -511, 531, -531), #B+, B-, B0, B0bar, B0s, B0sbar   # 541 is Bc+
+            operates_on_particles = cms.vint32(521, -521), 
 
             ### The file with properties of all particles
             particle_property_file = cms.FileInPath('HNLsGen/evtGenData/evt_2014_mass{m}_ctau{ctau}_{dm}.pdl'.format(\
@@ -229,10 +219,8 @@ process.generator = cms.EDFilter("Pythia8GeneratorFilter",
             #https://twiki.cern.ch/twiki/bin/view/CMSPublic/SWGuideEdmFileInPath
  
             ### The decay file 
-            user_decay_file = cms.vstring('HNLsGen/evtGenData/HNLdecay_mass{m}_{dm}_{de}.DEC'.format(\
-                                             m=options.mass, 
-                                             dm='maj' if options.doMajorana else 'dirac',
-                                             de='emu' if options.doElectron else 'mu')),
+            user_decay_file = cms.vstring('HNLsGen/evtGenData/HNLdecay_mass{m}_{dm}.DEC'.format(\
+                                             m=options.mass, dm='maj' if options.doMajorana else 'dirac')),
 
         ),
         parameterSets = cms.vstring('EvtGen130')
@@ -256,7 +244,7 @@ process.generator = cms.EDFilter("Pythia8GeneratorFilter",
             'SoftQCD:doubleDiffractive = off',         # default is off
             'PTFilter:filter = on',                    # default is off  # could not find **ANYWHERE** in the Pythia code PTFilter 
             'PTFilter:quarkToFilter = 5',                               # it's something that exists in CMSSW only, see Py8InterfaceBase.cc
-            'PTFilter:scaleToFilter = {stf}'.format(stf=options.scaleToFilter), # default is 0.4 , must be in  [0.4,10]
+            'PTFilter:scaleToFilter = 1.0'            # default is 0.4 
            
             ### settings to generate back-to-back b-jet production
             ### tip https://twiki.cern.ch/twiki/bin/view/CMS/EvtGenInterface#Tips_for_Pythia8   
@@ -268,10 +256,10 @@ process.generator = cms.EDFilter("Pythia8GeneratorFilter",
             #'HardQCD:qqbar2bbbar = on ',               # default is off  
             #'HardQCD:hardbbbar = off',                 # default is off  # should be set to off if gg2bbbar and hardbbbar on, otherwise double-counting
             #'PhaseSpace:pTHatMin = 5.',               # default is 0    # minimum invariant pT
-            ## 'PhaseSpace' to constrain the kinematics of a 2->2 process, 
-            ##              for hard physics only, 
-            ##              in the rest frame of the hard process, 
-            ##              cross-section is adjusted to correspond for the allowed phase-space
+            # 'PhaseSpace' to constrain the kinematics of a 2->2 process, 
+            #              for hard physics only, 
+            #              in the rest frame of the hard process, 
+            #              cross-section is adjusted to correspond for the allowed phase-space
         ),
         pythia8CUEP8M1Settings = cms.vstring( # these probably remain the same
             'Tune:pp 14', 
@@ -302,9 +290,11 @@ process.generator = cms.EDFilter("Pythia8GeneratorFilter",
 
 
 if options.doSkipMuonFilter:
-  process.ProductionFilterSequence = cms.Sequence(process.generator+process.BFilter) 
+  #process.ProductionFilterSequence = cms.Sequence(process.generator+process.BFilter) 
+  process.ProductionFilterSequence = cms.Sequence(process.generator+process.BpFilter) 
 else:
-  process.ProductionFilterSequence = cms.Sequence(process.generator+process.BFilter+process.SingleMuFilter)
+  #process.ProductionFilterSequence = cms.Sequence(process.generator+process.BFilter+process.SingleMuFilter)
+  process.ProductionFilterSequence = cms.Sequence(process.generator+process.BpFilter+process.SingleMuFilter)
 
 
 # Path and EndPath definitions

@@ -44,7 +44,7 @@ def makeRatioSettings(ratioMC):
   ratioMC.SetMarkerStyle(1)
 
 # hnum nominal, hden var1, hden2 var2
-def makeRatioPlot(hNum, hDen, hDen2="", nameNum="num", nameDen="den", nameDen2="", xtitle="pt",ytitle="Entries", ratiotitle="Ratio", norm=False, log=True, plotName="ratio", outDir='out'):
+def makeRatioPlot(hNum, hDen, hDen2="", nameNum="num", nameDen="den", nameDen2="", xtitle="pt",ytitle="Entries", ratiotitle="Ratio", norm=False, log=True, plotName="ratio", outDir='out',ratioyrange=(0,2)):
   TH1.SetDefaultSumw2()
 
   # prepare settings of histos
@@ -182,6 +182,7 @@ def makeRatioPlot(hNum, hDen, hDen2="", nameNum="num", nameDen="den", nameDen2="
   #print hRatio.Integral()
   makeRatioSettings(hRatio)
   if nameDen2 != "": makeRatioSettings(hRatio2)
+  hRatio.GetYaxis().SetRangeUser(ratioyrange[0],ratioyrange[1])
 
   hRatio.GetXaxis().SetTitle(xtitle)
   hRatio.GetYaxis().SetTitle(ratiotitle)

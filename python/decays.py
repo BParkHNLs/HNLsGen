@@ -3,8 +3,8 @@ This script collects the particle definition and creates the Decays class, that 
 the B->HNL branching ratios of interest, as a function of HNL mass and the mixing angle
 '''
 
-from objects import Particle, Decay, HNLDecay
-from QCD_corr_table import QCD_corr_table
+from python.objects import Particle, Decay, HNLDecay
+from python.QCD_corr_table import QCD_corr_table
 import math
 
 
