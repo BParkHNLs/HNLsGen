@@ -83,8 +83,8 @@ class Sample(object):
     #self.isMajorana
     self.name='bhnl_mass{m}_ctau{ctau}'.format(m=self.mass, ctau=self.ctau)
     #self.legname='{:3}: m={:.1f}GeV |V|^{{2}}={:.1e} c#tau={:.1f}mm {} {}'.format('rw' if self.isrw else 'gen',self.mass,self.vv,self.ctau,'- orig |V|^{{2}}={:.1e}'.format(self.orig_vv) if self.isrw else '', self.leglabel)
-    self.legname='{:3}: m={:.1f}GeV |V|^{{2}}={:.1e} c#tau={:.1f}mm'.format('rw' if self.isrw else 'gen',self.mass,self.vv,self.ctau)
-    #self.legname='{:3}: m={:.1f}GeV |V|^{{2}}={:.1e} {}'.format('rw' if self.isrw else 'gen',self.mass,self.vv, self.leglabel)
+    #self.legname='{:3}: m={:.1f}GeV |V|^{{2}}={:.1e} c#tau={:.1f}mm'.format('rw' if self.isrw else 'gen',self.mass,self.vv,self.ctau)
+    self.legname='{:3}: m={:.1f}GeV |V|^{{2}}={:.1e} {}'.format('rw' if self.isrw else 'gen',self.mass,self.vv, self.leglabel)
     if self.isrw:
       self.evt_w = '(weight_{vv})'.format(vv=str(self.vv).replace('-', 'm')) # reweight the tree (created with orig vv) to the vv of this sample
     else:
@@ -623,7 +623,7 @@ class SampleList(object):
 
       RP.makeRatioPlot(hNum, hDen, hDen2="", nameNum=nameNum, nameDen=nameDen, nameDen2="", \
                     xtitle=snum.histoDefs[what].xtitle,ytitle=snum.histoDefs[what].ytitle, \
-                    ratiotitle="Ratio", norm=False, log=snum.histoDefs[what].logY,plotName=plotName,outDir=outDir) 
+                    ratiotitle="Ratio", norm=False, log=snum.histoDefs[what].logY,plotName=plotName,outDir=outDir,ratioyrange=(0.7,1.3)) 
       # handle normalisation before RP.makeRatioPlot()
 
   def plotGraph(self, x='vv', y='acc'): 
@@ -741,6 +741,7 @@ def doAnalysis(path,pl,points,name,leglabel='',path2=None,pl2=None,points2=None,
   slist = SampleList(name=name, samples=samples, label=label)
   if doCompareAnalysis or doRwAnalysis:
     slist.plotRatios()
+    #slist.plotHistos(norm=norm, sameCanvas=False)
   else:
     slist.plotHistos(norm=norm, sameCanvas=False)
   #if 'fixedM' in name or 'closure' in name: 
@@ -862,12 +863,12 @@ if __name__ == "__main__":
   doSkipDispl = False #
   doDisplZ = False #
   doSkipHNLptEta = False
-  doCompareAnalysis = False #
+  doCompareAnalysis = True #
   doTestAnalysis = False
   doFixedMassAnalysis = False
   doRwAnalysis = False
   doFixedVVAnalysis = False
-  doAlongLimitAnalysis = True
+  doAlongLimitAnalysis = False
   muTrigPt = 9 # 0 1 2 5 7 9
   ####
 
@@ -897,8 +898,9 @@ if __name__ == "__main__":
     #points3 = [Point(mass=1.5,ctau=None,vv=1e-03,isrw=False)]  
     #points = [Point(mass=2.0,ctau=None,vv=1.5e-05,isrw=False)]
     #points2 = [Point(mass=2.0,ctau=None,vv=1.5e-05,isrw=False)]
-    points = [Point(mass=2.0,ctau=None,vv=5.0e-05,isrw=False)]
-    points2 = [Point(mass=2.0,ctau=None,vv=5.0e-05,isrw=False)]
+    points  = [Point(mass=3.0,ctau=184.256851021,vv=None,isrw=False)]
+    points2 = [Point(mass=3.0,ctau=184.0,vv=None,isrw=False)]
+    points3 = [Point(mass=3.0,ctau=184.0,vv=None,isrw=False)]
 
     for p in points:
       p.stamp()
@@ -907,12 +909,12 @@ if __name__ == "__main__":
       p.stamp()
     existing_points2=checkFiles(path=path2,points=points2)
     if not opt.pl3: 
-      doAnalysis(path=path,pl=opt.pl,points=existing_points,name='comp_norw',path2=path2,pl2=opt.pl2,points2=existing_points2,leglabel='Dirac', leglabel2='Majorana')
+      doAnalysis(path=path,pl=opt.pl,points=existing_points,name='comp_scale',path2=path2,pl2=opt.pl2,points2=existing_points2,leglabel='Scale=1', leglabel2='Scale=5')
     else:
       for p in points3:
         p.stamp()
       existing_points3=checkFiles(path=path3,points=points3)
-      doAnalysis(path=path,pl=opt.pl,points=existing_points,name='comp_norw',path2=path2,pl2=opt.pl2,points2=existing_points2,path3=path3,pl3=opt.pl3,points3=existing_points3)
+      doAnalysis(path=path,pl=opt.pl,points=existing_points,name='comp_scale',path2=path2,pl2=opt.pl2,points2=existing_points2,path3=path3,pl3=opt.pl3,points3=existing_points3, leglabel='Scale=1', leglabel2='Scale=5', leglabel3='Scale=10')
 
   if doTestAnalysis:
 
