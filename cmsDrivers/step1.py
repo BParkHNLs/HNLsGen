@@ -59,11 +59,6 @@ options.register('scaleToFilter',
                  VarParsing.multiplicity.singleton,
                  VarParsing.varType.float,
                  'Pythia parameter to scale the pt cut on the b quark (?)')
-#options.register ("doDirac",
-#                  1, # default value
-#                  VarParsing.multiplicity.singleton, # singleton or list
-#                  VarParsing.varType.int,          # string, int, or float
-#                  "do Dirac HNL? otherwise Majorana")
 options.parseArguments()
 print options
 

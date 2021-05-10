@@ -54,11 +54,11 @@ options.register('doElectron',
                   VarParsing.multiplicity.singleton, 
                   VarParsing.varType.bool, 
                   'HNL can decay to epi too, otherwise mupi only' )
-#options.register ("doDirac",
-#                  1, # default value
-#                  VarParsing.multiplicity.singleton, # singleton or list
-#                  VarParsing.varType.int,          # string, int, or float
-#                  "do Dirac HNL? otherwise Majorana")
+options.register('scaleToFilter',
+                 1.0,
+                 VarParsing.multiplicity.singleton,
+                 VarParsing.varType.float,
+                 'Pythia parameter to scale the pt cut on the b quark (?)')
 options.parseArguments()
 print options
 
