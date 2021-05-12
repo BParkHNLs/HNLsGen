@@ -456,6 +456,97 @@ class Job(object):
     print('===> Submitted {n} job arrays for {pl}\n'.format(n=len(self.points),pl=self.prodLabel))
   
 
+  def writeFragments(self):
+    for p in self.points:
+      fragname = 'BToNMuX_NToEMuPi_SoftQCD_b_mN{:.1f}_ctau{:.1f}mm_TuneCP5_13TeV_pythia8-evtgen_cfi.py'.format(p.mass,p.ctau)
+      with open('{}/{}'.format(self.prodLabel,fragname), 'w') as f:
+        tobewritten = '''
+import FWCore.ParameterSet.Config as cms
+from Configuration.StandardSequences.Eras import eras
+from Configuration.Generator.Pythia8CommonSettings_cfi import *
+from Configuration.Generator.MCTunes2017.PythiaCP5Settings_cfi import *
+
+# Production Info
+process.configurationMetadata = cms.untracked.PSet(
+    annotation = cms.untracked.string('B -> mu N X, with long-lived N, m={MASS:.1f}GeV, ctau={CTAU:.1f}mm'),
+    name = cms.untracked.string('B -> mu N X, with long-lived N, m={MASS:.1f}GeV, ctau={CTAU:.1f}mm'),
+    version = cms.untracked.string('$1.0$')
+)
+
+process.BFilter = cms.EDFilter("MCMultiParticleFilter",
+   NumRequired = cms.int32(1),
+   AcceptMore = cms.bool(True),
+   ParticleID = cms.vint32(521,511,531),
+   PtMin = cms.vdouble(0.,0.,0.),
+   EtaMax = cms.vdouble(10.,10.,10.),
+   Status = cms.vint32(0,0,0), 
+)
+
+process.BToNMuXFilter = cms.EDFilter("PythiaFilterMotherSister", 
+    MaxEta = cms.untracked.double(1.55),
+    MinEta = cms.untracked.double(-1.55),
+    MinPt = cms.untracked.double(6.8), 
+    ParticleID = cms.untracked.int32(13),
+    MotherIDs = cms.untracked.vint32(521, 511, 531), 
+    SisterID = cms.untracked.int32(9900015), 
+    MaxSisterDisplacement = cms.untracked.double(2900.), # max Lxyz displacement to generate in mm, -1 for no max
+)
+
+process.generator = cms.EDFilter("Pythia8GeneratorFilter",
+    ExternalDecays = cms.PSet(
+        EvtGen130 = cms.untracked.PSet(
+            convertPythiaCodes = cms.untracked.bool(False),
+            decay_table = cms.string('GeneratorInterface/EvtGenInterface/data/DECAY_2014_NOLONGLIFE.DEC'),
+            
+            list_forced_decays = cms.vstring(       
+                'myB+', 
+                'myB-',
+                'myB0',
+                'myB0bar',
+                'myB0s',
+                'myB0sbar',
+            ),
+            
+            operates_on_particles = cms.vint32(521, -521, 511, -511, 531, -531), 
+            particle_property_file = cms.FileInPath('HNLsGen/evtGenData/evt_2014_mass{MASS:.1f}_ctau{CTAU:.1f}_maj.pdl'),
+            user_decay_file = cms.vstring('HNLsGen/evtGenData/HNLdecay_mass{MASS:.1f}_maj_emu.DEC'),
+        ),
+        parameterSets = cms.vstring('EvtGen130')
+    ),
+
+    PythiaParameters = cms.PSet(
+        pythia8CommonSettingsBlock,
+        pythia8CP5SettingsBlock,
+        processParameters = cms.vstring('SoftQCD:nonDiffractive = on',
+                                        'PTFilter:filter = on',      
+                                        'PTFilter:quarkToFilter = 5', 
+                                        'PTFilter:scaleToFilter = 5.0',
+                                        ),
+        parameterSets = cms.vstring('pythia8CommonSettings',
+                                    'pythia8CP5Settings',
+                                    'processParameters',
+                                    )
+    ) 
+
+    comEnergy = cms.double(13000.0),
+    filterEfficiency = cms.untracked.double(-1),      # this will not be used by Pythia, only saved in GenInfo 
+    crossSection = cms.double(1.0)
+    maxEventsToPrint = cms.untracked.int32(0),        
+    pythiaHepMCVerbosity = cms.untracked.bool(False), 
+    pythiaPylistVerbosity = cms.untracked.int32(0)    
+)
+
+
+process.ProductionFilterSequence = cms.Sequence(process.generator+process.BFilter+process.BToNMuXFilter)
+
+'''.format(MASS=p.mass,CTAU=p.ctau)
+        f.write(tobewritten)
+    print('')
+    print('===> Wrote the fragments \n')
+
+
+
+
 def getOptions():
 
   # convention: no capital letters
@@ -481,7 +572,8 @@ def getOptions():
   parser.add_argument('--docontrol', dest='docontrol', help='do the generation for the control channel B->JpsiK', action='store_true', default=False)
   parser.add_argument('--domajorana', dest='domajorana', help='consider the HNL as a Majorana particle instead of Dirac', action='store_true', default=False)
   parser.add_argument('--doelectron', dest='doelectron', help='do electron decay in addition to muon', action='store_true', default=False)
-  parser.add_argument('--pythiascale', type=float, dest='pythiascale', help='a parameter in Pythia to scale the pt of the quark (?)', default=1.0)
+  parser.add_argument('--pythiascale', type=float, dest='pythiascale', help='a parameter in Pythia to scale the pt of the quark (?)', default=5.0)
+  parser.add_argument('--dofragments', dest='dofragments', help='write the relevant fragments', action='store_true', default=False)
 
 
   return parser.parse_args()
@@ -507,6 +599,9 @@ if __name__ == "__main__":
   job.makeTemplates()
 
   job.writeCfg()   
+
+  if opt.dofragments:
+    job.writeFragments()
 
   if opt.dosubmit:
     job.submit()
