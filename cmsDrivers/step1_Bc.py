@@ -174,7 +174,7 @@ process.BFilter = cms.EDFilter("MCMultiParticleFilter",
 
 
 if options.doDisplFilter:
-  maxDispl = cms.untracked.double(1500) 
+  maxDispl = cms.untracked.double(2900) 
 else:
   maxDispl = cms.untracked.double(-1)
 
