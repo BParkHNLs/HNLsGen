@@ -59,6 +59,21 @@ options.register('scaleToFilter',
                  VarParsing.multiplicity.singleton,
                  VarParsing.varType.float,
                  'Pythia parameter to scale the pt cut on the b quark (?)')
+options.register('maxDisplacement',
+                 1300,
+                 VarParsing.multiplicity.singleton,
+                 VarParsing.varType.float,
+                 'Maximum 2D displacement, in mm')
+options.register('minTrackPt',
+                 0.0,
+                 VarParsing.multiplicity.singleton,
+                 VarParsing.varType.float,
+                 'Minimum track pt')
+options.register('minLeptonPt',
+                 0.0,
+                 VarParsing.multiplicity.singleton,
+                 VarParsing.varType.float,
+                 'Minimum lepton pt')
 options.parseArguments()
 print options
 
@@ -177,22 +192,20 @@ process.BFilter = cms.EDFilter("MCMultiParticleFilter",
 #)
 
 if options.doDisplFilter:
-  maxDispl = cms.untracked.double(2900) 
+  maxDispl = cms.untracked.double(options.maxDisplacement) 
 else:
   maxDispl = cms.untracked.double(-1)
 
 process.SingleMuFilter = cms.EDFilter("PythiaFilterMotherSister", 
-    #MaxEta = cms.untracked.double(6),
-    #MinEta = cms.untracked.double(-6),
-    #MinPt = cms.untracked.double(0.0), # <=== keep it a bit lower than the pt cut at reco level... 
     MaxEta = cms.untracked.double(1.55),
     MinEta = cms.untracked.double(-1.55),
     MinPt = cms.untracked.double(6.8), 
     ParticleID = cms.untracked.int32(13), # abs value is taken
-    #Status = cms.untracked.int32(1),
     MotherIDs = cms.untracked.vint32(521, 511, 531), # require muon to come from B+/B- decay
     SisterID = cms.untracked.int32(9900015), # require HNL sister
-    MaxSisterDisplacement = maxDispl, # max Lxyz displacement to generate in mm, -1 for no max
+    MaxSisterDisplacement = maxDispl, # max Lxy(z) displacement to generate in mm, -1 for no max
+    NephewIDs = cms.untracked.vint32(11,13,211), # ids of the nephews you want to check the pt of
+    MinNephewPts = cms.untracked.vdouble(options.minLeptonPt,options.minLeptonPt,options.minTrackPt),
 )
 
 process.generator = cms.EDFilter("Pythia8GeneratorFilter",
