@@ -6,7 +6,7 @@ import ROOT
 sys.path.append('/work/mratti/plotting/myplotting')
 from spares import *
 from glob import glob
-import array
+from array import array
 import ratioplot as RP
 # couplings to be tested, for which the reweight is run
 
@@ -58,7 +58,7 @@ class Sample(object):
   '''
   Handles information of a single sample, i.e. mass,ctau , w/ or w/o reweighting
   '''
-  def __init__(self,mass=-99, ctau=-99, vv=-99, infileNames=None, isrw=False, orig_vv=None, label='V00', leglabel=''):
+  def __init__(self,mass=-99, ctau=-99, vv=-99, infileNames=None, is_ctau_rw=False, is_reco_rw=False, orig_vv=None, label='V00', leglabel='', myfilterEff=None):
     self.mass = mass
     self.ctau = ctau
     self.vv = vv
@@ -69,8 +69,9 @@ class Sample(object):
     self.treeName='tree'
     self.infileNames=infileNames
     #if not os.path.isfile(self.infileName): raise RuntimeError('file %s not found' % self.infileName)
-    self.isrw=isrw
-    if self.isrw:
+    self.is_ctau_rw=is_ctau_rw
+    self.is_reco_rw=is_reco_rw
+    if self.is_ctau_rw:
       self.orig_vv = orig_vv
       self.orig_ctau = getCtau(mass=self.mass,vv=orig_vv)
     else:
@@ -82,14 +83,19 @@ class Sample(object):
     self.njobs =    -999  #int(label.split('_njt')[1])
     #self.isMajorana
     self.name='bhnl_mass{m}_ctau{ctau}'.format(m=self.mass, ctau=self.ctau)
-    #self.legname='{:3}: m={:.1f}GeV |V|^{{2}}={:.1e} c#tau={:.1f}mm {} {}'.format('rw' if self.isrw else 'gen',self.mass,self.vv,self.ctau,'- orig |V|^{{2}}={:.1e}'.format(self.orig_vv) if self.isrw else '', self.leglabel)
-    #self.legname='{:3}: m={:.1f}GeV |V|^{{2}}={:.1e} c#tau={:.1f}mm'.format('rw' if self.isrw else 'gen',self.mass,self.vv,self.ctau)
-    self.legname='{:3}: m={:.1f}GeV |V|^{{2}}={:.1e} {}'.format('rw' if self.isrw else 'gen',self.mass,self.vv, self.leglabel)
-    if self.isrw:
+    #self.legname='{:3}: m={:.1f}GeV |V|^{{2}}={:.1e} c#tau={:.1f}mm {} {}'.format('rw' if self.is_ctau_rw else 'gen',self.mass,self.vv,self.ctau,'- orig |V|^{{2}}={:.1e}'.format(self.orig_vv) if self.is_ctau_rw else '', self.leglabel)
+    #self.legname='{:3}: m={:.1f}GeV |V|^{{2}}={:.1e} c#tau={:.1f}mm'.format('rw' if self.is_ctau_rw else 'gen',self.mass,self.vv,self.ctau)
+    #self.legname='{:3}: m={:.1f}GeV |V|^{{2}}={:.1e} {}'.format('rw' if self.is_ctau_rw else 'gen',self.mass,self.vv, self.leglabel)
+    self.legname='{:3}: m={:.1f}GeV c#tau={:.1e}m {}'.format('rw' if self.is_ctau_rw else 'gen',self.mass,self.ctau/1000., self.leglabel)
+    if self.is_ctau_rw:
       self.evt_w = '(weight_{vv})'.format(vv=str(self.vv).replace('-', 'm')) # reweight the tree (created with orig vv) to the vv of this sample
+    elif self.is_reco_rw:
+      self.evt_w = '(weight_reco)*(0.4)'
     else:
       self.evt_w = '(1)'
-    
+   
+    self.myfilterEff = myfilterEff
+ 
     self.accB = {}
     self.accB_errup = {}
     self.accB_errdn = {}
@@ -193,12 +199,12 @@ class Sample(object):
     This should print the basic information of the sample
     '''
     if debug: print('Info in Sample.stamp()')
-    print('mass={m}GeV, ctau={ctau}mm VV={vv}, isrw={isrw}, orig_VV={ovv}, orig_ctau={octau}mm, acc={acc}, au={au}, ad={ad}, num={num}, den={den}, evt_w={ew} effFilter={ef}'.format( \
-            m=self.mass,ctau=self.ctau,vv=self.vv,isrw=self.isrw,ovv=self.orig_vv,acc=self.acc,au=self.acc_errup,ad=self.acc_errdn,num=self.num,den=self.den,ew=self.evt_w,ef=self.effFilter,octau=self.orig_ctau))
+    print('mass={m}GeV, ctau={ctau}mm VV={vv}, is_ctau_rw={is_ctau_rw}, orig_VV={ovv}, orig_ctau={octau}mm, acc={acc}, au={au}, ad={ad}, num={num}, den={den}, evt_w={ew} effFilter={ef}'.format( \
+            m=self.mass,ctau=self.ctau,vv=self.vv,is_ctau_rw=self.is_ctau_rw,ovv=self.orig_vv,acc=self.acc,au=self.acc_errup,ad=self.acc_errdn,num=self.num,den=self.den,ew=self.evt_w,ef=self.effFilter,octau=self.orig_ctau))
 
     print('TGraphErrors') 
-    print('mass={m}GeV, ctau={ctau}mm VV={vv}, isrw={isrw}, orig_VV={ovv}, orig_ctau={octau}mm, acc={acc}, au={au}, ad={ad}, num={num}, den={den}, evt_w={ew} effFilter={ef}'.format( \
-            m=self.mass,ctau=self.ctau,vv=self.vv,isrw=self.isrw,ovv=self.orig_vv,acc=self.acc_tg,au=self.acc_errup_tg,ad=self.acc_errdn_tg,num=self.num,den=self.den,ew=self.evt_w,ef=self.effFilter,octau=self.orig_ctau))
+    print('mass={m}GeV, ctau={ctau}mm VV={vv}, is_ctau_rw={is_ctau_rw}, orig_VV={ovv}, orig_ctau={octau}mm, acc={acc}, au={au}, ad={ad}, num={num}, den={den}, evt_w={ew} effFilter={ef}'.format( \
+            m=self.mass,ctau=self.ctau,vv=self.vv,is_ctau_rw=self.is_ctau_rw,ovv=self.orig_vv,acc=self.acc_tg,au=self.acc_errup_tg,ad=self.acc_errdn_tg,num=self.num,den=self.den,ew=self.evt_w,ef=self.effFilter,octau=self.orig_ctau))
  
   def fillHistos(self,sel='(1)',sellabel='noSel'):
     '''
@@ -208,15 +214,9 @@ class Sample(object):
     chain = TChain(self.treeName)
     for fn in self.infileNames:
       chain.Add(fn)
-    #f = TFile.Open(self.infileName)
-    #t = f.Get(self.treeName)
-    #if not t:
-    #  print 'ERROR: no tree in file %s' % fname
-    #  return False
 
     for name,spec in self.histoDefs.items():
       chain.Draw('%s>>%s%s' % (spec.what, name, spec.binning), sel+'*'+self.evt_w, 'goff') 
-      #chain.Project('{}'.format(name),'{}'.format(spec.what))
       h = chain.GetHistogram().Clone('%s_%s_%s' % (self.name, name, sellabel))
       h.SetDirectory(0)
       h.SetTitle(h.GetName())
@@ -224,16 +224,75 @@ class Sample(object):
       h.GetXaxis().SetNdivisions(505)
       h.GetYaxis().SetTitle(spec.ytitle)
       h.GetYaxis().SetNdivisions(505)
-      #h.GetYaxis().SetTitleSize(0.05)
-      #h.GetXaxis().SetTitleSize(0.05)
-
-      #newh = getOverflowedHisto(h)
-      #newh.SetDirectory(0)
-      #self.histos[name] = newh
       h.SetDirectory(0)
       self.histos[name] = h
 
-    #f.IsA().Destructor(f)
+    return True
+
+  def fillHistoStats(self):
+    '''
+    To determine the stats
+    '''
+    if debug: print('Info in Sample.fillHistoStats()')
+    chain = TChain(self.treeName)
+    for fn in self.infileNames:
+      chain.Add(fn)
+
+    bins = [0.,10,50,100,300,500,1000] 
+    hns = ROOT.TH1F('hns', 'w/o selection, w/o reco weight', len(bins)-1, array('d',bins))
+    h   = ROOT.TH1F('h',   'w/  selection, w/o reco weight', len(bins)-1, array('d',bins))
+    hw  = ROOT.TH1F('hw',  'w/  selection, w/  reco weight', len(bins)-1, array('d',bins))
+
+    sel = '(l0_pt>7 && abs(l0_eta)<1.5 && pi1_pt > 0.7 && abs(pi1_eta) < 2. && l1_pt > 1.5 && abs(l1_eta) < 2.)'#
+          # && sqrt(TVector2::Phi_mpi_pi(hnl_phi-l0_phi)*TVector2::Phi_mpi_pi(hnl_phi-l0_phi) + (hnl_eta-l0_eta)*(hnl_eta-l0_eta)) < 0.5'
+
+    sel_and_weight = '({sel})*(weight_reco)*(0.4)'.format(sel=sel)
+    weight = '(weight_reco)*(0.4)'
+
+    chain.Draw('Lxy>>hns', '(1)',          'goff')
+    chain.Draw('Lxy>>h',   sel,            'goff')
+    #chain.Draw('Lxy>>h',   weight,            'goff')
+    chain.Draw('Lxy>>hw',  sel_and_weight, 'goff')
+
+    hns.GetXaxis().SetTitle('L_{xy} (mm)')
+    hns.GetYaxis().SetTitle('Entries')
+    
+    hns.SetLineColor(ROOT.kBlack)
+    h.SetLineColor(ROOT.kBlue)
+    hw.SetLineColor(ROOT.kRed)
+
+    c = TCanvas(self.name, self.name, 800, 600)
+    hns.Draw('histE')
+    h.Draw('histEsame')
+    hw.Draw('histEsame')
+    c.BuildLegend()
+    #c.SaveAs('./plots/' + self.label + suffix + '/stats_' + c.GetName()  + '.png')
+    #c.SaveAs('./plots/' + self.label + suffix + '/stats_' + c.GetName()  + '.pdf')
+    #c.SaveAs('./plots/' + self.label + suffix + '/stats_' + c.GetName()  + '.root')
+
+    ## Print the values bin by bin,
+    histos = [hns,h,hw]
+    lines = []
+
+    histos = [hw]
+    for i,h in enumerate(histos):
+      line = []
+      tot_entries = h.Integral() + h.GetBinContent(h.GetNbinsX()+1)
+      line.append('{:15.3f}'.format(tot_entries))
+      for binx in range(1,h.GetNbinsX()+2):
+        #line.append('{:15.1f}'.format(h.GetBinContent(binx)))
+        line.append('{:15.3f}'.format(h.GetBinContent(binx)/float(tot_entries)))
+      lines.append(' '.join(line))
+
+    #print('{:15s} {:15s} {:15s} {:15s} {:15s} {:15s} {:15s}'.format('Integral', '[0,1]cm', '[1,5]cm', '[5,10]cm','[10,30]cm', '[30,100]cm', '[100,inf]cm')   )
+    #for line in lines:
+    #  print(line)
+
+
+    tot_hns = hns.Integral() + hns.GetBinContent(hns.GetNbinsX()+1)
+    tot_hw  = hw.Integral()  + hw.Integral() + hw.GetBinContent(hw.GetNbinsX()+1)
+    print('{:15.1f} {:15.1f}'.format(tot_hns,tot_hw))
+
     return True
 
   def saveHistos(self, norm):
@@ -280,10 +339,14 @@ class Sample(object):
     self.effnumB = dict([(b, ROOT.TH1F('effnum_%s' % b, 'effnum_%s' % b, 1, 0, 13000)) for b in self.Bspecies])
     self.effdenB = dict([(b, ROOT.TH1F('effden_%s' % b, 'effden_%s' % b, 1, 0, 13000)) for b in self.Bspecies])
 
-    #if doInclusive:
+    # preselectoin cuts
+#    cutsnum = '(l0_pt>7 && abs(l0_eta)<1.5 && pi1_pt > 0.7 && abs(pi1_eta) < 2. && l1_pt > 1.5 && abs(l1_eta) < 2.)'#
+#    cutsden = '(1)'
+    ##### cutsden = '(l0_pt>7 && abs(l0_eta)<1.5)'
+
+    
+    ### cuts used for the july study
     cutsnum = '(l0_pt>{mp} && abs(l0_eta)<1.5'.format(mp=muTrigPt)
-    #else: 
-    #cutsnum = '(l0_pt>{mp} && abs(l0_eta)<1.5 && k_pt>1 && abs(k_eta)<2.5 && pi_pt>1 && abs(pi_eta)<2.5'.format(mp=muTrigPt) 
     if doSkipDispl:
       cutsnum += ''
     else:
@@ -298,8 +361,6 @@ class Sample(object):
       cutsnum += '&& l1_pt>3 && abs(l1_eta)<2.5 && pi1_pt>0.8 && abs(pi1_eta)<2.5'
     
     cutsnum += ')'
-
-
     cutsden = '(l0_pt>{mp} && abs(l0_eta)<1.5)'.format(mp=muTrigPt)
 
     
@@ -315,11 +376,11 @@ class Sample(object):
       self.acc_errup = peff.GetEfficiencyErrorUp(1)
       self.acc_errdn = peff.GetEfficiencyErrorLow(1)
 
-    tgra = TGraphAsymmErrors()
-    tgra.BayesDivide(self.effnum, self.effden)
-    self.acc_tg = tgra.GetY()[0]
-    self.acc_errup_tg = tgra.GetErrorYhigh(0)
-    self.acc_errdn_tg = tgra.GetErrorYlow(0)
+    #tgra = TGraphAsymmErrors()
+    #tgra.BayesDivide(self.effnum, self.effden)
+    #self.acc_tg = tgra.GetY()[0]
+    #self.acc_errup_tg = tgra.GetErrorYhigh(0)
+    #self.acc_errdn_tg = tgra.GetErrorYlow(0)
 
     # for debugging purposes
     self.num = self.effnum.GetEntries()
@@ -334,18 +395,31 @@ class Sample(object):
       chain.Draw('hnl_pt>>effnum_{b}'.format(b=b), selnum + '*' + self.evt_w, 'goff')
       chain.Draw('hnl_pt>>effden_{b}'.format(b=b), selden, 'goff')
 
+#      tgra = TGraphAsymmErrors()
+#      tgra.BayesDivide(self.effnumB[b], self.effdenB[b])
+#      print type(tgra.GetY()), self.effdenB[b]
+#      if tgra.GetY():
+#        self.accB[b] = tgra.GetY()[0]
+#        self.accB_errup[b] = tgra.GetErrorYhigh(0)
+#        self.accB_errdn[b] = tgra.GetErrorYlow(0)
+#      else:
+#        self.accB[b] = 0
+#        self.accB_errup[b] = 0
+#        self.accB_errdn[b] = 0
+
       if TEfficiency.CheckConsistency(self.effnumB[b],self.effdenB[b]):
-        peff = TEfficiency(self.effnumB[b],self.effdenB[b])
+         peff = TEfficiency(self.effnumB[b],self.effdenB[b])
         
-        self.accB[b]       = peff.GetEfficiency(1)
-        self.accB_errup[b] = peff.GetEfficiencyErrorUp(1)
-        self.accB_errdn[b] = peff.GetEfficiencyErrorLow(1)
+         self.accB[b]       = peff.GetEfficiency(1)
+         #self.accB_errup[b] = peff.GetEfficiencyErrorUp(1)
+         #self.accB_errdn[b] = peff.GetEfficiencyErrorLow(1)
+         self.accB_errup[b] = 0
+         self.accB_errdn[b] = 0
 
       else:
-        self.accB[b] = 0
-        self.accB_errup[b] = 0
-        self.accB_errdn[b] = 0
-
+         self.accB[b] = 0
+         self.accB_errup[b] = 0
+         self.accB_errdn[b] = 0
 
   def fillExpNevts(self):
     if debug: print('Info in Sample.fillExpNevts()')
@@ -405,10 +479,67 @@ class Sample(object):
     #self.expNevts_errup = N_HNL_VV1 * 2 * BR_HNLmupion(mass=self.mass) * self.vv * self.acc_errup         # because of an inconsistency between gamma_part and gamma_tot
     #self.expNevts_errdn = N_HNL_VV1 * 2 * BR_HNLmupion(mass=self.mass) * self.vv * self.acc_errdn
 
+  def fillExpNevts2(self):
+    if debug: print('Info in Sample.fillExpNevts2()')
+     
+    #N_B = 9.2001E9  # from slide 5 here http://cds.cern.ch/record/2704495/files/DP2019_043.pdf
+    # done with x-sec x lumi x filter_eff x acc x eff
+    Lumi = 41.6 * 1E09 # 1/fb = 1E09 * 1/microbarn
+    sigma_tot = 15.3 * 2 # microbarn, factor 2 for B+/B-  
+    if self.myfilterEff:
+      norm = Lumi * sigma_tot * self.myfilterEff
+    else:
+      print('WARNING: Filter eff not available, set to 1 for normalisation')
+      norm = Lumi * sigma_tot
+
+    # in microbarn, differentially in pT, not used
+    sigma={}
+    sigma[(10,13)] = 3.00      * 3    # eta < 1.45
+    sigma[(13,17)] = 0.88      * 4    # ""
+    sigma[(17,24)] = 0.39      * 6    # eta < 2.1
+    sigma[(24,30)] = 0.12      * 6    # ""
+    sigma[(30,40)] = 4.10E-02  * 10
+    sigma[(40,50)] = 1.20E-02  * 10
+    sigma[(50,60)] = 4.00E-03  * 10
+    sigma[(60,70)] = 1.90E-03  * 10
+    sigma[(70,100)]= 6.70E-04  * 30
+   
+    dec    = Decays(mass=p.mass, mixing_angle_square=1)
+    dec_SM = Decays(mass=0., mixing_angle_square=1)
+
+    B_w =        (dec.B_to_uHNL.BR+       \
+                  dec.B_to_D0uHNL.BR+     \
+                  dec.B_to_D0staruHNL.BR+ \
+                  dec.B_to_pi0uHNL.BR+    \
+                  dec.B_to_rho0uHNL.BR)  
+
+    B0_w =       (dec.B0_to_DuHNL.BR+     \
+                  dec.B0_to_DstaruHNL.BR+ \
+                  dec.B0_to_piuHNL.BR+    \
+                  dec.B0_to_rhouHNL.BR)   
+   
+    Bs_w =       (dec.Bs_to_DsuHNL.BR+ \
+                  dec.Bs_to_DsstaruHNL.BR+ \
+                  dec.Bs_to_KuHNL.BR+ \
+                  dec.Bs_to_KstaruHNL.BR)  
+    
+    Bc_w =     (dec.Bc_to_uHNL.BR) 
+
+    self.Bweights = [B_w, B0_w, Bs_w, Bc_w]
+    self.Bfracs =   [0.4, 0.4, 0.1, 0.001]
+
+    self.expNevts = 0
+    self.expNevts_errup = 0
+    self.expNevts_errdn = 0
+    for ib,b in enumerate(self.Bspecies):
+      #print norm, self.Bfracs[ib], self.Bweights[ib], BR_HNLmupion(mass=self.mass), self.vv, self.accB[b]
+      self.expNevts        += norm * self.Bfracs[ib] / 0.4 * self.Bweights[ib] * BR_HNLmupion(mass=self.mass) * self.vv * self.accB[b]
+      self.expNevts_errup  += norm * self.Bfracs[ib] / 0.4 * self.Bweights[ib] * BR_HNLmupion(mass=self.mass) * self.vv * self.accB_errup[b]
+      self.expNevts_errdn  += norm * self.Bfracs[ib] / 0.4 * self.Bweights[ib] * BR_HNLmupion(mass=self.mass) * self.vv * self.accB_errdn[b]
+       
   def fillFilterEff(self,dostamp=True):
     '''
-    To retrieve and save the filter efficiency - from the minigentree
-    TODO: retrieve the cross-section => for that you would need to run without separate jobs
+    To retrieve and save the filter efficiency - from the minigentree # OUTDATED
     '''
     ##if debug: print('Info in Sample.fillFilterEff()')
 
@@ -456,13 +587,15 @@ class SampleList(object):
     self.name = name
     self.samples = samples  # a list of objects of type Sample
     self.label = samples[0].label if label==None else label
-    self.colors = [ ROOT.kBlack,  ROOT.kOrange+1, ROOT.kRed, ROOT.kMagenta+2, ROOT.kViolet+8, ROOT.kAzure-8, ROOT.kAzure+6 ,
-                      ROOT.kGreen+1, ROOT.kSpring+4, ROOT.kYellow -5, ROOT.kYellow -3, ROOT.kYellow, ROOT.kOrange
+    self.colors = [  ROOT.kOrange+1, ROOT.kRed, ROOT.kMagenta+2, ROOT.kViolet+8, ROOT.kAzure-8, ROOT.kAzure+6 ,
+                      ROOT.kGreen+1, ROOT.kSpring+4, ROOT.kYellow -5, ROOT.kYellow -3, ROOT.kYellow, ROOT.kOrange,
+                    ROOT.kBlack,  ROOT.kOrange+1, ROOT.kRed, ROOT.kMagenta+2, ROOT.kViolet+8, ROOT.kAzure-8, ROOT.kAzure+6 ,
+                      ROOT.kGreen+1, ROOT.kSpring+4, ROOT.kYellow -5, ROOT.kYellow -3, ROOT.kYellow, ROOT.kOrange,
                   ]
     #self.colors = [ ROOT.kOrange+1, ROOT.kRed, ROOT.kMagenta+2, ROOT.kViolet+8, ROOT.kAzure-8, ROOT.kAzure+6 ,
     #                  ROOT.kGreen+1, ROOT.kSpring+4, ROOT.kYellow -5, ROOT.kYellow -3, ROOT.kYellow, ROOT.kOrange
     #              ]
-    self.styles = [  1,1,1,1,1,1,1,1,1,1,1,1,1,1, ]
+    self.styles = [  1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, ]
     self.graphs={}
 
     # x,y quantities for graphs
@@ -692,18 +825,25 @@ def doAnalysis(path,pl,points,name,leglabel='',path2=None,pl2=None,points2=None,
   samples = []
   for p in points:
     fns = glob(path.format(m=p.mass,ctau=p.orig_ctau))
-    s = Sample(mass=p.mass, ctau=p.ctau, vv=p.vv, infileNames=fns, isrw=p.isrw, orig_vv=p.orig_vv, label=pl, leglabel=leglabel)
+    s = Sample(mass=p.mass, ctau=p.ctau, vv=p.vv, infileNames=fns, is_ctau_rw=p.is_ctau_rw, is_reco_rw=p.is_reco_rw, orig_vv=p.orig_vv, 
+               label=pl, leglabel=leglabel,myfilterEff=p.myfilterEff)
     if doRwAnalysis:
       s.fillHistos(sel='(Lxy<1000)', sellabel='')
-      #s.fillHistos(sel='(l0_pt>5 && abs(l0_eta)<1.6)', sellabel='pt5_eta1p6') # filter selection
+    elif doGridAnalysis:
+      s.fillHistoStats()
+      s.fillHistos()
+    elif doFixedMassAnalysis:
+      pass 
+      # do not fill histograms, only acceptance is needed
     else:
-      #s.fillHistos(sel='(Lxyz<1500)', sellabel='') 
-      #s.fillHistos(sel='(l0_pt>6.8 && abs(l0_eta)<1.55)')
       s.fillHistos() # no selection
-    s.fillAcceptance()
-    s.fillExpNevts()
+
+    if not doGridAnalysis:
+      s.fillAcceptance()
+      s.fillExpNevts2()
+      #s.fillExpNevts()
     #s.fillFilterEff()
-    s.stamp()
+    #s.stamp()
     samples.append(s)
 
   if path2 and pl2 and points2:
@@ -711,12 +851,10 @@ def doAnalysis(path,pl,points,name,leglabel='',path2=None,pl2=None,points2=None,
     print('  => Going to do plotting for production={}, name={}'.format(pl2,name))
     for p in points2:
       fns = glob(path2.format(m=p.mass,ctau=p.orig_ctau))
-      s = Sample(mass=p.mass, ctau=p.ctau, vv=p.vv, infileNames=fns, isrw=p.isrw, orig_vv=p.orig_vv, label=pl2, leglabel=leglabel2) 
+      s = Sample(mass=p.mass, ctau=p.ctau, vv=p.vv, infileNames=fns, is_ctau_rw=p.is_ctau_rw, orig_vv=p.orig_vv, label=pl2, leglabel=leglabel2) 
       s.fillHistos()
-      #s.fillHistos(sel='(Lxyz<1500)', sellabel='')
-      #s.fillHistos(sel='(l0_pt>5 && abs(l0_eta)<1.6)', sellabel='pt5_eta1p6') # filter selection
       s.fillAcceptance()
-      s.fillExpNevts()
+      s.fillExpNevts2()
       #s.fillFilterEff()
       s.stamp()
       samples.append(s)
@@ -726,11 +864,10 @@ def doAnalysis(path,pl,points,name,leglabel='',path2=None,pl2=None,points2=None,
     print('  => Going to do plotting for production={}, name={}'.format(pl3,name))
     for p in points3:
       fns = glob(path3.format(m=p.mass,ctau=p.orig_ctau))
-      s = Sample(mass=p.mass, ctau=p.ctau, vv=p.vv, infileNames=fns, isrw=p.isrw, orig_vv=p.orig_vv, label=pl3, leglabel=leglabel3) 
+      s = Sample(mass=p.mass, ctau=p.ctau, vv=p.vv, infileNames=fns, is_ctau_rw=p.is_ctau_rw, orig_vv=p.orig_vv, label=pl3, leglabel=leglabel3) 
       s.fillHistos()
-      #s.fillHistos(sel='(l0_pt>5 && abs(l0_eta)<1.6)', sellabel='pt5_eta1p6') # filter selection
       s.fillAcceptance()
-      #s.fillExpNevts()
+      s.fillExpNevts2()
       #s.fillFilterEff()
       s.stamp()
       samples.append(s)
@@ -863,12 +1000,15 @@ if __name__ == "__main__":
   doSkipDispl = False #
   doDisplZ = False #
   doSkipHNLptEta = False
-  doCompareAnalysis = True #
+  doCompareAnalysis = False #
   doTestAnalysis = False
   doFixedMassAnalysis = False
+  doOld = False
   doRwAnalysis = False
   doFixedVVAnalysis = False
-  doAlongLimitAnalysis = False
+  doBenchmarkAnalysis = False
+  doGridAnalysis = True
+  doGridBc = False
   muTrigPt = 9 # 0 1 2 5 7 9
   ####
 
@@ -876,7 +1016,7 @@ if __name__ == "__main__":
   if doSkipDispl: suffix += '_skipDispl'
   if doDisplZ: suffix += '_wLz'
   if doSkipHNLptEta: suffix += '_skipHNLptEta'
-  suffix += '_muTrigPt{mp}'.format(mp=muTrigPt)
+  #suffix += '_muTrigPt{mp}'.format(mp=muTrigPt)
   opt = getOptions()
   
   complabel = '' if not opt.pl2 else ('_VS_{}'.format(opt.pl2) if not opt.pl3 else '_VS_{}_VS_{}'.format(opt.pl2,opt.pl3))
@@ -893,14 +1033,14 @@ if __name__ == "__main__":
   
 
   if doCompareAnalysis:
-    #points = [Point(mass=1.5,ctau=None,vv=1e-03,isrw=False)]
-    #points2 = [Point(mass=1.5,ctau=None,vv=1e-03,isrw=False)]
-    #points3 = [Point(mass=1.5,ctau=None,vv=1e-03,isrw=False)]  
-    #points = [Point(mass=2.0,ctau=None,vv=1.5e-05,isrw=False)]
-    #points2 = [Point(mass=2.0,ctau=None,vv=1.5e-05,isrw=False)]
-    points  = [Point(mass=3.0,ctau=184.256851021,vv=None,isrw=False)]
-    points2 = [Point(mass=3.0,ctau=184.0,vv=None,isrw=False)]
-    points3 = [Point(mass=3.0,ctau=184.0,vv=None,isrw=False)]
+    #points = [Point(mass=1.5,ctau=None,vv=1e-03,is_ctau_rw=False)]
+    #points2 = [Point(mass=1.5,ctau=None,vv=1e-03,is_ctau_rw=False)]
+    #points3 = [Point(mass=1.5,ctau=None,vv=1e-03,is_ctau_rw=False)]  
+    #points = [Point(mass=2.0,ctau=None,vv=1.5e-05,is_ctau_rw=False)]
+    #points2 = [Point(mass=2.0,ctau=None,vv=1.5e-05,is_ctau_rw=False)]
+    points  = [Point(mass=3.0,ctau=184.256851021,vv=None,is_ctau_rw=False)]
+    points2 = [Point(mass=3.0,ctau=184.0,vv=None,is_ctau_rw=False)]
+    points3 = [Point(mass=3.0,ctau=184.0,vv=None,is_ctau_rw=False)]
 
     for p in points:
       p.stamp()
@@ -919,11 +1059,11 @@ if __name__ == "__main__":
   if doTestAnalysis:
 
     gStyle.SetOptStat("mreuo")
-    #points = [Point(mass=1.0,ctau=None,vv=5e-04,isrw=False)]
-    #points = [Point(mass=1.5,ctau=None,vv=1e-03,isrw=False)]
-    #points = [Point(mass=3.0,ctau=None,vv=5e-05,isrw=False)]
-    #points = [Point(mass=2.0,ctau=None,vv=1.5e-05,isrw=False)]
-    #points = [Point(mass=2.0,ctau=None,vv=5.0e-05,isrw=False)]
+    #points = [Point(mass=1.0,ctau=None,vv=5e-04,is_ctau_rw=False)]
+    #points = [Point(mass=1.5,ctau=None,vv=1e-03,is_ctau_rw=False)]
+    #points = [Point(mass=3.0,ctau=None,vv=5e-05,is_ctau_rw=False)]
+    #points = [Point(mass=2.0,ctau=None,vv=1.5e-05,is_ctau_rw=False)]
+    #points = [Point(mass=2.0,ctau=None,vv=5.0e-05,is_ctau_rw=False)]
     points = [ Point(mass=3.0,ctau=None,vv=1.0e-05)] # same settings as V11_3_points.py
 
     for p in points:
@@ -931,20 +1071,20 @@ if __name__ == "__main__":
     existing_points=checkFiles(path=path,points=points)
     doAnalysis(path=path,pl=opt.pl,points=existing_points,name='testpoint_norw')
 
-  if doFixedMassAnalysis:
+  if doFixedMassAnalysis and doOld:
    
     slists_fixedMass = []
 
     ################
     points = [
-      Point(mass=0.5,ctau=None,vv=1e-03,isrw=True,orig_vv=8.6e-02),
-      Point(mass=0.5,ctau=None,vv=5e-04,isrw=True,orig_vv=8.6e-02),
-      Point(mass=0.5,ctau=None,vv=1e-04,isrw=True,orig_vv=8.6e-02),
-      Point(mass=0.5,ctau=None,vv=5e-05,isrw=True,orig_vv=8.6e-02),
-      Point(mass=0.5,ctau=None,vv=1e-05,isrw=True,orig_vv=8.6e-02),
-      Point(mass=0.5,ctau=None,vv=5e-06,isrw=True,orig_vv=8.6e-02),
-      Point(mass=0.5,ctau=None,vv=1e-06,isrw=True,orig_vv=8.6e-02),
-      Point(mass=0.5,ctau=None,vv=5e-07,isrw=True,orig_vv=8.6e-02),
+      Point(mass=0.5,ctau=None,vv=1e-03,is_ctau_rw=True,orig_vv=8.6e-02),
+      Point(mass=0.5,ctau=None,vv=5e-04,is_ctau_rw=True,orig_vv=8.6e-02),
+      Point(mass=0.5,ctau=None,vv=1e-04,is_ctau_rw=True,orig_vv=8.6e-02),
+      Point(mass=0.5,ctau=None,vv=5e-05,is_ctau_rw=True,orig_vv=8.6e-02),
+      Point(mass=0.5,ctau=None,vv=1e-05,is_ctau_rw=True,orig_vv=8.6e-02),
+      Point(mass=0.5,ctau=None,vv=5e-06,is_ctau_rw=True,orig_vv=8.6e-02),
+      Point(mass=0.5,ctau=None,vv=1e-06,is_ctau_rw=True,orig_vv=8.6e-02),
+      Point(mass=0.5,ctau=None,vv=5e-07,is_ctau_rw=True,orig_vv=8.6e-02),
       
     ]
     for p in points:
@@ -953,14 +1093,14 @@ if __name__ == "__main__":
     slists_fixedMass.append(doAnalysis(path=path,pl=opt.pl,points=existing_points,name='fixedMass0.5_norw'))
     ################
     points = [
-      Point(mass=1.0,ctau=None,vv=1e-03,isrw=True,orig_vv=2.7e-03),
-      Point(mass=1.0,ctau=None,vv=5e-04,isrw=True,orig_vv=2.7e-03),
-      Point(mass=1.0,ctau=None,vv=1e-04,isrw=True,orig_vv=2.7e-03),
-      Point(mass=1.0,ctau=None,vv=5e-05,isrw=True,orig_vv=2.7e-03),
-      Point(mass=1.0,ctau=None,vv=1e-05,isrw=True,orig_vv=2.7e-03),
-      Point(mass=1.0,ctau=None,vv=5e-06,isrw=True,orig_vv=2.7e-03),
-      Point(mass=1.0,ctau=None,vv=1e-06,isrw=True,orig_vv=2.7e-03),
-      Point(mass=1.0,ctau=None,vv=5e-07,isrw=True,orig_vv=2.7e-03),
+      Point(mass=1.0,ctau=None,vv=1e-03,is_ctau_rw=True,orig_vv=2.7e-03),
+      Point(mass=1.0,ctau=None,vv=5e-04,is_ctau_rw=True,orig_vv=2.7e-03),
+      Point(mass=1.0,ctau=None,vv=1e-04,is_ctau_rw=True,orig_vv=2.7e-03),
+      Point(mass=1.0,ctau=None,vv=5e-05,is_ctau_rw=True,orig_vv=2.7e-03),
+      Point(mass=1.0,ctau=None,vv=1e-05,is_ctau_rw=True,orig_vv=2.7e-03),
+      Point(mass=1.0,ctau=None,vv=5e-06,is_ctau_rw=True,orig_vv=2.7e-03),
+      Point(mass=1.0,ctau=None,vv=1e-06,is_ctau_rw=True,orig_vv=2.7e-03),
+      Point(mass=1.0,ctau=None,vv=5e-07,is_ctau_rw=True,orig_vv=2.7e-03),
       
     ]
     for p in points:
@@ -969,14 +1109,14 @@ if __name__ == "__main__":
     slists_fixedMass.append(doAnalysis(path=path,pl=opt.pl,points=existing_points,name='fixedMass1.0_norw'))
     ################
     points = [
-      Point(mass=1.5,ctau=None,vv=1e-03,isrw=True,orig_vv=3.5e-04),
-      Point(mass=1.5,ctau=None,vv=5e-04,isrw=True,orig_vv=3.5e-04),
-      Point(mass=1.5,ctau=None,vv=1e-04,isrw=True,orig_vv=3.5e-04),
-      Point(mass=1.5,ctau=None,vv=5e-05,isrw=True,orig_vv=3.5e-04),
-      Point(mass=1.5,ctau=None,vv=1e-05,isrw=True,orig_vv=3.5e-04),
-      Point(mass=1.5,ctau=None,vv=5e-06,isrw=True,orig_vv=3.5e-04),
-      Point(mass=1.5,ctau=None,vv=1e-06,isrw=True,orig_vv=3.5e-04),
-      Point(mass=1.5,ctau=None,vv=5e-07,isrw=True,orig_vv=3.5e-04),
+      Point(mass=1.5,ctau=None,vv=1e-03,is_ctau_rw=True,orig_vv=3.5e-04),
+      Point(mass=1.5,ctau=None,vv=5e-04,is_ctau_rw=True,orig_vv=3.5e-04),
+      Point(mass=1.5,ctau=None,vv=1e-04,is_ctau_rw=True,orig_vv=3.5e-04),
+      Point(mass=1.5,ctau=None,vv=5e-05,is_ctau_rw=True,orig_vv=3.5e-04),
+      Point(mass=1.5,ctau=None,vv=1e-05,is_ctau_rw=True,orig_vv=3.5e-04),
+      Point(mass=1.5,ctau=None,vv=5e-06,is_ctau_rw=True,orig_vv=3.5e-04),
+      Point(mass=1.5,ctau=None,vv=1e-06,is_ctau_rw=True,orig_vv=3.5e-04),
+      Point(mass=1.5,ctau=None,vv=5e-07,is_ctau_rw=True,orig_vv=3.5e-04),
       
     ]
     for p in points:
@@ -985,14 +1125,13 @@ if __name__ == "__main__":
     slists_fixedMass.append(doAnalysis(path=path,pl=opt.pl,points=existing_points,name='fixedMass1.5_norw'))
     ################
     points = [
-      #Point(mass=2.0,ctau=None,vv=1e-03,isrw=True,orig_vv=8.4e-05),
-      Point(mass=2.0,ctau=None,vv=5e-04,isrw=True,orig_vv=8.4e-05),
-      Point(mass=2.0,ctau=None,vv=1e-04,isrw=True,orig_vv=8.4e-05),
-      Point(mass=2.0,ctau=None,vv=5e-05,isrw=True,orig_vv=8.4e-05),
-      Point(mass=2.0,ctau=None,vv=1e-05,isrw=True,orig_vv=8.4e-05),
-      Point(mass=2.0,ctau=None,vv=5e-06,isrw=True,orig_vv=8.4e-05),
-      Point(mass=2.0,ctau=None,vv=1e-06,isrw=True,orig_vv=8.4e-05),
-      Point(mass=2.0,ctau=None,vv=5e-07,isrw=True,orig_vv=8.4e-05),
+      Point(mass=2.0,ctau=None,vv=5e-04,is_ctau_rw=True,orig_vv=8.4e-05),
+      Point(mass=2.0,ctau=None,vv=1e-04,is_ctau_rw=True,orig_vv=8.4e-05),
+      Point(mass=2.0,ctau=None,vv=5e-05,is_ctau_rw=True,orig_vv=8.4e-05),
+      Point(mass=2.0,ctau=None,vv=1e-05,is_ctau_rw=True,orig_vv=8.4e-05),
+      Point(mass=2.0,ctau=None,vv=5e-06,is_ctau_rw=True,orig_vv=8.4e-05),
+      Point(mass=2.0,ctau=None,vv=1e-06,is_ctau_rw=True,orig_vv=8.4e-05),
+      Point(mass=2.0,ctau=None,vv=5e-07,is_ctau_rw=True,orig_vv=8.4e-05),
       
     ]
     for p in points:
@@ -1001,14 +1140,14 @@ if __name__ == "__main__":
     slists_fixedMass.append(doAnalysis(path=path,pl=opt.pl,points=existing_points,name='fixedMass2.0_norw'))
     ################
     points = [
-      #Point(mass=3.0,ctau=None,vv=1e-03,isrw=True,orig_vv=1.1e-05),
-      Point(mass=3.0,ctau=None,vv=5e-04,isrw=True,orig_vv=1.1e-05),
-      Point(mass=3.0,ctau=None,vv=1e-04,isrw=True,orig_vv=1.1e-05),
-      Point(mass=3.0,ctau=None,vv=5e-05,isrw=True,orig_vv=1.1e-05),
-      Point(mass=3.0,ctau=None,vv=1e-05,isrw=True,orig_vv=1.1e-05),
-      Point(mass=3.0,ctau=None,vv=5e-06,isrw=True,orig_vv=1.1e-05),
-      Point(mass=3.0,ctau=None,vv=1e-06,isrw=True,orig_vv=1.1e-05),
-      Point(mass=3.0,ctau=None,vv=5e-07,isrw=True,orig_vv=1.1e-05),
+      Point(mass=3.0,ctau=None,vv=1e-03,is_ctau_rw=True,orig_vv=1.1e-05),
+      Point(mass=3.0,ctau=None,vv=5e-04,is_ctau_rw=True,orig_vv=1.1e-05),
+      Point(mass=3.0,ctau=None,vv=1e-04,is_ctau_rw=True,orig_vv=1.1e-05),
+      Point(mass=3.0,ctau=None,vv=5e-05,is_ctau_rw=True,orig_vv=1.1e-05),
+      Point(mass=3.0,ctau=None,vv=1e-05,is_ctau_rw=True,orig_vv=1.1e-05),
+      Point(mass=3.0,ctau=None,vv=5e-06,is_ctau_rw=True,orig_vv=1.1e-05),
+      Point(mass=3.0,ctau=None,vv=1e-06,is_ctau_rw=True,orig_vv=1.1e-05),
+      Point(mass=3.0,ctau=None,vv=5e-07,is_ctau_rw=True,orig_vv=1.1e-05),
     ]
     for p in points:
      p.stamp()
@@ -1017,15 +1156,93 @@ if __name__ == "__main__":
     slists_fixedMass.append(slist_norw)
     ################
     points = [
-      #Point(mass=4.5,ctau=None,vv=5e-03,isrw=True,orig_vv=2.0e-04),
-      Point(mass=4.5,ctau=None,vv=1e-03,isrw=True,orig_vv=2.0e-04),
-      Point(mass=4.5,ctau=None,vv=5e-04,isrw=True,orig_vv=2.0e-04),
-      Point(mass=4.5,ctau=None,vv=1e-04,isrw=True,orig_vv=2.0e-04),
-      Point(mass=4.5,ctau=None,vv=5e-05,isrw=True,orig_vv=2.0e-04),
-      Point(mass=4.5,ctau=None,vv=1e-05,isrw=True,orig_vv=2.0e-04),
-      Point(mass=4.5,ctau=None,vv=5e-06,isrw=True,orig_vv=2.0e-04),
-      Point(mass=4.5,ctau=None,vv=1e-06,isrw=True,orig_vv=2.0e-04),
-      Point(mass=4.5,ctau=None,vv=5e-07,isrw=True,orig_vv=2.0e-04),
+      Point(mass=4.5,ctau=None,vv=1e-03,is_ctau_rw=True,orig_vv=2.0e-04),
+      Point(mass=4.5,ctau=None,vv=5e-04,is_ctau_rw=True,orig_vv=2.0e-04),
+      Point(mass=4.5,ctau=None,vv=1e-04,is_ctau_rw=True,orig_vv=2.0e-04),
+      Point(mass=4.5,ctau=None,vv=5e-05,is_ctau_rw=True,orig_vv=2.0e-04),
+      Point(mass=4.5,ctau=None,vv=1e-05,is_ctau_rw=True,orig_vv=2.0e-04),
+      Point(mass=4.5,ctau=None,vv=5e-06,is_ctau_rw=True,orig_vv=2.0e-04),
+      Point(mass=4.5,ctau=None,vv=1e-06,is_ctau_rw=True,orig_vv=2.0e-04),
+      Point(mass=4.5,ctau=None,vv=5e-07,is_ctau_rw=True,orig_vv=2.0e-04),
+      
+    ]
+    for p in points:
+     p.stamp()
+    existing_points=checkFiles(path=path,points=points)
+    slists_fixedMass.append(doAnalysis(path=path,pl=opt.pl,points=existing_points,name='fixedMass4.5_norw'))
+
+    doLimitGraph(slists_fixedMass,'expNevtsVSvv', label=opt.pl)
+
+  if doFixedMassAnalysis and not doOld:
+   
+    slists_fixedMass = []
+
+    ################
+    points = [
+        Point(mass=0.5, ctau= 100000.0,  vv=None,is_reco_rw=True, myfilterEff=3.51E-05),
+        Point(mass=0.5, ctau=  10000.0,  vv=None,is_reco_rw=True, myfilterEff=3.34E-04),
+        Point(mass=0.5, ctau=   1000.0,  vv=None,is_reco_rw=True, myfilterEff=2.50E-03),
+      
+    ]
+    for p in points:
+     p.stamp()
+    existing_points=checkFiles(path=path,points=points)
+    slists_fixedMass.append(doAnalysis(path=path,pl=opt.pl,points=existing_points,name='fixedMass0.5_norw'))
+    ################
+    points = [
+        Point(mass=1.0, ctau= 100000.0,  vv=None,is_reco_rw=True, myfilterEff=2.34E-05),
+        Point(mass=1.0, ctau=  10000.0,  vv=None,is_reco_rw=True, myfilterEff=2.24E-04),
+        Point(mass=1.0, ctau=   1000.0,  vv=None,is_reco_rw=True, myfilterEff=1.79E-03),
+        Point(mass=1.0, ctau=    100.0,  vv=None,is_reco_rw=True, myfilterEff=5.72E-03),
+        Point(mass=1.0, ctau=     10.0,  vv=None,is_reco_rw=True, myfilterEff=6.57E-03),
+      
+    ]
+    for p in points:
+     p.stamp()
+    existing_points=checkFiles(path=path,points=points)
+    slists_fixedMass.append(doAnalysis(path=path,pl=opt.pl,points=existing_points,name='fixedMass1.0_norw'))
+    ################
+    points = [
+        Point(mass=1.5, ctau=  10000.0,  vv=None,is_reco_rw=True, myfilterEff=1.07E-04),
+        Point(mass=1.5, ctau=   1000.0,  vv=None,is_reco_rw=True, myfilterEff=8.83E-04),
+        Point(mass=1.5, ctau=    100.0,  vv=None,is_reco_rw=True, myfilterEff=3.09E-03),
+        Point(mass=1.5, ctau=     10.0,  vv=None,is_reco_rw=True, myfilterEff=3.56E-03),
+      
+    ]
+    for p in points:
+     p.stamp()
+    existing_points=checkFiles(path=path,points=points)
+    slists_fixedMass.append(doAnalysis(path=path,pl=opt.pl,points=existing_points,name='fixedMass1.5_norw'))
+    ################
+    points = [
+        Point(mass=2.0, ctau=  10000.0,  vv=None,is_reco_rw=True, myfilterEff=4.40E-05),
+        Point(mass=2.0, ctau=   1000.0,  vv=None,is_reco_rw=True, myfilterEff=3.66E-04),
+        Point(mass=2.0, ctau=    100.0,  vv=None,is_reco_rw=True, myfilterEff=1.34E-03),
+        Point(mass=2.0, ctau=     10.0,  vv=None,is_reco_rw=True, myfilterEff=1.57E-03),
+      
+    ]
+    for p in points:
+     p.stamp()
+    existing_points=checkFiles(path=path,points=points)
+    slists_fixedMass.append(doAnalysis(path=path,pl=opt.pl,points=existing_points,name='fixedMass2.0_norw'))
+    ################
+    points = [
+        Point(mass=3.0, ctau=   1000.0,  vv=None,is_reco_rw=True, myfilterEff=1.93E-03),
+        Point(mass=3.0, ctau=    100.0,  vv=None,is_reco_rw=True, myfilterEff=5.15E-03),
+        Point(mass=3.0, ctau=     10.0,  vv=None,is_reco_rw=True, myfilterEff=5.46E-03),
+        Point(mass=3.0, ctau=      1.0,  vv=None,is_reco_rw=True, myfilterEff=5.47E-03),
+    ]
+    for p in points:
+     p.stamp()
+    existing_points=checkFiles(path=path,points=points)
+    slist_norw = doAnalysis(path=path,pl=opt.pl,points=existing_points,name='fixedMass3.0_norw')
+    slists_fixedMass.append(slist_norw)
+    ################
+    points = [
+        Point(mass=4.5, ctau=    100.0,  vv=None,is_reco_rw=True, myfilterEff=3.53E-04),
+        Point(mass=4.5, ctau=     10.0,  vv=None,is_reco_rw=True, myfilterEff=4.59E-04),
+        Point(mass=4.5, ctau=      1.0,  vv=None,is_reco_rw=True, myfilterEff=4.59E-04),
+        Point(mass=4.5, ctau=      0.1,  vv=None,is_reco_rw=True, myfilterEff=4.58E-04  ),
       
     ]
     for p in points:
@@ -1039,13 +1256,13 @@ if __name__ == "__main__":
   if doRwAnalysis:
 
     points = [
-      #Point(mass=2.0,ctau=None,vv=1.5e-05,isrw=False),
-      Point(mass=3.0,ctau=None,vv=1e-06,isrw=True,orig_vv=2.0e-06),
-      Point(mass=3.0,ctau=None,vv=3e-06,isrw=True,orig_vv=2.0e-06),
-      Point(mass=3.0,ctau=None,vv=2e-05,isrw=True,orig_vv=2.0e-06),
-      Point(mass=3.0,ctau=None,vv=7e-05,isrw=True,orig_vv=2.0e-06),
-      Point(mass=3.0,ctau=None,vv=3e-04,isrw=True,orig_vv=2.0e-06),
-      #Point(mass=2.0,ctau=None,vv=0.0002,isrw=True,orig_vv=1.5e-05),
+      #Point(mass=2.0,ctau=None,vv=1.5e-05,is_ctau_rw=False),
+      Point(mass=3.0,ctau=None,vv=1e-06,is_ctau_rw=True,orig_vv=2.0e-06),
+      Point(mass=3.0,ctau=None,vv=3e-06,is_ctau_rw=True,orig_vv=2.0e-06),
+      Point(mass=3.0,ctau=None,vv=2e-05,is_ctau_rw=True,orig_vv=2.0e-06),
+      Point(mass=3.0,ctau=None,vv=7e-05,is_ctau_rw=True,orig_vv=2.0e-06),
+      Point(mass=3.0,ctau=None,vv=3e-04,is_ctau_rw=True,orig_vv=2.0e-06),
+      #Point(mass=2.0,ctau=None,vv=0.0002,is_ctau_rw=True,orig_vv=1.5e-05),
     ]
     for p in points:
       p.stamp()
@@ -1058,10 +1275,10 @@ if __name__ == "__main__":
 
     ###############
     points = [
-      #Point(mass=2.0,ctau=None,vv=3e-06,isrw=True,orig_vv=1e-04),
-      #Point(mass=2.0,ctau=None,vv=3e-06,isrw=False),
-      Point(mass=2.0,ctau=None,vv=3.0e-06,isrw=True,orig_vv=5.0e-05),
-      Point(mass=2.0,ctau=None,vv=3.0e-06,isrw=False),
+      #Point(mass=2.0,ctau=None,vv=3e-06,is_ctau_rw=True,orig_vv=1e-04),
+      #Point(mass=2.0,ctau=None,vv=3e-06,is_ctau_rw=False),
+      Point(mass=2.0,ctau=None,vv=3.0e-06,is_ctau_rw=True,orig_vv=5.0e-05),
+      Point(mass=2.0,ctau=None,vv=3.0e-06,is_ctau_rw=False),
     ]
     existing_points = checkFiles(path,points)
     #doAnalysis(path=path,pl=opt.pl,points=existing_points,name='closureRw_Mass2.0_VV3em06')
@@ -1072,26 +1289,26 @@ if __name__ == "__main__":
     ################
     points = [
       # normal B species
-      Point(mass=0.5,ctau=None,vv=1e-05,orig_vv=8.6e-02,isrw=True),
-      Point(mass=1.0,ctau=None,vv=1e-05,orig_vv=2.7e-03,isrw=True),
-      Point(mass=1.5,ctau=None,vv=1e-05,orig_vv=3.5e-04,isrw=True),
-      Point(mass=2.0,ctau=None,vv=1e-05,orig_vv=8.4e-05,isrw=True),
-      Point(mass=3.0,ctau=None,vv=1e-05,orig_vv=1.1e-05,isrw=True),
-      Point(mass=4.5,ctau=None,vv=1e-05,orig_vv=2.0e-04,isrw=True),
+      Point(mass=0.5,ctau=None,vv=1e-05,orig_vv=8.6e-02,is_ctau_rw=True),
+      Point(mass=1.0,ctau=None,vv=1e-05,orig_vv=2.7e-03,is_ctau_rw=True),
+      Point(mass=1.5,ctau=None,vv=1e-05,orig_vv=3.5e-04,is_ctau_rw=True),
+      Point(mass=2.0,ctau=None,vv=1e-05,orig_vv=8.4e-05,is_ctau_rw=True),
+      Point(mass=3.0,ctau=None,vv=1e-05,orig_vv=1.1e-05,is_ctau_rw=True),
+      Point(mass=4.5,ctau=None,vv=1e-05,orig_vv=2.0e-04,is_ctau_rw=True),
       
       # Bc points
-      #Point(mass=2.0,ctau=None,vv=8.4e-05,isrw=False),
-      #Point(mass=3.0,ctau=None,vv=1.1e-05,isrw=False),
-      ##Point(mass=3.0,ctau=None,vv=4.0e-04,isrw=False),
-      #Point(mass=4.5,ctau=None,vv=2.0e-04,isrw=False),
-      ##Point(mass=4.5,ctau=None,vv=6.0e-03,isrw=False),
-      #Point(mass=5.5,ctau=None,vv=1.0e-03,isrw=False),
-      #Point(mass=5.5,ctau=None,vv=3.0e-02,isrw=False),
+      #Point(mass=2.0,ctau=None,vv=8.4e-05,is_ctau_rw=False),
+      #Point(mass=3.0,ctau=None,vv=1.1e-05,is_ctau_rw=False),
+      ##Point(mass=3.0,ctau=None,vv=4.0e-04,is_ctau_rw=False),
+      #Point(mass=4.5,ctau=None,vv=2.0e-04,is_ctau_rw=False),
+      ##Point(mass=4.5,ctau=None,vv=6.0e-03,is_ctau_rw=False),
+      #Point(mass=5.5,ctau=None,vv=1.0e-03,is_ctau_rw=False),
+      #Point(mass=5.5,ctau=None,vv=3.0e-02,is_ctau_rw=False),
 
-      #Point(mass=1.0,ctau=None,vv=1e-05,isrw=False),
-      #Point(mass=2.0,ctau=None,vv=1e-05,isrw=False),
-      #Point(mass=3.0,ctau=None,vv=1e-05,isrw=False),
-      #Point(mass=3.0,ctau=None,vv=1e-05,orig_vv=5e-05,isrw=True),
+      #Point(mass=1.0,ctau=None,vv=1e-05,is_ctau_rw=False),
+      #Point(mass=2.0,ctau=None,vv=1e-05,is_ctau_rw=False),
+      #Point(mass=3.0,ctau=None,vv=1e-05,is_ctau_rw=False),
+      #Point(mass=3.0,ctau=None,vv=1e-05,orig_vv=5e-05,is_ctau_rw=True),
     ]
     for p in points:
      p.stamp()
@@ -1100,20 +1317,90 @@ if __name__ == "__main__":
     doAnalysis(path=path,pl=opt.pl,points=existing_points,name='fixedVV1em05')
   
 
-  if doAlongLimitAnalysis:
+  if doBenchmarkAnalysis:
     ################
     points = [
     
-      Point(mass=0.5,ctau=None,vv=2e-05,orig_vv=8.6e-02,isrw=True),
-      Point(mass=1.0,ctau=None,vv=8e-06,orig_vv=2.7e-03,isrw=True),
-      Point(mass=1.5,ctau=None,vv=2e-06,orig_vv=3.5e-04,isrw=True),
-      Point(mass=2.0,ctau=None,vv=2e-06,orig_vv=8.4e-05,isrw=True),
-      Point(mass=3.0,ctau=None,vv=1e-05,orig_vv=1.1e-05,isrw=True),
-      Point(mass=4.5,ctau=None,vv=1e-04,orig_vv=2.0e-04,isrw=True),
+##      Point(mass=0.5,ctau=None,vv=2e-05,orig_vv=8.6e-02,is_ctau_rw=True),
+##      Point(mass=1.0,ctau=None,vv=8e-06,orig_vv=2.7e-03,is_ctau_rw=True),
+#      Point(mass=1.5,ctau=None,vv=2e-06,orig_vv=3.5e-04,is_ctau_rw=True),
+##      Point(mass=2.0,ctau=None,vv=2e-06,orig_vv=8.4e-05,is_ctau_rw=True),
+##      Point(mass=3.0,ctau=None,vv=1e-05,orig_vv=1.1e-05,is_ctau_rw=True),
+##      Point(mass=4.5,ctau=None,vv=1e-04,orig_vv=2.0e-04,is_ctau_rw=True),
+#      Point(mass=0.5,ctau=None,vv=2e-05,is_ctau_rw=False),
+#      Point(mass=1.0,ctau=None,vv=8e-06,is_ctau_rw=False),
+#      Point(mass=1.5,ctau=None,vv=2e-06,is_ctau_rw=False),
+#      Point(mass=2.0,ctau=None,vv=2e-06,is_ctau_rw=False),
+#      Point(mass=3.0,ctau=None,vv=1e-05,is_ctau_rw=False),
+#      Point(mass=4.5,ctau=None,vv=1e-04,is_ctau_rw=False),
+      Point(mass=1.0,ctau=10000.0,vv=None,is_ctau_rw=False),
+      Point(mass=3.0,ctau=100.0,vv=None,is_ctau_rw=False),
+      Point(mass=4.5,ctau=1.0,vv=None,is_ctau_rw=False),
+
     ]
 
     for p in points:
      p.stamp()
     existing_points=checkFiles(path=path,points=points)
-    doAnalysis(path=path,pl=opt.pl,points=existing_points,name='alongLimit')
+    doAnalysis(path=path,pl=opt.pl,points=existing_points,name='benchmark')
+  
+  if doGridAnalysis:
+    ################
+
+    if not doGridBc:
+      points = [
+    
+##        Point(mass=0.5, ctau= 100000.0,  vv=None,is_reco_rw=True, myfilterEff=3.51E-05),
+##        Point(mass=0.5, ctau=  10000.0,  vv=None,is_reco_rw=True, myfilterEff=3.34E-04),
+##        Point(mass=0.5, ctau=   1000.0,  vv=None,is_reco_rw=True, myfilterEff=2.50E-03),
+##        Point(mass=1.0, ctau= 100000.0,  vv=None,is_reco_rw=True, myfilterEff=2.34E-05),
+        Point(mass=1.0, ctau=  10000.0,  vv=None,is_reco_rw=True, myfilterEff=2.24E-04),   # FILTER EFF are OBSOLETE
+#        Point(mass=1.0, ctau=   1000.0,  vv=None,is_reco_rw=True, myfilterEff=1.79E-03),
+#        Point(mass=1.0, ctau=    100.0,  vv=None,is_reco_rw=True, myfilterEff=5.72E-03),
+#        Point(mass=1.0, ctau=     10.0,  vv=None,is_reco_rw=True, myfilterEff=6.57E-03),
+        Point(mass=1.5, ctau=  10000.0,  vv=None,is_reco_rw=True, myfilterEff=1.07E-04),
+#        Point(mass=1.5, ctau=   1000.0,  vv=None,is_reco_rw=True, myfilterEff=8.83E-04),
+#        Point(mass=1.5, ctau=    100.0,  vv=None,is_reco_rw=True, myfilterEff=3.09E-03),
+#        Point(mass=1.5, ctau=     10.0,  vv=None,is_reco_rw=True, myfilterEff=3.56E-03),
+        Point(mass=2.0, ctau=  10000.0,  vv=None,is_reco_rw=True, myfilterEff=4.40E-05),
+#        Point(mass=2.0, ctau=   1000.0,  vv=None,is_reco_rw=True, myfilterEff=3.66E-04),
+#        Point(mass=2.0, ctau=    100.0,  vv=None,is_reco_rw=True, myfilterEff=1.34E-03),
+#        Point(mass=2.0, ctau=     10.0,  vv=None,is_reco_rw=True, myfilterEff=1.57E-03),
+        Point(mass=3.0, ctau=   1000.0,  vv=None,is_reco_rw=True, myfilterEff=1.93E-03),
+#        Point(mass=3.0, ctau=    100.0,  vv=None,is_reco_rw=True, myfilterEff=5.15E-03),
+#        Point(mass=3.0, ctau=     10.0,  vv=None,is_reco_rw=True, myfilterEff=5.46E-03),
+#        Point(mass=3.0, ctau=      1.0,  vv=None,is_reco_rw=True, myfilterEff=5.47E-03),
+        Point(mass=4.5, ctau=    100.0,  vv=None,is_reco_rw=True, myfilterEff=3.53E-04),
+#        Point(mass=4.5, ctau=     10.0,  vv=None,is_reco_rw=True, myfilterEff=4.59E-04),
+#        Point(mass=4.5, ctau=      1.0,  vv=None,is_reco_rw=True, myfilterEff=4.59E-04),
+#        Point(mass=4.5, ctau=      0.1,  vv=None,is_reco_rw=True, myfilterEff=4.58E-04  ),
+        ##Point(mass=1.0,  ctau=10000.0, vv=None, is_reco_rw=True, myfilterEff=4.80e-04), # factor 2.0 higher eff than Lxyz < 1.5 
+        ##Point(mass=3.0, ctau=1000.0, vv=None, is_reco_rw=True, myfilterEff=2.91e-03),  # factor 1.5 higher eff than Lxyz < 1.5
+      ]
+    else:
+       points = [
+
+         Point(mass=2.0, ctau=   10000.0,  vv=None,is_reco_rw=True, myfilterEff=1.61E-02   ),  # FILTER EFF are OBSOLETE
+         Point(mass=2.0, ctau=    1000.0,  vv=None,is_reco_rw=True, myfilterEff=2.21E-01   ),
+         Point(mass=2.0, ctau=     100.0,  vv=None,is_reco_rw=True, myfilterEff=2.21E-01   ),
+         Point(mass=2.0, ctau=      10.0,  vv=None,is_reco_rw=True, myfilterEff=2.34E-01   ),
+         Point(mass=3.0, ctau=    1000.0,  vv=None,is_reco_rw=True, myfilterEff=7.99E-02   ),
+         Point(mass=3.0, ctau=     100.0,  vv=None,is_reco_rw=True, myfilterEff=1.68E-01   ),
+         Point(mass=3.0, ctau=      10.0,  vv=None,is_reco_rw=True, myfilterEff=1.69E-01   ),
+         Point(mass=3.0, ctau=       1.0,  vv=None,is_reco_rw=True, myfilterEff=1.69E-01   ),
+         Point(mass=4.5, ctau=     100.0,  vv=None,is_reco_rw=True, myfilterEff=3.63E-02   ),
+         Point(mass=4.5, ctau=      10.0,  vv=None,is_reco_rw=True, myfilterEff=3.77E-02   ),
+         Point(mass=4.5, ctau=       1.0,  vv=None,is_reco_rw=True, myfilterEff=3.81E-02   ),
+         Point(mass=4.5, ctau=       0.1,  vv=None,is_reco_rw=True, myfilterEff=3.79E-02   ),
+         Point(mass=5.5, ctau=      10.0,  vv=None,is_reco_rw=True, myfilterEff=1.28E-03   ),
+         Point(mass=5.5, ctau=       1.0,  vv=None,is_reco_rw=True, myfilterEff=1.28E-03   ),
+         Point(mass=5.5, ctau=       0.1,  vv=None,is_reco_rw=True, myfilterEff=1.28E-03   ),
+         Point(mass=5.5, ctau=      0.01,  vv=None,is_reco_rw=True, myfilterEff=1.28E-03   ),
+      ]                               
+
+    for p in points:
+     p.stamp()
+    existing_points=checkFiles(path=path,points=points)
+    doAnalysis(path=path,pl=opt.pl,points=existing_points,name='grid')
+
 

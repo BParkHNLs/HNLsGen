@@ -329,7 +329,7 @@ class Job(object):
         '#SBATCH -J prod_m{m}_ctau{ctau}',
         '#SBATCH -o logs/prod_mass{m}_ctau{ctau}_%a.log', 
         '#SBATCH -e logs/prod_mass{m}_ctau{ctau}_%a.log',
-        '#SBATCH -p wn',
+        '#SBATCH -p standard',
         '#SBATCH -t {hh}:00:00',
         '#SBATCH --mem {mem}',
         '#SBATCH --array={arr}',
@@ -377,7 +377,7 @@ class Job(object):
         'pwd',
         'echo "Going to run step1"',
         'DATE_START_step1=`date +%s`',
-        'cmsRun {jop1} maxEvents={nevtsjob} nThr={nthr} mass={m} ctau={ctau} outputFile=BPH-step1.root seedOffset=$SLURM_ARRAY_TASK_ID doSkipMuonFilter={dsmf} doDisplFilter={ddf} doMajorana={dmj} doElectron={de} scaleToFilter={stf} ',
+        'cmsRun {jop1} maxEvents={nevtsjob} nThr={nthr} mass={m} ctau={ctau} outputFile=BPH-step1.root seedOffset=$SLURM_ARRAY_TASK_ID doSkipMuonFilter={dsmf} doDisplFilter={ddf} doMajorana={dmj} doElectron={de} scaleToFilter={stf} minTrackPt={mtpt} minLeptonPt={mlpt} maxDisplacement={mtdd}',
         'DATE_END_step1=`date +%s`',
         'if [ $? -eq 0 ]; then echo "Successfully run step 1"; else exit $?; fi',
         'echo "Finished running step1"',
@@ -414,6 +414,9 @@ class Job(object):
           dmj=self.domajorana,
           de=self.doelectron,
           stf=self.pythiascale,
+          mtpt=self.mintrackpt,
+          mlpt=self.minleptonpt,
+          mtdd=self.maxdisplacement,
           nevtsjob=nevtsjob_toset,
           nthr=self.nthr,
           jop2=self.jop2,
@@ -573,6 +576,9 @@ def getOptions():
   parser.add_argument('--domajorana', dest='domajorana', help='consider the HNL as a Majorana particle instead of Dirac', action='store_true', default=False)
   parser.add_argument('--doelectron', dest='doelectron', help='do electron decay in addition to muon', action='store_true', default=False)
   parser.add_argument('--pythiascale', type=float, dest='pythiascale', help='a parameter in Pythia to scale the pt of the quark (?)', default=5.0)
+  parser.add_argument('--maxdisplacement', type=float, dest='maxdisplacement', help='maximum 2D displacement in mm', default=1300)
+  parser.add_argument('--mintrackpt', type=float, dest='mintrackpt', help='minimum track pt', default=0.0)
+  parser.add_argument('--minleptonpt', type=float, dest='minleptonpt', help='minimum lepton pt', default=0.0)
   parser.add_argument('--dofragments', dest='dofragments', help='write the relevant fragments', action='store_true', default=False)
 
 

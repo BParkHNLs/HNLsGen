@@ -53,8 +53,10 @@ if __name__ == "__main__":
         failed_arrs.append(task_id_full.split('_')[1])
     fstatus.close()
 
-    print('  JobName : {}, Job : {}'.format(name,job)) 
+    print('\n  JobName : {}, Job : {}'.format(name,job)) 
     print('  failed elements of array: {}'.format(len(failed_arrs)))
+
+    if len(failed_arrs)==0: continue
 
     fslurm = open('slurm_{name}_prod.sh'.format(name=name), 'r')
     a = fslurm.readlines()
@@ -71,7 +73,7 @@ if __name__ == "__main__":
     step2_command = args[0] + ' ' + args[1] + ' ' + args[2] + ' ' + args[3] + ' ' + args[4] + ' ' + 'inputFile=BPH-step1.root' + ' ' + args[6] + ' ' + args[7] + '\n'  
     new_lines = a[0:8] + [arrl] + a[9:34] + copl + a[60:67] + [step2_command] + a[68:]
         
-    with open('resubmit_{i}_{name}_prod.sh'.format(i=opt.iter,name=name), 'w') as fresub:
+    with open('resubmit_{i}_{name}_prod.sh'.format(i=opt.iteration,name=name), 'w') as fresub:
       fresub.writelines(new_lines)
 
     print('  Written resubmitter')

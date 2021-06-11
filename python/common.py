@@ -65,10 +65,11 @@ class Point(object):
   '''
   Class that contains information on mass,ctau,vv of a given signal point
   '''
-  def __init__(self,mass,ctau=None,vv=None,isrw=False,orig_vv=None,ismaj=True):
+  def __init__(self,mass,ctau=None,vv=None,is_ctau_rw=False,orig_vv=None,is_reco_rw=False,ismaj=True,myfilterEff=None):
     self.mass = mass
-    self.isrw = isrw
+    self.is_ctau_rw = is_ctau_rw
     self.ismaj = ismaj
+    self.myfilterEff = myfilterEff
     self.cfg = None
 
     if not vv: 
@@ -81,13 +82,14 @@ class Point(object):
       self.vv = vv
       self.ctau = ctau
 
-    if self.isrw:
+    if self.is_ctau_rw:
       self.orig_vv = orig_vv
       self.orig_ctau = getCtau(mass=self.mass,vv=orig_vv, ismaj=self.ismaj)
     else:
       self.orig_vv = self.vv 
       self.orig_ctau = self.ctau
-    
+   
+    self.is_reco_rw = is_reco_rw
     self.name = '{:.1f}_{:.1f}'.format(self.mass,self.vv)
   #def getExpMedian():
     rv = expon(scale=self.ctau) 
