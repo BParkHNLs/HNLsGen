@@ -196,9 +196,8 @@ else:
 process.SingleMuFilter = cms.EDFilter("PythiaFilterMotherSister", 
     MaxEta = cms.untracked.double(1.55),
     MinEta = cms.untracked.double(-1.55),
-    MinPt = cms.untracked.double(6.8), # <=== keep it a bit lower than the pt cut at reco level... #### FIXME should be raised to 6.5 - 7
+    MinPt = cms.untracked.double(6.8), 
     ParticleID = cms.untracked.int32(13), # abs value is taken
-    #Status = cms.untracked.int32(1),
     MotherIDs = cms.untracked.vint32(541), # require muon to come from Bc+/Bc- decay
     SisterID = cms.untracked.int32(9900015), # require HNL sister
     MaxSisterDisplacement = maxDispl, # max Lxy(z) displacement to generate in mm, -1 for no max
@@ -242,20 +241,32 @@ process.generator = cms.EDFilter("Pythia8HadronizerFilter",
     PythiaParameters = cms.PSet(
         parameterSets = cms.vstring(
             'pythia8CommonSettings', 
-            'pythia8CUEP8M1Settings',  # pythia8CP5Settings ?
-                                       # pythia8PSweightsSettings ?
+            'pythia8CP5Settings', 
             'processParameters'
         ),
         processParameters = cms.vstring(
             '541:m0 = 6.275',
             '541:tau0 = 0.153'
         ),
-        pythia8CUEP8M1Settings = cms.vstring( # these probably remain the same
+        pythia8CP5Settings = cms.vstring(
             'Tune:pp 14', 
             'Tune:ee 7', 
-            'MultipartonInteractions:pT0Ref=2.4024',    # default is 2.28000 
-            'MultipartonInteractions:ecmPow=0.25208',   # default is 0.21500
-            'MultipartonInteractions:expPow=1.6'        # default is 1.85000
+            'MultipartonInteractions:ecmPow=0.03344', 
+            'PDF:pSet=20', 
+            'MultipartonInteractions:bProfile=2', 
+            'MultipartonInteractions:pT0Ref=1.41', 
+            'MultipartonInteractions:coreRadius=0.7634', 
+            'MultipartonInteractions:coreFraction=0.63', 
+            'ColourReconnection:range=5.176', 
+            'SigmaTotal:zeroAXB=off', 
+            'SpaceShower:alphaSorder=2', 
+            'SpaceShower:alphaSvalue=0.118', 
+            'SigmaProcess:alphaSvalue=0.118', 
+            'SigmaProcess:alphaSorder=2', 
+            'MultipartonInteractions:alphaSvalue=0.118', 
+            'MultipartonInteractions:alphaSorder=2', 
+            'TimeShower:alphaSorder=2', 
+            'TimeShower:alphaSvalue=0.118'
         ),
         pythia8CommonSettings = cms.vstring( 
             'Tune:preferLHAPDF = 2',                    # default is 1 
