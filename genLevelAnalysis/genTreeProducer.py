@@ -229,6 +229,7 @@ def runGenTreeProducer(infiles='./step*root',outfilename='out.root',this_mass=1,
     
   # get to the real thing
   print 'loading the file ...'
+  print files
   events = Events(files)
   print '... done!'
 
@@ -549,6 +550,7 @@ if __name__ == "__main__":
     user = os.environ["USER"] 
     fileExpr = 'step1*nj*root' if not opt.doFromMini else 'step4*root'
     expr = '/pnfs/psi.ch/cms/trivcat/store/user/{usr}/BHNLsGen/{pl}/mass{m}_ctau{ctau}/{ex}'.format(usr=user,pl=opt.pl,m=p.mass,ctau=p.ctau,ex=fileExpr)
+    #expr = '/work/mratti/GEN_HNL_newPythia/fragments_test/CMSSW_10_2_15/src/BHNL_test*.root'
     #expr = '/work/mratti/GEN_HNL_newPythia/CMSSW_10_2_3/src/HNLsGen/slurm/testManyChan_n100_njt1/BPH-step1_numEvent1000.root'
     #expr = '/work/mratti/GEN_HNL_newPythia/CMSSW_10_2_3/src/HNLsGen/slurm/testBc_n10_njt1/BPH-step1_numEvent1000.root'
     opath = './' if not opt.doSaveScratch else '/scratch/mratti/BHNLsGenDump/'
