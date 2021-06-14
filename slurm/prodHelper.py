@@ -465,18 +465,17 @@ class Job(object):
       with open('{}/{}'.format(self.prodLabel,fragname), 'w') as f:
         tobewritten = '''
 import FWCore.ParameterSet.Config as cms
-from Configuration.StandardSequences.Eras import eras
 from Configuration.Generator.Pythia8CommonSettings_cfi import *
 from Configuration.Generator.MCTunes2017.PythiaCP5Settings_cfi import *
 
 # Production Info
-process.configurationMetadata = cms.untracked.PSet(
+configurationMetadata = cms.untracked.PSet(
     annotation = cms.untracked.string('B -> mu N X, with long-lived N, m={MASS:.1f}GeV, ctau={CTAU:.1f}mm'),
     name = cms.untracked.string('B -> mu N X, with long-lived N, m={MASS:.1f}GeV, ctau={CTAU:.1f}mm'),
     version = cms.untracked.string('$1.0$')
 )
 
-process.BFilter = cms.EDFilter("MCMultiParticleFilter",
+BFilter = cms.EDFilter("MCMultiParticleFilter",
    NumRequired = cms.int32(1),
    AcceptMore = cms.bool(True),
    ParticleID = cms.vint32(521,511,531),
@@ -485,7 +484,7 @@ process.BFilter = cms.EDFilter("MCMultiParticleFilter",
    Status = cms.vint32(0,0,0), 
 )
 
-process.BToNMuXFilter = cms.EDFilter("PythiaFilterMotherSister", 
+BToNMuXFilter = cms.EDFilter("PythiaFilterMotherSister", 
     MaxEta = cms.untracked.double(1.55),
     MinEta = cms.untracked.double(-1.55),
     MinPt = cms.untracked.double(6.8), 
@@ -497,7 +496,7 @@ process.BToNMuXFilter = cms.EDFilter("PythiaFilterMotherSister",
     MinNephewPts = cms.untracked.vdouble(0.4,0.4,0.5), 
 )
 
-process.generator = cms.EDFilter("Pythia8GeneratorFilter",
+generator = cms.EDFilter("Pythia8GeneratorFilter",
     ExternalDecays = cms.PSet(
         EvtGen130 = cms.untracked.PSet(
             convertPythiaCodes = cms.untracked.bool(False),
@@ -513,8 +512,8 @@ process.generator = cms.EDFilter("Pythia8GeneratorFilter",
             ),
             
             operates_on_particles = cms.vint32(521, -521, 511, -511, 531, -531), 
-            particle_property_file = cms.FileInPath('HNLsGen/evtGenData/evt_2014_mass{MASS:.1f}_ctau{CTAU:.1f}_maj.pdl'),
-            user_decay_file = cms.vstring('HNLsGen/evtGenData/HNLdecay_mass{MASS:.1f}_maj_emu.DEC'),
+            particle_property_file = cms.FileInPath('McRequest/evtGenData/evt_2014_mass{MASS:.1f}_ctau{CTAU:.1f}_maj.pdl'),
+            user_decay_file = cms.vstring('McRequest/evtGenData/HNLdecay_mass{MASS:.1f}_maj_emu.DEC'),
         ),
         parameterSets = cms.vstring('EvtGen130')
     ),
@@ -531,18 +530,17 @@ process.generator = cms.EDFilter("Pythia8GeneratorFilter",
                                     'pythia8CP5Settings',
                                     'processParameters',
                                     )
-    ) 
+    ), 
 
     comEnergy = cms.double(13000.0),
     filterEfficiency = cms.untracked.double(-1),      # this will not be used by Pythia, only saved in GenInfo 
-    crossSection = cms.double(1.0)
+    crossSection = cms.double(1.0),
     maxEventsToPrint = cms.untracked.int32(0),        
     pythiaHepMCVerbosity = cms.untracked.bool(False), 
     pythiaPylistVerbosity = cms.untracked.int32(0)    
 )
 
-
-process.ProductionFilterSequence = cms.Sequence(process.generator+process.BFilter+process.BToNMuXFilter)
+ProductionFilterSequence = cms.Sequence(process.generator+process.BFilter+process.BToNMuXFilter)
 
 '''.format(MASS=p.mass,CTAU=p.ctau)
         f.write(tobewritten)
@@ -555,18 +553,17 @@ process.ProductionFilterSequence = cms.Sequence(process.generator+process.BFilte
       with open('{}/{}'.format(self.prodLabel,fragname), 'w') as f:
         tobewritten = '''
 import FWCore.ParameterSet.Config as cms
-from Configuration.StandardSequences.Eras import eras
 from Configuration.Generator.Pythia8CommonSettings_cfi import *
 from Configuration.Generator.MCTunes2017.PythiaCP5Settings_cfi import *
 
 # Production Info
-process.configurationMetadata = cms.untracked.PSet(
+configurationMetadata = cms.untracked.PSet(
     annotation = cms.untracked.string('Bc -> mu N X, with long-lived N, m={MASS:.1f}GeV, ctau={CTAU:.1f}mm'),
     name = cms.untracked.string('Bc -> mu N X, with long-lived N, m={MASS:.1f}GeV, ctau={CTAU:.1f}mm'),
     version = cms.untracked.string('$1.0$')
 )
 
-process.BFilter = cms.EDFilter("MCMultiParticleFilter",
+BFilter = cms.EDFilter("MCMultiParticleFilter",
    NumRequired = cms.int32(1),
    AcceptMore = cms.bool(True),
    ParticleID = cms.vint32(541),
@@ -575,7 +572,7 @@ process.BFilter = cms.EDFilter("MCMultiParticleFilter",
    Status = cms.vint32(0), 
 )
 
-process.BToNMuXFilter = cms.EDFilter("PythiaFilterMotherSister", 
+BToNMuXFilter = cms.EDFilter("PythiaFilterMotherSister", 
     MaxEta = cms.untracked.double(1.55),
     MinEta = cms.untracked.double(-1.55),
     MinPt = cms.untracked.double(6.8), 
@@ -587,7 +584,7 @@ process.BToNMuXFilter = cms.EDFilter("PythiaFilterMotherSister",
     MinNephewPts = cms.untracked.vdouble(0.4,0.4,0.5), 
 )
 
-process.generator = cms.EDFilter("Pythia8HadronizerFilter",
+generator = cms.EDFilter("Pythia8HadronizerFilter",
     ExternalDecays = cms.PSet(
         EvtGen130 = cms.untracked.PSet(
             convertPythiaCodes = cms.untracked.bool(False),
@@ -599,8 +596,8 @@ process.generator = cms.EDFilter("Pythia8HadronizerFilter",
             ),
             
             operates_on_particles = cms.vint32(541, -541), 
-            particle_property_file = cms.FileInPath('HNLsGen/evtGenData/evt_2014_mass{MASS:.1f}_ctau{CTAU:.1f}_maj.pdl'),
-            user_decay_file = cms.vstring('HNLsGen/evtGenData/HNLdecay_mass{MASS:.1f}_maj_emu_Bc.DEC'),
+            particle_property_file = cms.FileInPath('McRequest/evtGenData/evt_2014_mass{MASS:.1f}_ctau{CTAU:.1f}_maj.pdl'),
+            user_decay_file = cms.vstring('McRequest/evtGenData/HNLdecay_mass{MASS:.1f}_maj_emu_Bc.DEC'),
         ),
         parameterSets = cms.vstring('EvtGen130')
     ),
@@ -615,18 +612,18 @@ process.generator = cms.EDFilter("Pythia8HadronizerFilter",
                                     'pythia8CP5Settings',
                                     'processParameters',
                                     )
-    ) 
+    ),
 
     comEnergy = cms.double(13000.0),
     filterEfficiency = cms.untracked.double(-1),      # this will not be used by Pythia, only saved in GenInfo 
-    crossSection = cms.double(1.0)
+    crossSection = cms.double(1.0),
     maxEventsToPrint = cms.untracked.int32(0),        
     pythiaHepMCVerbosity = cms.untracked.bool(False), 
     pythiaPylistVerbosity = cms.untracked.int32(0)    
 )
 
 
-process.ProductionFilterSequence = cms.Sequence(process.generator+process.BFilter+process.BToNMuXFilter)
+ProductionFilterSequence = cms.Sequence(generator+process.BFilter+BToNMuXFilter)
 
 '''.format(MASS=p.mass,CTAU=p.ctau)
         f.write(tobewritten)
