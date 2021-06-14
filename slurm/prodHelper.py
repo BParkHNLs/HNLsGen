@@ -515,7 +515,7 @@ generator = cms.EDFilter("Pythia8GeneratorFilter",
             particle_property_file = cms.FileInPath('McRequest/evtGenData/evt_2014_mass{MASS:.1f}_ctau{CTAU:.1f}_maj.pdl'),
             user_decay_file = cms.vstring('McRequest/evtGenData/HNLdecay_mass{MASS:.1f}_maj_emu.DEC'),
         ),
-        parameterSets = cms.vstring('EvtGen130')
+        parameterSets = cms.vstring('EvtGen130'),
     ),
 
     PythiaParameters = cms.PSet(
@@ -529,17 +529,17 @@ generator = cms.EDFilter("Pythia8GeneratorFilter",
         parameterSets = cms.vstring('pythia8CommonSettings',
                                     'pythia8CP5Settings',
                                     'processParameters',
-                                    )
+                                    ),
     ), 
 
     comEnergy = cms.double(13000.0),
     filterEfficiency = cms.untracked.double(-1),      # this will not be used by Pythia, only saved in GenInfo 
     maxEventsToPrint = cms.untracked.int32(0),        
     pythiaHepMCVerbosity = cms.untracked.bool(False), 
-    pythiaPylistVerbosity = cms.untracked.int32(0)    
+    pythiaPylistVerbosity = cms.untracked.int32(0),
 )
 
-ProductionFilterSequence = cms.Sequence(process.generator+process.BFilter+process.BToNMuXFilter)
+ProductionFilterSequence = cms.Sequence(generator+BFilter+BToNMuXFilter)
 
 '''.format(MASS=p.mass,CTAU=p.ctau)
         f.write(tobewritten)
@@ -598,7 +598,7 @@ generator = cms.EDFilter("Pythia8HadronizerFilter",
             particle_property_file = cms.FileInPath('McRequest/evtGenData/evt_2014_mass{MASS:.1f}_ctau{CTAU:.1f}_maj.pdl'),
             user_decay_file = cms.vstring('McRequest/evtGenData/HNLdecay_mass{MASS:.1f}_maj_emu_Bc.DEC'),
         ),
-        parameterSets = cms.vstring('EvtGen130')
+        parameterSets = cms.vstring('EvtGen130'),
     ),
 
     PythiaParameters = cms.PSet(
@@ -610,18 +610,18 @@ generator = cms.EDFilter("Pythia8HadronizerFilter",
         parameterSets = cms.vstring('pythia8CommonSettings',
                                     'pythia8CP5Settings',
                                     'processParameters',
-                                    )
+                                    ),
     ),
 
     comEnergy = cms.double(13000.0),
     filterEfficiency = cms.untracked.double(-1),      # this will not be used by Pythia, only saved in GenInfo 
     maxEventsToPrint = cms.untracked.int32(0),        
     pythiaHepMCVerbosity = cms.untracked.bool(False), 
-    pythiaPylistVerbosity = cms.untracked.int32(0)    
+    pythiaPylistVerbosity = cms.untracked.int32(0),
 )
 
 
-ProductionFilterSequence = cms.Sequence(generator+process.BFilter+BToNMuXFilter)
+ProductionFilterSequence = cms.Sequence(generator+BFilter+BToNMuXFilter)
 
 '''.format(MASS=p.mass,CTAU=p.ctau)
         f.write(tobewritten)
