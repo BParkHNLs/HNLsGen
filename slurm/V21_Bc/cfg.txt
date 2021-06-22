@@ -1,0 +1,23 @@
+Run prodHelper.py with following options
+dobc           : True      
+docontrol      : False     
+dodisplfilter  : True      
+doelectron     : False     
+dofragments    : False     
+dogenonly      : False     
+domajorana     : True      
+domultijob     : False     
+domultithread  : False     
+doskipmuonfilter: False     
+dosubmit       : True      
+maxdisplacement: 1300.0    
+mem            : 1000      
+minleptonpt    : 0.4       
+mintrackpt     : 0.5       
+nevts          : 10        
+njobs          : 10        
+npremixfiles   : 20        
+pointFile      : V21_Bc_points.py
+pythiascale    : 5.0       
+time           : 08        
+ver            : V21_Bc    
