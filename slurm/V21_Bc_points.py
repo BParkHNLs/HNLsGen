@@ -5,13 +5,13 @@ from python.common  import Point,Config,getCtauEff
 
 
 m_ctau_eff_time_s = [
-(4.5,1.20,3.64e-02, 50),
+(4.5,1.20,3.10e-02, 25),
 ]
 
 points = []
 for m,ctau,eff,time in m_ctau_eff_time_s:
   p   = Point(mass=m,ctau=ctau,vv=None,ismaj=True)
-  cfg = Config(nevtseff=100000,muoneff=eff,displeff=1.0,timeevt=time,timejob=15,contingency=3.)
+  cfg = Config(nevtseff=100000,muoneff=eff,displeff=1.0,timeevt=time,timejob=20,contingency=2.5)
   p.setConfig(cfg)
   points.append(p)
 
