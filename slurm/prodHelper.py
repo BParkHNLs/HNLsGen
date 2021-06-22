@@ -259,7 +259,7 @@ class Job(object):
       labela = jopa[0:len(jopa)-3]
       labelb = jopb[0:len(jopb)-3]
       if jopa == 'step2.py':
-        command = 'cmsRun {jopa} randomizePremix=1 nPremixFiles={nprx} nThr={nthr} inputFile=BPH-{lblb}_numEvent{nevtsjob}.root outputFile=BPH-{lbla}.root seedOffset=$SLURM_ARRAY_TASK_ID'.format(jopa=jopa, nprx=self.npremixfiles, nthr=nthr, lblb=labelb, nevtsjob=nevtsjob, lbla=labela)
+        command = 'cmsRun {jopa} randomizePremix=1 nPremixFiles={nprx} nThr={nthr} inputFile=BPH-{lblb}.root outputFile=BPH-{lbla}.root seedOffset=$SLURM_ARRAY_TASK_ID'.format(jopa=jopa, nprx=self.npremixfiles, nthr=nthr, lblb=labelb, nevtsjob=nevtsjob, lbla=labela)
       else:
         command = 'cmsRun {jopa} nThr={nthr} inputFile=BPH-{lblb}.root outputFile=BPH-{lbla}.root seedOffset=$SLURM_ARRAY_TASK_ID'.format(jopa=jopa, nthr=1, lblb=labelb, lbla=labela)
 
@@ -381,12 +381,13 @@ class Job(object):
         'DATE_END_step1=`date +%s`',
         'if [ $? -eq 0 ]; then echo "Successfully run step 1"; else exit $?; fi',
         'echo "Finished running step1"',
+        'mv $WORKDIR/BPH-step1_numEvent{nevtsjob}.root $WORKDIR/BPH-step1.root',
         'echo "Content of current directory"',
         'ls -al',
         'echo ""',
         '',
         'echo "Going to copy output to result directory"',
-        'xrdcp -f $WORKDIR/BPH-step1_numEvent{nevtsjob}.root $OUTSEPREFIX/$SERESULTDIR/step1_nj$SLURM_ARRAY_TASK_ID".root"',
+        'xrdcp -f $WORKDIR/BPH-step1.root $OUTSEPREFIX/$SERESULTDIR/step1_nj$SLURM_ARRAY_TASK_ID".root"',
         'if [ $? -eq 0 ]; then echo "Successfully copied step1 file"; else exit $?; fi',
         '',
         '{addstep2}',
