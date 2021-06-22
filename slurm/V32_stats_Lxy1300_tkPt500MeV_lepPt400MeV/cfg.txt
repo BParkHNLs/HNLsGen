@@ -1,0 +1,23 @@
+Run prodHelper.py with following options
+dobc           : False     
+docontrol      : False     
+dodisplfilter  : True      
+doelectron     : False     
+dofragments    : False     
+dogenonly      : True      
+domajorana     : True      
+domultijob     : False     
+domultithread  : False     
+doskipmuonfilter: False     
+dosubmit       : True      
+maxdisplacement: 1300.0    
+mem            : 1000      
+minleptonpt    : 0.4       
+mintrackpt     : 0.5       
+nevts          : 10        
+njobs          : 10        
+npremixfiles   : 20        
+pointFile      : V32_stats_Lxy1300_tkPt500MeV_lepPt400MeV_points.py
+pythiascale    : 5.0       
+time           : 08        
+ver            : V32_stats_Lxy1300_tkPt500MeV_lepPt400MeV
