@@ -39,20 +39,15 @@ def getExpNevtsD(mass,which='BtoDX'): # 'BtoDX' , 'BtoDuvu'
   # semileptonic modes
   gamma4,gamma5,gamma6,gamma7,gamma8,gamma11,gamma18 = 0.0235,0.077,0.0566,0.0188,0.044,0.0188,0.00061
 
-#  # use the B->DX and subtract B->DuX
-#  B_w_inc =  (gamma38+gamma39  -  (gamma4*2+gamma5+gamma6*2+gamma7)) * tot_D0_to_uHNL + \
-#             (gamma40+gamma41  -  (gamma8*2 + gamma11*2           )) * tot_D_to_uHNL  + \
-#             (gamma42+gamma43  -  (gamma18*2                      )) * tot_Ds_to_uHNL 
-
   if which=='BtoDX':
     B_w =  (gamma38+gamma39) * tot_D0_to_uHNL + \
-               (gamma40+gamma41) * tot_D_to_uHNL  + \
-               (gamma42+gamma43) * tot_Ds_to_uHNL 
+           (gamma40+gamma41) * tot_D_to_uHNL  + \
+           (gamma42+gamma43) * tot_Ds_to_uHNL 
 
   elif which=='BtoDuvu':
     B_w =  (gamma4*2 + gamma5 + gamma6*2 + gamma7 ) * tot_D0_to_HNL + \
-               (gamma8*2 + gamma11*2 )                  * tot_D_to_HNL + \
-               (gamma18*2)                              * tot_Ds_to_HNL
+           (gamma8*2 + gamma11*2 )                  * tot_D_to_HNL + \
+           (gamma18*2)                              * tot_Ds_to_HNL
   else:
     B_w = 0.
 
@@ -63,9 +58,6 @@ def getExpNevtsD(mass,which='BtoDX'): # 'BtoDX' , 'BtoDuvu'
   # semi-leptonic
   gamma4,gamma5,gamma6,gamma7,gamma8,gamma11 = 0.0231,0.0108,0.0506,0.0157,0.041,0.023  
 
-#  B0_w_inc = (gamma23+gamma24  - (gamma4*2+gamma5+gamma6*2+gamma7)) * tot_D0_to_uHNL + \
-#             (gamma25+gamma26  - (gamma11*2))                       * tot_D_to_uHNL + \
-#             (gamma27+gamma28)                                      * tot_Ds_to_uHNL
   if which=='BtoDX':
     B0_w = (gamma23+gamma24)  * tot_D0_to_uHNL + \
            (gamma25+gamma26)  * tot_D_to_uHNL + \
@@ -166,4 +158,12 @@ if __name__ == "__main__":
   print 'B => mu v_mu D X => l  HNL X:   Expected = {:.3f}'.format(getExpNevtsD(mass=1.8, which='BtoDuvu'))
   print ''
 
+#  # use the B->DX and subtract B->DuX
+#  B_w_inc =  (gamma38+gamma39  -  (gamma4*2+gamma5+gamma6*2+gamma7)) * tot_D0_to_uHNL + \
+#             (gamma40+gamma41  -  (gamma8*2 + gamma11*2           )) * tot_D_to_uHNL  + \
+#             (gamma42+gamma43  -  (gamma18*2                      )) * tot_Ds_to_uHNL 
+
+#  B0_w_inc = (gamma23+gamma24  - (gamma4*2+gamma5+gamma6*2+gamma7)) * tot_D0_to_uHNL + \
+#             (gamma25+gamma26  - (gamma11*2))                       * tot_D_to_uHNL + \
+#             (gamma27+gamma28)                                      * tot_Ds_to_uHNL
 
