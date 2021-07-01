@@ -259,7 +259,7 @@ class Job(object):
       labela = jopa[0:len(jopa)-3]
       labelb = jopb[0:len(jopb)-3]
       if jopa == 'step2.py':
-        command = 'cmsRun {jopa} randomizePremix=1 nPremixFiles={nprx} nThr={nthr} inputFile=BPH-{lblb}_numEvent{nevtsjob}.root outputFile=BPH-{lbla}.root seedOffset=$SLURM_ARRAY_TASK_ID'.format(jopa=jopa, nprx=self.npremixfiles, nthr=nthr, lblb=labelb, nevtsjob=nevtsjob, lbla=labela)
+        command = 'cmsRun {jopa} randomizePremix=1 nPremixFiles={nprx} nThr={nthr} inputFile=BPH-{lblb}.root outputFile=BPH-{lbla}.root seedOffset=$SLURM_ARRAY_TASK_ID'.format(jopa=jopa, nprx=self.npremixfiles, nthr=nthr, lblb=labelb, nevtsjob=nevtsjob, lbla=labela)
       else:
         command = 'cmsRun {jopa} nThr={nthr} inputFile=BPH-{lblb}.root outputFile=BPH-{lbla}.root seedOffset=$SLURM_ARRAY_TASK_ID'.format(jopa=jopa, nthr=1, lblb=labelb, lbla=labela)
 
@@ -329,7 +329,7 @@ class Job(object):
         '#SBATCH -J prod_m{m}_ctau{ctau}',
         '#SBATCH -o logs/prod_mass{m}_ctau{ctau}_%a.log', 
         '#SBATCH -e logs/prod_mass{m}_ctau{ctau}_%a.log',
-        '#SBATCH -p wn',
+        '#SBATCH -p standard',
         '#SBATCH -t {hh}:00:00',
         '#SBATCH --mem {mem}',
         '#SBATCH --array={arr}',
@@ -377,16 +377,17 @@ class Job(object):
         'pwd',
         'echo "Going to run step1"',
         'DATE_START_step1=`date +%s`',
-        'cmsRun {jop1} maxEvents={nevtsjob} nThr={nthr} mass={m} ctau={ctau} outputFile=BPH-step1.root seedOffset=$SLURM_ARRAY_TASK_ID doSkipMuonFilter={dsmf} doDisplFilter={ddf} doMajorana={dmj} doElectron={de} scaleToFilter={stf} ',
+        'cmsRun {jop1} maxEvents={nevtsjob} nThr={nthr} mass={m} ctau={ctau} outputFile=BPH-step1.root seedOffset=$SLURM_ARRAY_TASK_ID doSkipMuonFilter={dsmf} doDisplFilter={ddf} doMajorana={dmj} doElectron={de} scaleToFilter={stf} minTrackPt={mtpt} minLeptonPt={mlpt} maxDisplacement={mtdd}',
         'DATE_END_step1=`date +%s`',
         'if [ $? -eq 0 ]; then echo "Successfully run step 1"; else exit $?; fi',
         'echo "Finished running step1"',
+        'mv $WORKDIR/BPH-step1_numEvent{nevtsjob}.root $WORKDIR/BPH-step1.root',
         'echo "Content of current directory"',
         'ls -al',
         'echo ""',
         '',
         'echo "Going to copy output to result directory"',
-        'xrdcp -f $WORKDIR/BPH-step1_numEvent{nevtsjob}.root $OUTSEPREFIX/$SERESULTDIR/step1_nj$SLURM_ARRAY_TASK_ID".root"',
+        'xrdcp -f $WORKDIR/BPH-step1.root $OUTSEPREFIX/$SERESULTDIR/step1_nj$SLURM_ARRAY_TASK_ID".root"',
         'if [ $? -eq 0 ]; then echo "Successfully copied step1 file"; else exit $?; fi',
         '',
         '{addstep2}',
@@ -414,6 +415,9 @@ class Job(object):
           dmj=self.domajorana,
           de=self.doelectron,
           stf=self.pythiascale,
+          mtpt=self.mintrackpt,
+          mlpt=self.minleptonpt,
+          mtdd=self.maxdisplacement,
           nevtsjob=nevtsjob_toset,
           nthr=self.nthr,
           jop2=self.jop2,
@@ -456,6 +460,177 @@ class Job(object):
     print('===> Submitted {n} job arrays for {pl}\n'.format(n=len(self.points),pl=self.prodLabel))
   
 
+  def writeFragments(self):
+    for p in self.points:
+      fragname = 'BToNMuX_NToEMuPi_SoftQCD_b_mN{:.1f}_ctau{:.1f}mm_TuneCP5_13TeV_pythia8-evtgen_cfi.py'.format(p.mass,p.ctau)
+      with open('{}/{}'.format(self.prodLabel,fragname), 'w') as f:
+        tobewritten = '''
+import FWCore.ParameterSet.Config as cms
+from Configuration.Generator.Pythia8CommonSettings_cfi import *
+from Configuration.Generator.MCTunes2017.PythiaCP5Settings_cfi import *
+
+# Production Info
+configurationMetadata = cms.untracked.PSet(
+    annotation = cms.untracked.string('B -> mu N X, with long-lived N, m={MASS:.1f}GeV, ctau={CTAU:.1f}mm'),
+    name = cms.untracked.string('B -> mu N X, with long-lived N, m={MASS:.1f}GeV, ctau={CTAU:.1f}mm'),
+    version = cms.untracked.string('$1.0$')
+)
+
+BFilter = cms.EDFilter("MCMultiParticleFilter",
+   NumRequired = cms.int32(1),
+   AcceptMore = cms.bool(True),
+   ParticleID = cms.vint32(521,511,531),
+   PtMin = cms.vdouble(0.,0.,0.),
+   EtaMax = cms.vdouble(10.,10.,10.),
+   Status = cms.vint32(0,0,0), 
+)
+
+BToNMuXFilter = cms.EDFilter("PythiaFilterMotherSister", 
+    MaxEta = cms.untracked.double(1.55),
+    MinEta = cms.untracked.double(-1.55),
+    MinPt = cms.untracked.double(6.8), 
+    ParticleID = cms.untracked.int32(13),
+    MotherIDs = cms.untracked.vint32(521, 511, 531), 
+    SisterID = cms.untracked.int32(9900015), 
+    MaxSisterDisplacement = cms.untracked.double(1300.), # max Lxy displacement to generate in mm, -1 for no max
+    NephewIDs = cms.untracked.vint32(11,13,211), # ids of the nephews you want to check the pt of
+    MinNephewPts = cms.untracked.vdouble(0.4,0.4,0.5), 
+)
+
+generator = cms.EDFilter("Pythia8GeneratorFilter",
+    ExternalDecays = cms.PSet(
+        EvtGen130 = cms.untracked.PSet(
+            convertPythiaCodes = cms.untracked.bool(False),
+            decay_table = cms.string('GeneratorInterface/EvtGenInterface/data/DECAY_2014_NOLONGLIFE.DEC'),
+            
+            list_forced_decays = cms.vstring(       
+                'myB+', 
+                'myB-',
+                'myB0',
+                'myB0bar',
+                'myB0s',
+                'myB0sbar',
+            ),
+            
+            operates_on_particles = cms.vint32(521, -521, 511, -511, 531, -531), 
+            particle_property_file = cms.FileInPath('McRequest/evtGenData/evt_2014_mass{MASS:.1f}_ctau{CTAU:.1f}_maj.pdl'),
+            user_decay_file = cms.vstring('McRequest/evtGenData/HNLdecay_mass{MASS:.1f}_maj_emu.DEC'),
+        ),
+        parameterSets = cms.vstring('EvtGen130'),
+    ),
+
+    PythiaParameters = cms.PSet(
+        pythia8CommonSettingsBlock,
+        pythia8CP5SettingsBlock,
+        processParameters = cms.vstring('SoftQCD:nonDiffractive = on',
+                                        'PTFilter:filter = on',      
+                                        'PTFilter:quarkToFilter = 5', 
+                                        'PTFilter:scaleToFilter = 5.0',
+                                        ),
+        parameterSets = cms.vstring('pythia8CommonSettings',
+                                    'pythia8CP5Settings',
+                                    'processParameters',
+                                    ),
+    ), 
+
+    comEnergy = cms.double(13000.0),
+    filterEfficiency = cms.untracked.double(-1),      # this will not be used by Pythia, only saved in GenInfo 
+    maxEventsToPrint = cms.untracked.int32(0),        
+    pythiaHepMCVerbosity = cms.untracked.bool(False), 
+    pythiaPylistVerbosity = cms.untracked.int32(0),
+)
+
+ProductionFilterSequence = cms.Sequence(generator+BFilter+BToNMuXFilter)
+
+'''.format(MASS=p.mass,CTAU=p.ctau)
+        f.write(tobewritten)
+    print('')
+    print('===> Wrote the fragments \n')
+
+  def writeFragmentsBc(self):
+    for p in self.points:
+      fragname = 'BcToNMuX_NToEMuPi_SoftQCD_b_mN{:.1f}_ctau{:.1f}mm_TuneCP5_13TeV_pythia8-evtgen_cfi.py'.format(p.mass,p.ctau)
+      with open('{}/{}'.format(self.prodLabel,fragname), 'w') as f:
+        tobewritten = '''
+import FWCore.ParameterSet.Config as cms
+from Configuration.Generator.Pythia8CommonSettings_cfi import *
+from Configuration.Generator.MCTunes2017.PythiaCP5Settings_cfi import *
+
+# Production Info
+configurationMetadata = cms.untracked.PSet(
+    annotation = cms.untracked.string('Bc -> mu N X, with long-lived N, m={MASS:.1f}GeV, ctau={CTAU:.1f}mm'),
+    name = cms.untracked.string('Bc -> mu N X, with long-lived N, m={MASS:.1f}GeV, ctau={CTAU:.1f}mm'),
+    version = cms.untracked.string('$1.0$')
+)
+
+BFilter = cms.EDFilter("MCMultiParticleFilter",
+   NumRequired = cms.int32(1),
+   AcceptMore = cms.bool(True),
+   ParticleID = cms.vint32(541),
+   PtMin = cms.vdouble(0.),
+   EtaMax = cms.vdouble(10.),
+   Status = cms.vint32(0), 
+)
+
+BToNMuXFilter = cms.EDFilter("PythiaFilterMotherSister", 
+    MaxEta = cms.untracked.double(1.55),
+    MinEta = cms.untracked.double(-1.55),
+    MinPt = cms.untracked.double(6.8), 
+    ParticleID = cms.untracked.int32(13),
+    MotherIDs = cms.untracked.vint32(541), 
+    SisterID = cms.untracked.int32(9900015), 
+    MaxSisterDisplacement = cms.untracked.double(1300.), # max Lxy displacement to generate in mm, -1 for no max
+    NephewIDs = cms.untracked.vint32(11,13,211), # ids of the nephews you want to check the pt of
+    MinNephewPts = cms.untracked.vdouble(0.4,0.4,0.5), 
+)
+
+generator = cms.EDFilter("Pythia8HadronizerFilter",
+    ExternalDecays = cms.PSet(
+        EvtGen130 = cms.untracked.PSet(
+            convertPythiaCodes = cms.untracked.bool(False),
+            decay_table = cms.string('GeneratorInterface/EvtGenInterface/data/DECAY_2014_NOLONGLIFE.DEC'),
+            
+            list_forced_decays = cms.vstring(       
+                'myBc+', 
+                'myBc-',
+            ),
+            
+            operates_on_particles = cms.vint32(541, -541), 
+            particle_property_file = cms.FileInPath('McRequest/evtGenData/evt_2014_mass{MASS:.1f}_ctau{CTAU:.1f}_maj.pdl'),
+            user_decay_file = cms.vstring('McRequest/evtGenData/HNLdecay_mass{MASS:.1f}_maj_emu_Bc.DEC'),
+        ),
+        parameterSets = cms.vstring('EvtGen130'),
+    ),
+
+    PythiaParameters = cms.PSet(
+        pythia8CommonSettingsBlock,
+        pythia8CP5SettingsBlock,
+        processParameters = cms.vstring('541:m0 = 6.275',
+                                        '541:tau0 = 0.153',
+                                        ),
+        parameterSets = cms.vstring('pythia8CommonSettings',
+                                    'pythia8CP5Settings',
+                                    'processParameters',
+                                    ),
+    ),
+
+    comEnergy = cms.double(13000.0),
+    filterEfficiency = cms.untracked.double(-1),      # this will not be used by Pythia, only saved in GenInfo 
+    maxEventsToPrint = cms.untracked.int32(0),        
+    pythiaHepMCVerbosity = cms.untracked.bool(False), 
+    pythiaPylistVerbosity = cms.untracked.int32(0),
+)
+
+
+ProductionFilterSequence = cms.Sequence(generator+BFilter+BToNMuXFilter)
+
+'''.format(MASS=p.mass,CTAU=p.ctau)
+        f.write(tobewritten)
+    print('')
+    print('===> Wrote the fragments \n')
+
+
+
 def getOptions():
 
   # convention: no capital letters
@@ -481,7 +656,11 @@ def getOptions():
   parser.add_argument('--docontrol', dest='docontrol', help='do the generation for the control channel B->JpsiK', action='store_true', default=False)
   parser.add_argument('--domajorana', dest='domajorana', help='consider the HNL as a Majorana particle instead of Dirac', action='store_true', default=False)
   parser.add_argument('--doelectron', dest='doelectron', help='do electron decay in addition to muon', action='store_true', default=False)
-  parser.add_argument('--pythiascale', type=float, dest='pythiascale', help='a parameter in Pythia to scale the pt of the quark (?)', default=1.0)
+  parser.add_argument('--pythiascale', type=float, dest='pythiascale', help='a parameter in Pythia to scale the pt of the quark (?)', default=5.0)
+  parser.add_argument('--maxdisplacement', type=float, dest='maxdisplacement', help='maximum 2D displacement in mm', default=1300)
+  parser.add_argument('--mintrackpt', type=float, dest='mintrackpt', help='minimum track pt', default=0.0)
+  parser.add_argument('--minleptonpt', type=float, dest='minleptonpt', help='minimum lepton pt', default=0.0)
+  parser.add_argument('--dofragments', dest='dofragments', help='write the relevant fragments', action='store_true', default=False)
 
 
   return parser.parse_args()
@@ -507,6 +686,13 @@ if __name__ == "__main__":
   job.makeTemplates()
 
   job.writeCfg()   
+
+  if opt.dofragments:
+    if opt.dobc:
+      job.writeFragmentsBc()
+    else:
+      job.writeFragments()
+   
 
   if opt.dosubmit:
     job.submit()

@@ -45,7 +45,7 @@ branches = [
     'hnl_beta',  # Lorentz
     'hnl_gamma', # Lorentz
 
-    # # the D meson
+    # # the meson
     'd_pt',
     'd_eta',
     'd_phi',
@@ -62,21 +62,21 @@ branches = [
     'l0_pdgid',
 
     # daughters of the D meson
-    # # the pion
-    'pi_pt',
-    'pi_eta',
-    'pi_phi',
-    'pi_mass',
-    'pi_q',
-    'pi_pdgid',
-    
-    # # the kaon
-    'k_pt',
-    'k_eta',
-    'k_phi',
-    'k_mass',
-    'k_q',
-    'k_pdgid',
+#    # # the pion
+#    'pi_pt',
+#    'pi_eta',
+#    'pi_phi',
+#    'pi_mass',
+#    'pi_q',
+#    'pi_pdgid',
+#    
+#    # # the kaon
+#    'k_pt',
+#    'k_eta',
+#    'k_phi',
+#    'k_mass',
+#    'k_q',
+#    'k_pdgid',
     
     # daughters of the HNL
     # # the lepton
@@ -107,7 +107,9 @@ branches = [
     'Lxy_cos', # cosine of the pointing angle in the transverse plane
 
     'Lxyz_b', #3D displacement of the B wrt to primary vertex
-    'Lxyz_l0' #3D displacement of the trigger lepton wrt to B vertex
+    'Lxyz_l0', #3D displacement of the trigger lepton wrt to B vertex
+
+    'weight_reco', # reconstruction efficiency weight, as obtained by A-M's study
 ]
 
 # couplings to be tested, for which the reweight is run
@@ -153,9 +155,20 @@ for vv in new_vvs:
     branches.append('ctau_%s'        %(str(vv).replace('-', 'm')))
     branches.append('xs_scale_to_%s' %(str(vv).replace('-', 'm')))
 
+import pandas as pd
+bins_pt  = [(0,7), (7,10), (10,15),(15,30), (30,1000)] #rows
+bins_lxy = [(0,10),(10,30),(30,50),(50,100),(100,150),(150,300),(300,500),(500,1e10)] #columns, everything in mm
+reco_weights = pd.read_csv('reco_weights_updated.csv', sep=',', comment='#')
+
 ###################
 # Functions and classes
 ##################
+def stampDaugthers(particle, indent=0):
+    for idau in range(particle.numberOfDaughters()):
+        daughter = particle.daughter(idau)
+        print ' '*4*indent, '|---->', 'pdgid', daughter.pdgId(), '\t pt {0:>5}  eta {1:>5}  phi {2:>5}'.format('%.1f'%daughter.pt(), '%.2f'%daughter.eta(), '%.2f'%daughter.phi())
+        stampDaugthers(daughter, indent+1)
+
 
 def isAncestor(a, p):
     if a == p :
@@ -216,16 +229,20 @@ def runGenTreeProducer(infiles='./step*root',outfilename='out.root',this_mass=1,
     
   # get to the real thing
   print 'loading the file ...'
+  print files
   events = Events(files)
   print '... done!'
-  
+
   for i, event in enumerate(events):
+    if opt.maxEvts != -1 and i+1 > opt.maxEvts: break    
+
     # access the handles
     for k, v in handles.iteritems():
         event.getByLabel(v[0], v[1])
         setattr(event, k, v[1].product())
   
     if i%1000==0:
+    #if i%1==0:
         percentage = float(i)/events.size()*100.
         print '\t===> processing %d / %d event \t completed %.1f%s' %(i, events.size(), percentage, '%')
   
@@ -257,15 +274,16 @@ def runGenTreeProducer(infiles='./step*root',outfilename='out.root',this_mass=1,
   
     # get the other daughters of the B meson
     event.the_b_mother.daughters = [event.the_b_mother.daughter(jj) for jj in range(event.the_b_mother.numberOfDaughters())]
-    #print [ii.pdgId() for ii in event.the_b_mother.daughters]
+
+    if opt.doDebug: stampDaugthers(event.the_b_mother)
   
-    # # first the D0 meson, if it exists
-    if doBtoD:
-      the_ds = sorted([ii for ii in event.the_b_mother.daughters if abs(ii.pdgId())==421], key = lambda x : x.pt(), reverse=True)
-      if len(the_ds):
-        event.the_d = the_ds[0]
-      else:
-        event.the_d = None
+    # # first the daughter meson if it exists (we will call it D, but it could be something else)
+    the_ds = sorted([ii for ii in event.the_b_mother.daughters if abs(ii.pdgId()) in [111,211,113,213,321,323,411,421,413,423,431,433]], 
+                     key = lambda x : x.pt(), reverse=True)
+    if len(the_ds):
+      event.the_d = the_ds[0]
+    else:
+      event.the_d = None
 
     # # then the trigger lepton
     the_pls = sorted([ii for ii in event.the_b_mother.daughters if abs(ii.pdgId()) in [11, 13, 15]], key = lambda x : x.pt(), reverse=True)
@@ -274,23 +292,23 @@ def runGenTreeProducer(infiles='./step*root',outfilename='out.root',this_mass=1,
     else:
       event.the_pl = None
     
-    # D0s daughters
-    if doBtoD and len(the_ds):
-      event.the_d.daughters = [event.the_d.daughter(jj) for jj in range(event.the_d.numberOfDaughters())]
-    
-      # #find the pion
-      the_pis = sorted([ii for ii in event.the_d.daughters if abs(ii.pdgId())==211], key = lambda x : x.pt(), reverse=True)
-      if len(the_pis):
-          event.the_pi = the_pis[0]
-      else:
-          event.the_pi = None
-          
-      # find the kaon
-      the_ks = sorted([ii for ii in event.the_d.daughters if abs(ii.pdgId())==321], key = lambda x : x.pt(), reverse=True)
-      if len(the_ks):
-          event.the_k = the_ks[0]
-      else:
-          event.the_k = None
+#    # D0s daughters
+#    if doBtoD and len(the_ds):
+#      event.the_d.daughters = [event.the_d.daughter(jj) for jj in range(event.the_d.numberOfDaughters())]
+#    
+#      # #find the pion
+#      the_pis = sorted([ii for ii in event.the_d.daughters if abs(ii.pdgId())==211], key = lambda x : x.pt(), reverse=True)
+#      if len(the_pis):
+#          event.the_pi = the_pis[0]
+#      else:
+#          event.the_pi = None
+#          
+#      # find the kaon
+#      the_ks = sorted([ii for ii in event.the_d.daughters if abs(ii.pdgId())==321], key = lambda x : x.pt(), reverse=True)
+#      if len(the_ks):
+#          event.the_k = the_ks[0]
+#      else:
+#          event.the_k = None
      
   
     # HNL daughters
@@ -316,9 +334,9 @@ def runGenTreeProducer(infiles='./step*root',outfilename='out.root',this_mass=1,
       event.the_hnldaughters = event.the_hn.lep.p4() + event.the_hn.pi.p4()
     
     # # to get the invariant mass of the D0 daughters
-    if doBtoD and len(the_ds):
-      if len(the_ks) and len(the_pis):   
-        event.the_d0daughters = event.the_k.p4() + event.the_pi.p4()
+    #if doBtoD and len(the_ds):
+    #  if len(the_ks) and len(the_pis):   
+    #    event.the_d0daughters = event.the_k.p4() + event.the_pi.p4()
   
     # # to get the full or partial invariant mass of the B 
     # # # partial
@@ -379,8 +397,19 @@ def runGenTreeProducer(infiles='./step*root',outfilename='out.root',this_mass=1,
     event.Lxyz_pl = np.sqrt((event.the_b_mother.vx() - event.the_pl.vx())**2 + \
                         (event.the_b_mother.vy() - event.the_pl.vy())**2 + \
                         (event.the_b_mother.vz() - event.the_pl.vz())**2) * 10 # everything in mm
-    
-   
+
+    # set the reconstruction efficiency weigh
+    event.weight_reco = 1.
+    if opt.doWeightReco:
+
+    #  while event.weight_reco == 1.:
+        for i,bin_pt in enumerate(bins_pt):
+            for j,bin_lxy in enumerate(bins_lxy):
+              #print i,bin_pt,j,bin_lxy,reco_weights.iloc[i][j]
+              if event.Lxy > bin_lxy[0] and event.Lxy < bin_lxy[1] and event.the_hn.pt() > bin_pt[0] and event.the_hn.pt() < bin_pt[1]:
+                event.weight_reco = reco_weights.iloc[i][j] 
+                #print i,bin_pt,j,bin_lxy,event.weight_reco
+
     # get the lifetime of the B
     event.the_b_mother.beta  = event.the_b_mother.p4().Beta()
     event.the_b_mother.gamma = event.the_b_mother.p4().Gamma()   
@@ -411,29 +440,29 @@ def runGenTreeProducer(infiles='./step*root',outfilename='out.root',this_mass=1,
     tofill['hnl_gamma'  ] = event.the_hn.gamma  
     tofill['hnl_pdgid'  ] = event.the_hn.pdgId()  
   
-    if doBtoD and event.the_d:
-        tofill['d_pt'   ] = event.the_d.pt()     
-        tofill['d_eta'  ] = event.the_d.eta()    
-        tofill['d_phi'  ] = event.the_d.phi()    
-        tofill['d_mass' ] = event.the_d.mass()   
-        tofill['d_q'    ] = event.the_d.charge()   
-        tofill['d_pdgid'] = event.the_d.pdgId()   
+    if event.the_d:
+      tofill['d_pt'   ] = event.the_d.pt()     
+      tofill['d_eta'  ] = event.the_d.eta()    
+      tofill['d_phi'  ] = event.the_d.phi()    
+      tofill['d_mass' ] = event.the_d.mass()   
+      tofill['d_q'    ] = event.the_d.charge()   
+      tofill['d_pdgid'] = event.the_d.pdgId()   
   
-        if event.the_k:
-           tofill['k_pt'   ] = event.the_k.pt()     
-           tofill['k_eta'  ] = event.the_k.eta()    
-           tofill['k_phi'  ] = event.the_k.phi()    
-           tofill['k_mass' ] = event.the_k.mass()   
-           tofill['k_q'    ] = event.the_k.charge()   
-           tofill['k_pdgid'] = event.the_k.pdgId()   
-       
-        if event.the_pi:
-           tofill['pi_pt'   ] = event.the_pi.pt()     
-           tofill['pi_eta'  ] = event.the_pi.eta()    
-           tofill['pi_phi'  ] = event.the_pi.phi()    
-           tofill['pi_mass' ] = event.the_pi.mass()   
-           tofill['pi_q'    ] = event.the_pi.charge()   
-           tofill['pi_pdgid'] = event.the_pi.pdgId()   
+#        if event.the_k:
+#           tofill['k_pt'   ] = event.the_k.pt()     
+#           tofill['k_eta'  ] = event.the_k.eta()    
+#           tofill['k_phi'  ] = event.the_k.phi()    
+#           tofill['k_mass' ] = event.the_k.mass()   
+#           tofill['k_q'    ] = event.the_k.charge()   
+#           tofill['k_pdgid'] = event.the_k.pdgId()   
+#       
+#        if event.the_pi:
+#           tofill['pi_pt'   ] = event.the_pi.pt()     
+#           tofill['pi_eta'  ] = event.the_pi.eta()    
+#           tofill['pi_phi'  ] = event.the_pi.phi()    
+#           tofill['pi_mass' ] = event.the_pi.mass()   
+#           tofill['pi_q'    ] = event.the_pi.charge()   
+#           tofill['pi_pdgid'] = event.the_pi.pdgId()   
   
     if event.the_pl:
        tofill['l0_pt'      ] = event.the_pl.pt()
@@ -461,10 +490,10 @@ def runGenTreeProducer(infiles='./step*root',outfilename='out.root',this_mass=1,
   
     # invariant mass
     tofill['lep_pi_invmass' ] = event.the_hnldaughters.mass()
-    if doBtoD and len(the_ds):
-      tofill['k_pi_invmass' ] = event.the_d0daughters.mass()
-    #tofill['b_invmass'] = event.the_bdaughters_all.mass()
     tofill['bpartial_invmass'] = event.the_bdaughters_partial.mass()
+    #if doBtoD and len(the_ds):
+    #  tofill['k_pi_invmass' ] = event.the_d0daughters.mass()
+    #tofill['b_invmass'] = event.the_bdaughters_all.mass()
     
     # hnl charge
     tofill['hnl_q'      ] = event.the_hn.lep.charge() + event.the_hn.pi.charge() 
@@ -477,6 +506,8 @@ def runGenTreeProducer(infiles='./step*root',outfilename='out.root',this_mass=1,
       #tofill['Lxy_cos'    ] = event.cos_pointing
   
     tofill['Lxyz_l0'] = event.Lxyz_pl
+
+    tofill['weight_reco'] = event.weight_reco
   
     # weights for ctau reweighting 
     for vv in new_vvs:
@@ -498,9 +529,12 @@ def getOptions():
    parser.add_argument('--pl', type=str, dest='pl', help='production label', default='V02_muFromB_pt5_eta1p6_njt30')
    #parser.add_argument('--expr', type=str, dest='expr', help='file regular expression', default='step1*root')
    parser.add_argument('--points', type=str, dest='pointFile', help='name of file contaning information on scan to be run', default='points.py')
+   parser.add_argument('--maxEvts', type=int, dest='maxEvts', help='max number of events to be run', default=-1)
    parser.add_argument('--doBtoD', dest='doBtoD', help='do exclusive decay B->DmuHNL', action='store_true', default=False)
+   parser.add_argument('--doDebug', dest='doDebug', help='', action='store_true', default=False)
    parser.add_argument('--doFromMini', dest='doFromMini', help='run on the miniAOD, as opposed to the GEN-SIM', action='store_true', default=False)
    parser.add_argument('--doSaveScratch', dest='doSaveScratch', help='save on scratch, not on work', action='store_true', default=False)
+   parser.add_argument('--doWeightReco', dest='doWeightReco', help='calculate weight for reconstruction efficiency', action='store_true', default=False)
    return parser.parse_args()
   
 
@@ -515,7 +549,13 @@ if __name__ == "__main__":
 
     user = os.environ["USER"] 
     fileExpr = 'step1*nj*root' if not opt.doFromMini else 'step4*root'
-    expr = '/pnfs/psi.ch/cms/trivcat/store/user/{usr}/BHNLsGen/{pl}/mass{m}_ctau{ctau}/{ex}'.format(usr=user,pl=opt.pl,m=p.mass,ctau=p.ctau,ex=fileExpr)
+    #expr = '/pnfs/psi.ch/cms/trivcat/store/user/{usr}/BHNLsGen/{pl}/mass{m}_ctau{ctau}/{ex}'.format(usr=user,pl=opt.pl,m=p.mass,ctau=p.ctau,ex=fileExpr)
+    #expr = '/work/mratti/GEN_HNL_newPythia/fragments_test/CMSSW_10_2_15/src/ok_BToNMuX_NToEMuPi_test.root'
+    #expr = '/work/mratti/GEN_HNL_newPythia/fragments_test/CMSSW_10_2_15/src/BToNMuX_NToEMuPi_test.root'
+    #expr = '/work/mratti/GEN_HNL_newPythia/fragments_test/CMSSW_10_2_27/src/BToNMuX_NToEMuPi_test.root'
+    expr = '/work/mratti/GEN_HNL_newPythia/fragments_test/CMSSW_10_2_15/src/BcToNMuX_NToEMuPi_test.root'
+    #expr = '/work/mratti/GEN_HNL_newPythia/fragments_test/CMSSW_10_2_27/src/BcToNMuX_NToEMuPi_test.root'
+    #expr = '/work/mratti/GEN_HNL_newPythia/fragments_test/CMSSW_10_2_15/src/BHNL_test*.root'
     #expr = '/work/mratti/GEN_HNL_newPythia/CMSSW_10_2_3/src/HNLsGen/slurm/testManyChan_n100_njt1/BPH-step1_numEvent1000.root'
     #expr = '/work/mratti/GEN_HNL_newPythia/CMSSW_10_2_3/src/HNLsGen/slurm/testBc_n10_njt1/BPH-step1_numEvent1000.root'
     opath = './' if not opt.doSaveScratch else '/scratch/mratti/BHNLsGenDump/'
