@@ -49,7 +49,7 @@ if __name__ == "__main__":
       data = filter(lambda x: x is not '', l.split(' '))
       task_id_full = data[0]
       task_state = data[2]
-      if task_state == 'FAILED' or task_state == 'CANCELLED':
+      if task_state == 'FAILED' or task_state == 'CANCELLED' or task_state == 'TIMEOUT':
         failed_arrs.append(task_id_full.split('_')[1])
     fstatus.close()
 
