@@ -394,11 +394,11 @@ class HNLDecay(object):
       print('\n******************************************')
       print('Decaytype={}, daughters={}'.format(self.decay_type,[x.name for x in self.daughters]))
 
-    allowed_decay_types = ['cc_lep','cc_had', 'nc_lep', 'nc_had', 'nc_neu', 'mupi']
+    allowed_decay_types = ['cc_lep','cc_had', 'nc_lep', 'nc_had', 'nc_neu', 'mupi', 'elpi']
     if self.decay_type not in allowed_decay_types: raise RuntimeError('Decay type %s not allowed, please check' % self.decay_type)
 
     # the decay for the analysis
-    if self.decay_type == 'mupi':
+    if self.decay_type == 'mupi' or self.decay_type == 'elpi':
       if len(self.daughters)!=2: raise RuntimeError('Expected exactly two particles for this decay')
       if self.daughters[0].particle_type != 'lepton': raise RuntimeError('Expected a lepton as first daughter')
       if self.daughters[1].particle_type != 'meson' : raise RuntimeError('Expected a meson as second daughter')
