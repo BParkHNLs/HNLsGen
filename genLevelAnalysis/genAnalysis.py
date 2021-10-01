@@ -180,8 +180,8 @@ class Sample(object):
     'hnl_invmass'   : PlotOpt('lep_pi_invmass', '(50,0,5)', 'HNL invariant mass, m(#mu,#pi) [GeV]', 'a.u.', False, False),     
 #    'd_invmass'     : PlotOpt('k_pi_invmass', '(50,0,5)', 'D meson invariant mass, m(K,#pi) [GeV]', 'a.u.', False, False),      
     #'b_invmass'     : PlotOpt('b_invmass', '(50,2,7)', 'B invariant mass [GeV]', 'a.u.', False, False),     
-    'bpartial_invmass'     : PlotOpt('bpartial_invmass', '(50,2,7)', 'm(HNL,#mu^{trig}) [GeV]', 'a.u.', False, False),     
-    'bpartial_invmass_log'     : PlotOpt('bpartial_invmass', '(50,2,7)', 'm(HNL,#mu^{trig}) [GeV]', 'a.u.', False, True),     
+    'bpartial_invmass'     : PlotOpt('bpartial_invmass', '(70,0,7)', 'm(HNL,#mu^{trig}) [GeV]', 'a.u.', False, False),     
+    'bpartial_invmass_log'     : PlotOpt('bpartial_invmass', '(70,0,7)', 'm(HNL,#mu^{trig}) [GeV]', 'a.u.', False, True),     
     #'Lxy_cos', # cosine of the pointing angle in the transverse plane
     #'Lxyz_b', #3D displacement of the B wrt to primary vertex
     #'Lxyz_l0' #3D displacement of the prompt lepton wrt to B vertex
@@ -650,7 +650,7 @@ class SampleList(object):
     hMax = {}
     for j, what in enumerate(self.samples[0].histos.keys()):
       hMax[what] = []
-      leg=defaultLegend(x1=0.15,y1=0.7,x2=0.95,y2=0.95,mult=1.2)
+      leg=defaultLegend(x1=0.15,y1=0.7,x2=0.95,y2=0.92,mult=1.2)
       legends.append(leg)
     # do the actual plotting
     for i, sample in enumerate(self.samples):
@@ -1006,8 +1006,8 @@ if __name__ == "__main__":
   doOld = False
   doRwAnalysis = False
   doFixedVVAnalysis = False
-  doBenchmarkAnalysis = False
-  doGridAnalysis = True
+  doBenchmarkAnalysis = True
+  doGridAnalysis = False
   doGridBc = False
   muTrigPt = 9 # 0 1 2 5 7 9
   ####

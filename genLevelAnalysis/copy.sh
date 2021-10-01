@@ -37,8 +37,8 @@ dirname="V31_stats_NBs_recoW"
 dirname="V30_nofilter_benchmark_incl"
 #dirname="V15_full_VS_V23_scaleToFilter_10_incl_muTrigPt9"
 #dirname="V12_multiB_n4200000_njt200_incl_muTrigPt9"
-dirname="pilot_V32_stats_Lxy1300_tkPt400MeV_lepPt500MeV_incl"
-dirname="V32_stats_Lxy1300_incl"
+#dirname="pilot_V32_stats_Lxy1300_tkPt400MeV_lepPt500MeV_incl"
+#dirname="V32_stats_Lxy1300_incl"
 rm -rf /eos/home-m/mratti/www/BHNL/genAnalysis/$dirname
 cp -r plots/$dirname /eos/home-m/mratti/www/BHNL/genAnalysis/$dirname
 cp HTACCESS /eos/home-m/mratti/www/BHNL/genAnalysis/$dirname/.htaccess
