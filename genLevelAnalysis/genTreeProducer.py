@@ -158,7 +158,8 @@ for vv in new_vvs:
 import pandas as pd
 bins_pt  = [(0,7), (7,10), (10,15),(15,30), (30,1000)] #rows
 bins_lxy = [(0,10),(10,30),(30,50),(50,100),(100,150),(150,300),(300,500),(500,1e10)] #columns, everything in mm
-reco_weights = pd.read_csv('reco_weights_updated.csv', sep=',', comment='#')
+#reco_weights = pd.read_csv('reco_weights_updated_merged.csv', sep=',', comment='#') 
+reco_weights = pd.read_csv('reco_weights_updated.csv', sep=',', comment='#') # version of 07/07 
 
 ###################
 # Functions and classes
@@ -548,12 +549,13 @@ if __name__ == "__main__":
   for p in ps.points:
 
     user = os.environ["USER"] 
-    fileExpr = 'step1*nj*root' if not opt.doFromMini else 'step4*root'
-    #expr = '/pnfs/psi.ch/cms/trivcat/store/user/{usr}/BHNLsGen/{pl}/mass{m}_ctau{ctau}/{ex}'.format(usr=user,pl=opt.pl,m=p.mass,ctau=p.ctau,ex=fileExpr)
+    #fileExpr = 'step1*nj*root' if not opt.doFromMini else 'step4*root'
+    fileExpr = 'step1_nj1.root' 
+    expr = '/pnfs/psi.ch/cms/trivcat/store/user/{usr}/BHNLsGen/{pl}/mass{m}_ctau{ctau}/{ex}'.format(usr=user,pl=opt.pl,m=p.mass,ctau=p.ctau,ex=fileExpr)
     #expr = '/work/mratti/GEN_HNL_newPythia/fragments_test/CMSSW_10_2_15/src/ok_BToNMuX_NToEMuPi_test.root'
     #expr = '/work/mratti/GEN_HNL_newPythia/fragments_test/CMSSW_10_2_15/src/BToNMuX_NToEMuPi_test.root'
     #expr = '/work/mratti/GEN_HNL_newPythia/fragments_test/CMSSW_10_2_27/src/BToNMuX_NToEMuPi_test.root'
-    expr = '/work/mratti/GEN_HNL_newPythia/fragments_test/CMSSW_10_2_15/src/BcToNMuX_NToEMuPi_test.root'
+    #expr = '/work/mratti/GEN_HNL_newPythia/fragments_test/CMSSW_10_2_15/src/BcToNMuX_NToEMuPi_test.root'
     #expr = '/work/mratti/GEN_HNL_newPythia/fragments_test/CMSSW_10_2_27/src/BcToNMuX_NToEMuPi_test.root'
     #expr = '/work/mratti/GEN_HNL_newPythia/fragments_test/CMSSW_10_2_15/src/BHNL_test*.root'
     #expr = '/work/mratti/GEN_HNL_newPythia/CMSSW_10_2_3/src/HNLsGen/slurm/testManyChan_n100_njt1/BPH-step1_numEvent1000.root'
