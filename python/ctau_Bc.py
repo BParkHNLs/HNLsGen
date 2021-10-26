@@ -9,6 +9,7 @@ import numpy as np
 from matplotlib.ticker import FormatStrFormatter
 from matplotlib.ticker import LogLocator
 
+#plt.style.use('./mystyle.mplstyle')
 
 #masses = np.array( [float('{:.2f}'.format(0.5+i*0.1)) for i in range(0,56) ] )# GeV
 masses = np.array( [float('{:.2f}'.format(0.8+i*0.1)) for i in range(0,53) ] )# GeV
@@ -38,18 +39,9 @@ pcm = ax0.pcolor(masses, vvs, ctaus,
 cbar = fig.colorbar(pcm, ax=ax0, extend='max')
 cbar.set_label('c$\\tau$ (m)')
 CS = ax0.contour(masses, vvs, ctaus, levels=ctau_levels, colors=mycolors) #cmap='PiYG_r', norm=colors.LogNorm(vmin=ctaus.min(), vmax=ctaus.max()))
-#ax0.clabel(CS,fmt='%1.1e', inline=False, fontsize=10,color='black')
 ax0.set_xlabel('mass (GeV)')
-#ax0.tick_params(axis='x', which='both')
-#ax0.xaxis.set_minor_formatter(FormatStrFormatter("%.1f"))
-#x_major = LogLocator(base = 10.0, numticks = 5)
-#ax0.xaxis.set_major_locator(x_major)
-#x_minor = LogLocator(base = 10.0, subs = np.arange(1.0, 10.0) * 0.05, numticks = 20)
-#ax0.xaxis.set_minor_locator(x_minor)
 ax0.set_ylabel('$V^2$')
 ax0.set_ylim(1e-06,1.)
-#ax0.set_ylim(1e-06,3e-04)
-#ax0.set_xlim(0.5,6)
 ax0.set_xlim(0.8,6)
 ax0.set_yscale('log')
 ax0.set_xscale('log')
@@ -73,7 +65,7 @@ for i,ctau in enumerate(ctau_levels):
     if res and res[0].size != 0:
       mass = v[ res[0][0],0]
       vv   = v[ res[0][0],1]
-      if vv < 0.01 : # only consider points below 10^{-2}
+      if vv < 0.01 and getCtau(mass,vv)<=(1000+500) and mass > 2. : # only consider points below 10^{-2} and 
         xs[ctau].append( mass )
         ys[ctau].append( vv )
 
@@ -81,6 +73,7 @@ for i,ctau in enumerate(ctau_levels):
 ax0.legend(loc='upper right', fontsize='x-small', numpoints=1)
 
 fig.savefig('ctau_Bc.pdf')
+fig.savefig('ctau_Bc.png')
 
 
 
