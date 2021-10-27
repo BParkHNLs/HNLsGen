@@ -1,6 +1,10 @@
 import os
 
 out_dir = 'BHNL_Bc_LHEGEN_v0'
+#out_dir = 'BHNL_Bc_LHEGEN_v0_camilla'
+#out_dir = 'BHNL_Bc_LHEGEN_v0_mgSecondRun'
+#out_dir = 'BHNL_Bc_LHEGEN_v0_testUnMerged'
+#out_dir = 'BHNL_Bc_LHEGEN_v0_testMerged'
 
 lhe_files = [
     'root://cms-xrd-global.cern.ch//eos/cms/store/group/phys_bphys/fiorendi/13TeV/BcLHE/2MLHE_MuChannel_for2016/Bcgen_0/bcvegpy.lhe',
@@ -110,7 +114,61 @@ lhe_files = [
     'root://cms-xrd-global.cern.ch//eos/cms/store/group/phys_bphys/fiorendi/13TeV/BcLHE/50MLHE_for2017/45_50/Bcgen_3/bcvegpy.lhe',
     'root://cms-xrd-global.cern.ch//eos/cms/store/group/phys_bphys/fiorendi/13TeV/BcLHE/50MLHE_for2017/45_50/Bcgen_4/bcvegpy.lhe',
     'root://cms-xrd-global.cern.ch//eos/cms/store/group/phys_bphys/fiorendi/13TeV/BcLHE/50MLHE_for2017/45_50/Bcgen_5/bcvegpy.lhe',
-]
+
+    # Sara's
+    #'root://cms-xrd-global.cern.ch//eos/cms/store/group/phys_bphys/fiorendi/13TeV/BcLHE/50MLHE_for2017/45_50/Bcgen_5/bcvegpy.lhe',
+
+    # Camilla's
+     #'root://t3dcachedb.psi.ch:1094//pnfs/psi.ch/cms/trivcat/store/user/mratti/Bc_LHE/camilla/bcvegpy_200k_2837.lhe',
+
+    # My own
+#     'root://t3dcachedb.psi.ch:1094//pnfs/psi.ch/cms/trivcat/store/user/mratti/Bc_LHE/secondRun/bcvegpy_200k_1.lhe',
+#     'root://t3dcachedb.psi.ch:1094//pnfs/psi.ch/cms/trivcat/store/user/mratti/Bc_LHE/secondRun/bcvegpy_200k_2.lhe',
+#     'root://t3dcachedb.psi.ch:1094//pnfs/psi.ch/cms/trivcat/store/user/mratti/Bc_LHE/secondRun/bcvegpy_200k_3.lhe',
+#     'root://t3dcachedb.psi.ch:1094//pnfs/psi.ch/cms/trivcat/store/user/mratti/Bc_LHE/secondRun/bcvegpy_200k_4.lhe',
+#     'root://t3dcachedb.psi.ch:1094//pnfs/psi.ch/cms/trivcat/store/user/mratti/Bc_LHE/secondRun/bcvegpy_200k_5.lhe',
+#     'root://t3dcachedb.psi.ch:1094//pnfs/psi.ch/cms/trivcat/store/user/mratti/Bc_LHE/secondRun/bcvegpy_200k_6.lhe',
+#     'root://t3dcachedb.psi.ch:1094//pnfs/psi.ch/cms/trivcat/store/user/mratti/Bc_LHE/secondRun/bcvegpy_200k_7.lhe',
+#     'root://t3dcachedb.psi.ch:1094//pnfs/psi.ch/cms/trivcat/store/user/mratti/Bc_LHE/secondRun/bcvegpy_200k_8.lhe',
+#     'root://t3dcachedb.psi.ch:1094//pnfs/psi.ch/cms/trivcat/store/user/mratti/Bc_LHE/secondRun/bcvegpy_200k_9.lhe',
+#     'root://t3dcachedb.psi.ch:1094//pnfs/psi.ch/cms/trivcat/store/user/mratti/Bc_LHE/secondRun/bcvegpy_200k_10.lhe',
+#     'root://t3dcachedb.psi.ch:1094//pnfs/psi.ch/cms/trivcat/store/user/mratti/Bc_LHE/secondRun/bcvegpy_200k_11.lhe',
+#     'root://t3dcachedb.psi.ch:1094//pnfs/psi.ch/cms/trivcat/store/user/mratti/Bc_LHE/secondRun/bcvegpy_200k_12.lhe',
+#     'root://t3dcachedb.psi.ch:1094//pnfs/psi.ch/cms/trivcat/store/user/mratti/Bc_LHE/secondRun/bcvegpy_200k_13.lhe',
+#     'root://t3dcachedb.psi.ch:1094//pnfs/psi.ch/cms/trivcat/store/user/mratti/Bc_LHE/secondRun/bcvegpy_200k_14.lhe',
+#     'root://t3dcachedb.psi.ch:1094//pnfs/psi.ch/cms/trivcat/store/user/mratti/Bc_LHE/secondRun/bcvegpy_200k_15.lhe',
+#     'root://t3dcachedb.psi.ch:1094//pnfs/psi.ch/cms/trivcat/store/user/mratti/Bc_LHE/secondRun/bcvegpy_200k_16.lhe',
+#     'root://t3dcachedb.psi.ch:1094//pnfs/psi.ch/cms/trivcat/store/user/mratti/Bc_LHE/secondRun/bcvegpy_200k_17.lhe',
+#     'root://t3dcachedb.psi.ch:1094//pnfs/psi.ch/cms/trivcat/store/user/mratti/Bc_LHE/secondRun/bcvegpy_200k_18.lhe',
+#     'root://t3dcachedb.psi.ch:1094//pnfs/psi.ch/cms/trivcat/store/user/mratti/Bc_LHE/secondRun/bcvegpy_200k_19.lhe',
+#     'root://t3dcachedb.psi.ch:1094//pnfs/psi.ch/cms/trivcat/store/user/mratti/Bc_LHE/secondRun/bcvegpy_200k_20.lhe',
+#     'root://t3dcachedb.psi.ch:1094//pnfs/psi.ch/cms/trivcat/store/user/mratti/Bc_LHE/secondRun/bcvegpy_200k_21.lhe',
+#     'root://t3dcachedb.psi.ch:1094//pnfs/psi.ch/cms/trivcat/store/user/mratti/Bc_LHE/secondRun/bcvegpy_200k_22.lhe',
+#     'root://t3dcachedb.psi.ch:1094//pnfs/psi.ch/cms/trivcat/store/user/mratti/Bc_LHE/secondRun/bcvegpy_200k_23.lhe',
+#     'root://t3dcachedb.psi.ch:1094//pnfs/psi.ch/cms/trivcat/store/user/mratti/Bc_LHE/secondRun/bcvegpy_200k_24.lhe',
+#     'root://t3dcachedb.psi.ch:1094//pnfs/psi.ch/cms/trivcat/store/user/mratti/Bc_LHE/secondRun/bcvegpy_200k_25.lhe',
+#     'root://t3dcachedb.psi.ch:1094//pnfs/psi.ch/cms/trivcat/store/user/mratti/Bc_LHE/secondRun/bcvegpy_200k_26.lhe',
+#     'root://t3dcachedb.psi.ch:1094//pnfs/psi.ch/cms/trivcat/store/user/mratti/Bc_LHE/secondRun/bcvegpy_200k_27.lhe',
+#     'root://t3dcachedb.psi.ch:1094//pnfs/psi.ch/cms/trivcat/store/user/mratti/Bc_LHE/secondRun/bcvegpy_200k_28.lhe',
+#     'root://t3dcachedb.psi.ch:1094//pnfs/psi.ch/cms/trivcat/store/user/mratti/Bc_LHE/secondRun/bcvegpy_200k_29.lhe',
+#     'root://t3dcachedb.psi.ch:1094//pnfs/psi.ch/cms/trivcat/store/user/mratti/Bc_LHE/secondRun/bcvegpy_200k_30.lhe',
+#     'root://t3dcachedb.psi.ch:1094//pnfs/psi.ch/cms/trivcat/store/user/mratti/Bc_LHE/secondRun/bcvegpy_200k_31.lhe',
+#     'root://t3dcachedb.psi.ch:1094//pnfs/psi.ch/cms/trivcat/store/user/mratti/Bc_LHE/secondRun/bcvegpy_200k_32.lhe',
+#     'root://t3dcachedb.psi.ch:1094//pnfs/psi.ch/cms/trivcat/store/user/mratti/Bc_LHE/secondRun/bcvegpy_200k_33.lhe',
+#     'root://t3dcachedb.psi.ch:1094//pnfs/psi.ch/cms/trivcat/store/user/mratti/Bc_LHE/secondRun/bcvegpy_200k_34.lhe',
+#     'root://t3dcachedb.psi.ch:1094//pnfs/psi.ch/cms/trivcat/store/user/mratti/Bc_LHE/secondRun/bcvegpy_200k_35.lhe',
+#     'root://t3dcachedb.psi.ch:1094//pnfs/psi.ch/cms/trivcat/store/user/mratti/Bc_LHE/secondRun/bcvegpy_200k_36.lhe',
+#     'root://t3dcachedb.psi.ch:1094//pnfs/psi.ch/cms/trivcat/store/user/mratti/Bc_LHE/secondRun/bcvegpy_200k_37.lhe',
+#     'root://t3dcachedb.psi.ch:1094//pnfs/psi.ch/cms/trivcat/store/user/mratti/Bc_LHE/secondRun/bcvegpy_200k_38.lhe',
+#     'root://t3dcachedb.psi.ch:1094//pnfs/psi.ch/cms/trivcat/store/user/mratti/Bc_LHE/secondRun/bcvegpy_200k_39.lhe',
+
+#      'root://t3dcachedb.psi.ch:1094/pnfs/psi.ch/cms/trivcat/store/user/mratti/Bc_LHE/testMerge/unmerged/bcvegpy_200k_998.lhe',
+#      'root://t3dcachedb.psi.ch:1094/pnfs/psi.ch/cms/trivcat/store/user/mratti/Bc_LHE/testMerge/unmerged/bcvegpy_200k_998_copy.lhe',
+#      'root://t3dcachedb.psi.ch:1094/pnfs/psi.ch/cms/trivcat/store/user/mratti/Bc_LHE/testMerge/unmerged/bcvegpy_200k_998_copy2.lhe',
+# merged file
+#      'root://t3dcachedb.psi.ch:1094/pnfs/psi.ch/cms/trivcat/store/user/mratti/Bc_LHE/testMerge/merged/results.lhe',
+
+ ]
 
 events_per_job = -1
 njobs = len(lhe_files)
@@ -167,7 +225,7 @@ rm -r /scratch/mratti/{scratch_dir}/
     )
     flauncher.close()
     
-    command_sh_batch = 'sbatch -p wn --account=t3 -o %s/logs/step0_nj%d.log -e %s/logs/step0_nj%d.log --job-name=%s --time=01:00:00 %s/submitter_nj%d.sh' %(out_dir, ijob, out_dir, ijob, out_dir, out_dir, ijob)
+    command_sh_batch = 'sbatch -p standard --account=t3 -o %s/logs/step0_nj%d.log -e %s/logs/step0_nj%d.log --job-name=%s --time=01:00:00 %s/submitter_nj%d.sh' %(out_dir, ijob, out_dir, ijob, out_dir, out_dir, ijob)
 
     print(command_sh_batch)
     os.system(command_sh_batch)
