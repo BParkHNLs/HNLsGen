@@ -212,7 +212,7 @@ def getpT(input):
    return input.pT
 
 
-def runGenTreeProducer(infiles='./step*root',outfilename='out.root',this_mass=1,this_ctau=500,this_vv=0.0013,doBtoD=False,doFromMini=False):
+def runGenTreeProducer(infiles='./step*root',outfilename='out.root',this_mass=1,this_ctau=500,this_vv=0.0013,doFromMini=False):
   # input and output
   files = glob.glob(infiles)
 
@@ -278,15 +278,13 @@ def runGenTreeProducer(infiles='./step*root',outfilename='out.root',this_mass=1,
               hasKDaughter = True
           if hasJPsiDaughter and hasKDaughter:
             event.the_b_mother = ip
-            
-
-    stampParticle(event.the_b_mother)
-    stampDaugthers(event.the_b_mother)
       
     # get the other daughters of the B meson
     event.the_b_mother.daughters = [event.the_b_mother.daughter(jj) for jj in range(event.the_b_mother.numberOfDaughters())]
 
-    if opt.doDebug: stampDaugthers(event.the_b_mother)
+    if opt.doDebug: 
+      stampParticle(event.the_b_mother)
+      stampDaugthers(event.the_b_mother)
   
     # # first the daughter meson if it exists (we will call it D, but it could be something else)
     the_ds = sorted([ii for ii in event.the_b_mother.daughters if abs(ii.pdgId()) in [111,211,113,213,321,323,411,421,413,423,431,433]], 
@@ -395,7 +393,8 @@ def runGenTreeProducer(infiles='./step*root',outfilename='out.root',this_mass=1,
     # get the lifetime of the B
     event.the_b_mother.beta  = event.the_b_mother.p4().Beta()
     event.the_b_mother.gamma = event.the_b_mother.p4().Gamma()   
-    event.the_b_mother.y     = event.the_b_mother.p4().Y()
+    b_p4 = event.the_b_mother.p4()
+    event.the_b_mother.y     = 0.5 * ROOT.TMath.Log( (b_p4.E()+b_p4.Pz()) / (b_p4.E()-b_p4.Pz()) ) if (b_p4.E()-b_p4.Pz())!=0 else -99
     #event.the_b_mother.ct_reco = event.Lxyz_pl / (event.the_b_mother.beta * event.the_b_mother.gamma)
   
     tofill['run'        ] = event.eventAuxiliary().run()
@@ -405,7 +404,7 @@ def runGenTreeProducer(infiles='./step*root',outfilename='out.root',this_mass=1,
     if event.the_b_mother:
         tofill['b_pt'   ] = event.the_b_mother.pt()     
         tofill['b_eta'  ] = event.the_b_mother.eta()    
-        tofill['b_y'    ] = event.the_b_mother.y     # FIXME
+        tofill['b_y'    ] = event.the_b_mother.y 
         tofill['b_phi'  ] = event.the_b_mother.phi()    
         tofill['b_mass' ] = event.the_b_mother.mass()   
         tofill['b_q'    ] = event.the_b_mother.charge()   
@@ -484,7 +483,6 @@ def runGenTreeProducer(infiles='./step*root',outfilename='out.root',this_mass=1,
           tofill['xs_scale_to_%s' %(str(vv).replace('-', 'm'))] = vv / this_vv
   
     tofill['weight_reco'] = event.weight_reco
-  
          
     ntuple.Fill(array('f',tofill.values()))
   
@@ -501,7 +499,6 @@ def getOptions():
    #parser.add_argument('--expr', type=str, dest='expr', help='file regular expression', default='step1*root')
    parser.add_argument('--points', type=str, dest='pointFile', help='name of file contaning information on scan to be run', default='points.py')
    parser.add_argument('--maxEvts', type=int, dest='maxEvts', help='max number of events to be run', default=-1)
-   parser.add_argument('--doBtoD', dest='doBtoD', help='do exclusive decay B->DmuHNL', action='store_true', default=False)
    parser.add_argument('--doDebug', dest='doDebug', help='', action='store_true', default=False)
    parser.add_argument('--doFromMini', dest='doFromMini', help='run on the miniAOD, as opposed to the GEN-SIM', action='store_true', default=False)
    parser.add_argument('--doSaveScratch', dest='doSaveScratch', help='save on scratch, not on work', action='store_true', default=False)
@@ -520,8 +517,8 @@ if __name__ == "__main__":
 
     user = os.environ["USER"] 
     fileExpr = 'step1*nj*root' if not opt.doFromMini else 'step4*root'
-    #expr = '/pnfs/psi.ch/cms/trivcat/store/user/{usr}/BHNLsGen/{pl}/mass{m}_ctau{ctau}/{ex}'.format(usr=user,pl=opt.pl,m=p.mass,ctau=p.ctau,ex=fileExpr)
-    expr = '/work/mratti/GEN_HNL/CMSSW_10_2_15/src/HNLsGen/slurm/pilot_V15_control_BfilterNoMufilter/BPH-step1_numEvent357.root'
+    expr = '/pnfs/psi.ch/cms/trivcat/store/user/{usr}/BHNLsGen/{pl}/mass{m}_ctau{ctau}/{ex}'.format(usr=user,pl=opt.pl,m=p.mass,ctau=p.ctau,ex=fileExpr)
+    #expr = '/work/mratti/GEN_HNL/CMSSW_10_2_15/src/HNLsGen/slurm/pilot_V15_control_BfilterNoMufilter/BPH-step1_numEvent357.root'
     #expr = '/work/mratti/GEN_HNL_newPythia/fragments_test/CMSSW_10_2_15/src/ok_BToNMuX_NToEMuPi_test.root'
     #expr = '/work/mratti/GEN_HNL_newPythia/fragments_test/CMSSW_10_2_15/src/BToNMuX_NToEMuPi_test.root'
     #expr = '/work/mratti/GEN_HNL_newPythia/fragments_test/CMSSW_10_2_27/src/BToNMuX_NToEMuPi_test.root'
@@ -541,5 +538,5 @@ if __name__ == "__main__":
     print('   ctau: {} mm'.format(p.ctau))
     print('   VV  : {} \n'.format(p.vv))
 
-    runGenTreeProducer(infiles=expr,outfilename=outfilename,this_mass=p.mass,this_ctau=p.ctau,this_vv=p.vv,doBtoD=opt.doBtoD,doFromMini=opt.doFromMini)
+    runGenTreeProducer(infiles=expr,outfilename=outfilename,this_mass=p.mass,this_ctau=p.ctau,this_vv=p.vv,doFromMini=opt.doFromMini)
 
