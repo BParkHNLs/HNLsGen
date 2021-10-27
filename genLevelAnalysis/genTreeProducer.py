@@ -25,6 +25,7 @@ branches = [
     # the mother
     'b_pt',
     'b_eta',
+    'b_y',
     'b_phi',
     'b_mass',
     'b_q',
@@ -170,6 +171,8 @@ def stampDaugthers(particle, indent=0):
         print ' '*4*indent, '|---->', 'pdgid', daughter.pdgId(), '\t pt {0:>5}  eta {1:>5}  phi {2:>5}'.format('%.1f'%daughter.pt(), '%.2f'%daughter.eta(), '%.2f'%daughter.phi())
         stampDaugthers(daughter, indent+1)
 
+def stampParticle(particle, indent=0):
+   print ' '*4*indent, '', 'pdgid', particle.pdgId(), '\t pt {0:>5}  eta {1:>5}  phi {2:>5}'.format('%.1f'%particle.pt(), '%.2f'%particle.eta(), '%.2f'%particle.phi())
 
 def isAncestor(a, p):
     if a == p :
@@ -210,7 +213,7 @@ def getpT(input):
    return input.pT
 
 
-def runGenTreeProducer(infiles='./step*root',outfilename='out.root',this_mass=1,this_ctau=500,this_vv=0.0013,doBtoD=False,doFromMini=False):
+def runGenTreeProducer(infiles='./step*root',outfilename='out.root',this_mass=1,this_ctau=500,this_vv=0.0013,doFromMini=False):
   # input and output
   files = glob.glob(infiles)
 
@@ -251,154 +254,131 @@ def runGenTreeProducer(infiles='./step*root',outfilename='out.root',this_mass=1,
         
     # get the heavy neutrino
     the_hns = [ip for ip in event.genP if abs(ip.pdgId())==9900015 and ip.isLastCopy()] 
-    if len(the_hns):
+    if len(the_hns)!=0:
        event.the_hn = the_hns[0] # one per event
-   
-#    print( '\n\nNEW EVENT run={} event={}'.format( event.eventAuxiliary().run(),event.eventAuxiliary().event() ))
-#    if event.the_hn:
-#      print('FOUND HNL, status={} isLastCopy()={} vx={:10} vy={:10} vz={:10} pt={:10} eta={:10} phi={:10}'.format(event.the_hn.status(), event.the_hn.isLastCopy(), event.the_hn.vx(), event.the_hn.vy(), event.the_hn.vz(), event.the_hn.pt(), event.the_hn.eta(), event.the_hn.phi()))
-#      for iD in range(event.the_hn.numberOfDaughters()):
-#        print('         , daughter pdg={:10}, status={:10} isLastCopy={:10} vx={:10} vy={:10} vz={:10} pt={:10} eta={:10} phi={:10}'.format(event.the_hn.daughter(iD).pdgId(),event.the_hn.daughter(iD).status(), event.the_hn.daughter(iD).isLastCopy(), event.the_hn.daughter(iD).vx(), event.the_hn.daughter(iD).vy(), event.the_hn.daughter(iD).vz(), event.the_hn.daughter(iD).pt(), event.the_hn.daughter(iD).eta(), event.the_hn.daughter(iD).phi()))
-#      for iM in range(event.the_hn.numberOfMothers()):
-#        print('         , mother  pdg={:10}, status={:10} isLastCopy={:10} vx={:10} vy={:10} vz={:10} pt={:10} eta={:10} phi={:10}'.format(event.the_hn.mother(iM).pdgId(),event.the_hn.mother(iM).status(), event.the_hn.mother(iM).isLastCopy(), event.the_hn.mother(iM).vx(), event.the_hn.mother(iM).vy(), event.the_hn.mother(iM).vz(), event.the_hn.mother(iM).pt(), event.the_hn.mother(iM).eta(), event.the_hn.mother(iM).phi()))
-#        for iDM in range(event.the_hn.mother(iM).numberOfDaughters()):
-#          print('                   daughter pdg={:10}, status={:10} isLastCopy={:10} vx={:10} vy={:10} vz={:10} pt={:10} eta={:10} phi={:10}'.format(event.the_hn.mother(iM).daughter(iDM).pdgId(), event.the_hn.mother(iM).daughter(iDM).status(), event.the_hn.mother(iM).daughter(iDM).isLastCopy(), event.the_hn.mother(iM).daughter(iDM).vx(), event.the_hn.mother(iM).daughter(iDM).vy(), event.the_hn.mother(iM).daughter(iDM).vz(), event.the_hn.mother(iM).daughter(iDM).pt(), event.the_hn.mother(iM).daughter(iDM).eta(), event.the_hn.mother(iM).daughter(iDM).phi()))
-
-
-    # find the B mother  
-    event.the_hn.mothers = [event.the_hn.mother(jj) for jj in range(event.the_hn.numberOfMothers())]
-    the_b_mothers = sorted([ii for ii in event.the_hn.mothers if (abs(ii.pdgId())==521 or abs(ii.pdgId())==511 or abs(ii.pdgId())==531 or abs(ii.pdgId())==541)], key = lambda x : x.pt(), reverse=True)
-    if len(the_b_mothers):
-      event.the_b_mother = the_b_mothers[0]
     else:
-      event.the_b_mother = None
-  
+       event.the_hn = None
+   
+    # find the B; if the event is a BHNL, take the mother of the HNL, else, take the genParticles which are Bs
+    if event.the_hn:
+      event.the_hn.mothers = [event.the_hn.mother(jj) for jj in range(event.the_hn.numberOfMothers())]
+      the_b_mothers = sorted([ii for ii in event.the_hn.mothers if (abs(ii.pdgId())==521 or abs(ii.pdgId())==511 or abs(ii.pdgId())==531 \
+                                                                 or abs(ii.pdgId())==541)], key = lambda x : x.pt(), reverse=True)
+      if len(the_b_mothers)!=0:
+        event.the_b_mother = the_b_mothers[0]
+    else:
+      #the_b_mothers = sorted([ii for ii in event.genP if abs(ii.pdgId())==521 and ()  and ii.isLastCopy()], key = lambda x : x.pt(), reverse=True)
+      for ip in event.genP:
+        if abs(ip.pdgId())==521  and ip.isLastCopy():
+          hasJPsiDaughter = False
+          hasKDaughter = False
+          for idau in range(ip.numberOfDaughters()):
+            if abs(ip.daughter(idau).pdgId())==443:
+              hasJPsiDaughter = True
+            if abs(ip.daughter(idau).pdgId())==321:
+              hasKDaughter = True
+          if hasJPsiDaughter and hasKDaughter:
+            event.the_b_mother = ip
+      
     # get the other daughters of the B meson
     event.the_b_mother.daughters = [event.the_b_mother.daughter(jj) for jj in range(event.the_b_mother.numberOfDaughters())]
 
-    if opt.doDebug: stampDaugthers(event.the_b_mother)
+    if opt.doDebug: 
+      stampParticle(event.the_b_mother)
+      stampDaugthers(event.the_b_mother)
   
     # # first the daughter meson if it exists (we will call it D, but it could be something else)
     the_ds = sorted([ii for ii in event.the_b_mother.daughters if abs(ii.pdgId()) in [111,211,113,213,321,323,411,421,413,423,431,433]], 
                      key = lambda x : x.pt(), reverse=True)
-    if len(the_ds):
+    if len(the_ds)!=0:
       event.the_d = the_ds[0]
     else:
       event.the_d = None
 
     # # then the trigger lepton
     the_pls = sorted([ii for ii in event.the_b_mother.daughters if abs(ii.pdgId()) in [11, 13, 15]], key = lambda x : x.pt(), reverse=True)
-    if len(the_pls):
+    if len(the_pls)!=0:
       event.the_pl = the_pls[0]
     else:
       event.the_pl = None
-    
-#    # D0s daughters
-#    if doBtoD and len(the_ds):
-#      event.the_d.daughters = [event.the_d.daughter(jj) for jj in range(event.the_d.numberOfDaughters())]
-#    
-#      # #find the pion
-#      the_pis = sorted([ii for ii in event.the_d.daughters if abs(ii.pdgId())==211], key = lambda x : x.pt(), reverse=True)
-#      if len(the_pis):
-#          event.the_pi = the_pis[0]
-#      else:
-#          event.the_pi = None
-#          
-#      # find the kaon
-#      the_ks = sorted([ii for ii in event.the_d.daughters if abs(ii.pdgId())==321], key = lambda x : x.pt(), reverse=True)
-#      if len(the_ks):
-#          event.the_k = the_ks[0]
-#      else:
-#          event.the_k = None
      
-  
-    # HNL daughters
-    event.the_hn.initialdaus = [event.the_hn.daughter(jj) for jj in range(event.the_hn.numberOfDaughters())]
-  
-    # # the lepton
-    the_lep_daughters = sorted([ii for ii in event.the_hn.initialdaus if abs(ii.pdgId()) in [11, 13, 15]], key = lambda x : x.pt(), reverse=True)
-    if len(the_lep_daughters):
-       event.the_hn.lep = the_lep_daughters[0]
-    else: 
-       event.the_hn.lep = None
-   
-    # # the pion
-    the_pi_daughters = sorted([ii for ii in event.the_hn.initialdaus if abs(ii.pdgId())==211], key = lambda x : x.pt(), reverse=True)
-    if len(the_pi_daughters):
-       event.the_hn.pi = the_pi_daughters[0]
-    else:
-       event.the_hn.pi = None
-   
-    # invariant masses   
-    # # to get the invariant mass of the HNL daughters
-    if len(the_pi_daughters) and len(the_lep_daughters):   
-      event.the_hnldaughters = event.the_hn.lep.p4() + event.the_hn.pi.p4()
+    if event.the_hn: 
+      # HNL daughters
+      event.the_hn.initialdaus = [event.the_hn.daughter(jj) for jj in range(event.the_hn.numberOfDaughters())]
     
-    # # to get the invariant mass of the D0 daughters
-    #if doBtoD and len(the_ds):
-    #  if len(the_ks) and len(the_pis):   
-    #    event.the_d0daughters = event.the_k.p4() + event.the_pi.p4()
-  
-    # # to get the full or partial invariant mass of the B 
-    # # # partial
-    if len(the_pls) and len(the_hns):
-      event.the_bdaughters_partial = event.the_hn.p4() + event.the_pl.p4()
-    # # # total
-    #event.the_bdaughters_all = sum([ii.p4() for ii in event.the_b_mother.daughters])
+      # # the lepton
+      the_lep_daughters = sorted([ii for ii in event.the_hn.initialdaus if abs(ii.pdgId()) in [11, 13, 15]], key = lambda x : x.pt(), reverse=True)
+      if len(the_lep_daughters)!=0:
+         event.the_hn.lep = the_lep_daughters[0]
+      else: 
+         event.the_hn.lep = None
+     
+      # # the pion
+      the_pi_daughters = sorted([ii for ii in event.the_hn.initialdaus if abs(ii.pdgId())==211], key = lambda x : x.pt(), reverse=True)
+      if len(the_pi_daughters)!=0:
+         event.the_hn.pi = the_pi_daughters[0]
+      else:
+         event.the_hn.pi = None
+     
+      # invariant masses   
+      # # to get the invariant mass of the HNL daughters
+      if len(the_pi_daughters)!=0 and len(the_lep_daughters)!=0:   
+        event.the_hnldaughters = event.the_hn.lep.p4() + event.the_hn.pi.p4()
     
-    #if doBtoD and len(the_ds) and len(the_pls) and len(the_hns):
-    #   event.the_bdaughters = event.the_hn.p4() + event.the_d.p4() + event.the_pl.p4()
-    ##elif not len(the_ds):
-    #elif not doBtoD:
-    #   event.the_bdaughters = event.the_hn.p4() + event.the_pl.p4()
+      # # to get the full or partial invariant mass of the B 
+      # # # partial
+      if len(the_pls)!=0 and len(the_hns)!=0:
+        event.the_bdaughters_partial = event.the_hn.p4() + event.the_pl.p4()
+      # # # total
+      #event.the_bdaughters_all = sum([ii.p4() for ii in event.the_b_mother.daughters])
       
-    # identify the primary vertex
-    # for that, needs the trigger lepton
-    if len(the_pls):
-      event.the_hn.the_pv = event.the_pl.vertex()
-    
-    # identify the secondary vertex
-    if len(the_lep_daughters):
-      event.the_hn.the_sv = event.the_hn.lep.vertex()
-    
-    # 2D transverse and 3D displacement, Pythagoras
-    if len(the_pls) and len(the_lep_daughters):
-      event.Lz  =  np.sqrt((event.the_hn.the_pv.z() - event.the_hn.the_sv.z())**2) * 10 # everything in mm
+      # identify the primary vertex
+      # for that, needs the trigger lepton
+      if len(the_pls)!=0:
+        event.the_hn.the_pv = event.the_pl.vertex()
       
-      event.Lxy  = np.sqrt((event.the_hn.the_pv.x() - event.the_hn.the_sv.x())**2 + \
-                           (event.the_hn.the_pv.y() - event.the_hn.the_sv.y())**2) * 10 # everything in mm
-
-      event.Lxyz = np.sqrt((event.the_hn.the_pv.x() - event.the_hn.the_sv.x())**2 + \
-                           (event.the_hn.the_pv.y() - event.the_hn.the_sv.y())**2 + \
-                           (event.the_hn.the_pv.z() - event.the_hn.the_sv.z())**2) * 10 # everything in mm
- 
-    # per event ct, as derived from the flight distance and Lorentz boost  
-    event.the_hn.beta  = event.the_hn.p4().Beta()
-    event.the_hn.gamma = event.the_hn.p4().Gamma()
-    
-    # we get the lifetime from the kinematics 
-    if len(the_pls) and len(the_lep_daughters):
-      event.the_hn.ct_reco = event.Lxyz / (event.the_hn.beta * event.the_hn.gamma)
+      # identify the secondary vertex
+      if len(the_lep_daughters)!=0:
+        event.the_hn.the_sv = event.the_hn.lep.vertex()
+      
+      # 2D transverse and 3D displacement, Pythagoras
+      if len(the_pls)!=0 and len(the_lep_daughters)!=0:
+        event.Lz  =  np.sqrt((event.the_hn.the_pv.z() - event.the_hn.the_sv.z())**2) * 10 # everything in mm
+        
+        event.Lxy  = np.sqrt((event.the_hn.the_pv.x() - event.the_hn.the_sv.x())**2 + \
+                             (event.the_hn.the_pv.y() - event.the_hn.the_sv.y())**2) * 10 # everything in mm
   
-    # pointing angle    
-    #if len(the_pls) and len(the_lep_daughters):
-    #  hn_pt_vect = ROOT.math.XYZVector(event.the_hnldaughters.px(),
-    #                                   event.the_hnldaughters.py(),
-    #                                   0.)
-  
-    #  Lxy_vect = ROOT.GlobalPoint(-1*((event.the_hn.the_pv.x() - event.the_hn.the_sv.x())), 
-    #                              -1*((event.the_hn.the_pv.y() - event.the_hn.the_sv.y())),
-    #                               0)
-  
-    #  vperptau = ROOT.math.XYZVector(Lxy_vect.x(), Lxy_vect.y(), 0.)
+        event.Lxyz = np.sqrt((event.the_hn.the_pv.x() - event.the_hn.the_sv.x())**2 + \
+                             (event.the_hn.the_pv.y() - event.the_hn.the_sv.y())**2 + \
+                             (event.the_hn.the_pv.z() - event.the_hn.the_sv.z())**2) * 10 # everything in mm
    
-      #event.cos_pointing = vperptau.Dot(hn_pt_vect)/(vperptau.R()*hn_pt_vect.R())
+      # per event ct, as derived from the flight distance and Lorentz boost  
+      event.the_hn.beta  = event.the_hn.p4().Beta()
+      event.the_hn.gamma = event.the_hn.p4().Gamma()
+      
+      # we get the lifetime from the kinematics 
+      if len(the_pls)!=0 and len(the_lep_daughters)!=0:
+        event.the_hn.ct_reco = event.Lxyz / (event.the_hn.beta * event.the_hn.gamma)
+    
+      # pointing angle    
+      #if len(the_pls) and len(the_lep_daughters):
+      #  hn_pt_vect = ROOT.math.XYZVector(event.the_hnldaughters.px(),
+      #                                   event.the_hnldaughters.py(),
+      #                                   0.)
+    
+      #  Lxy_vect = ROOT.GlobalPoint(-1*((event.the_hn.the_pv.x() - event.the_hn.the_sv.x())), 
+      #                              -1*((event.the_hn.the_pv.y() - event.the_hn.the_sv.y())),
+      #                               0)
+    
+      #  vperptau = ROOT.math.XYZVector(Lxy_vect.x(), Lxy_vect.y(), 0.)
+     
+        #event.cos_pointing = vperptau.Dot(hn_pt_vect)/(vperptau.R()*hn_pt_vect.R())
+    
+    if len(the_pls)!=0:
+      event.Lxyz_pl = np.sqrt((event.the_b_mother.vx() - event.the_pl.vx())**2 + \
+                              (event.the_b_mother.vy() - event.the_pl.vy())**2 + \
+                              (event.the_b_mother.vz() - event.the_pl.vz())**2) * 10 # everything in mm
   
-  
-    event.Lxyz_pl = np.sqrt((event.the_b_mother.vx() - event.the_pl.vx())**2 + \
-                        (event.the_b_mother.vy() - event.the_pl.vy())**2 + \
-                        (event.the_b_mother.vz() - event.the_pl.vz())**2) * 10 # everything in mm
-
     # set the reconstruction efficiency weigh
     event.weight_reco = 1.
     if opt.doWeightReco:
@@ -414,7 +394,9 @@ def runGenTreeProducer(infiles='./step*root',outfilename='out.root',this_mass=1,
     # get the lifetime of the B
     event.the_b_mother.beta  = event.the_b_mother.p4().Beta()
     event.the_b_mother.gamma = event.the_b_mother.p4().Gamma()   
-    event.the_b_mother.ct_reco = event.Lxyz_pl / (event.the_b_mother.beta * event.the_b_mother.gamma)
+    b_p4 = event.the_b_mother.p4()
+    event.the_b_mother.y     = 0.5 * ROOT.TMath.Log( (b_p4.E()+b_p4.Pz()) / (b_p4.E()-b_p4.Pz()) ) if (b_p4.E()-b_p4.Pz())!=0 else -99
+    #event.the_b_mother.ct_reco = event.Lxyz_pl / (event.the_b_mother.beta * event.the_b_mother.gamma)
   
     tofill['run'        ] = event.eventAuxiliary().run()
     tofill['lumi'       ] = event.eventAuxiliary().luminosityBlock()
@@ -423,23 +405,25 @@ def runGenTreeProducer(infiles='./step*root',outfilename='out.root',this_mass=1,
     if event.the_b_mother:
         tofill['b_pt'   ] = event.the_b_mother.pt()     
         tofill['b_eta'  ] = event.the_b_mother.eta()    
+        tofill['b_y'    ] = event.the_b_mother.y 
         tofill['b_phi'  ] = event.the_b_mother.phi()    
         tofill['b_mass' ] = event.the_b_mother.mass()   
         tofill['b_q'    ] = event.the_b_mother.charge()   
         tofill['b_pdgid'] = event.the_b_mother.pdgId()   
-        tofill['b_ct_reco'] = event.the_b_mother.ct_reco   
-     
-    tofill['hnl_pt'     ] = event.the_hn.pt()     
-    #tofill['hnl_p'      ] = event.the_hn.pt() * ROOT.TMath.CosH(event.the_hn.eta())
-    tofill['hnl_eta'    ] = event.the_hn.eta()    
-    tofill['hnl_phi'    ] = event.the_hn.phi()    
-    tofill['hnl_mass'   ] = event.the_hn.mass()   
-    #tofill['hnl_ct_lhe' ] = event.hnl_ct_lhe 
-    if len(the_lep_daughters):
-      tofill['hnl_ct_reco'] = event.the_hn.ct_reco 
-    tofill['hnl_beta'   ] = event.the_hn.beta  
-    tofill['hnl_gamma'  ] = event.the_hn.gamma  
-    tofill['hnl_pdgid'  ] = event.the_hn.pdgId()  
+        #tofill['b_ct_reco'] = event.the_b_mother.ct_reco   
+    
+    if event.the_hn: 
+      tofill['hnl_pt'     ] = event.the_hn.pt()     
+      #tofill['hnl_p'      ] = event.the_hn.pt() * ROOT.TMath.CosH(event.the_hn.eta())
+      tofill['hnl_eta'    ] = event.the_hn.eta()    
+      tofill['hnl_phi'    ] = event.the_hn.phi()    
+      tofill['hnl_mass'   ] = event.the_hn.mass()   
+      #tofill['hnl_ct_lhe' ] = event.hnl_ct_lhe 
+      if len(the_lep_daughters)!=0:
+        tofill['hnl_ct_reco'] = event.the_hn.ct_reco 
+      tofill['hnl_beta'   ] = event.the_hn.beta  
+      tofill['hnl_gamma'  ] = event.the_hn.gamma  
+      tofill['hnl_pdgid'  ] = event.the_hn.pdgId()  
   
     if event.the_d:
       tofill['d_pt'   ] = event.the_d.pt()     
@@ -448,23 +432,7 @@ def runGenTreeProducer(infiles='./step*root',outfilename='out.root',this_mass=1,
       tofill['d_mass' ] = event.the_d.mass()   
       tofill['d_q'    ] = event.the_d.charge()   
       tofill['d_pdgid'] = event.the_d.pdgId()   
-  
-#        if event.the_k:
-#           tofill['k_pt'   ] = event.the_k.pt()     
-#           tofill['k_eta'  ] = event.the_k.eta()    
-#           tofill['k_phi'  ] = event.the_k.phi()    
-#           tofill['k_mass' ] = event.the_k.mass()   
-#           tofill['k_q'    ] = event.the_k.charge()   
-#           tofill['k_pdgid'] = event.the_k.pdgId()   
-#       
-#        if event.the_pi:
-#           tofill['pi_pt'   ] = event.the_pi.pt()     
-#           tofill['pi_eta'  ] = event.the_pi.eta()    
-#           tofill['pi_phi'  ] = event.the_pi.phi()    
-#           tofill['pi_mass' ] = event.the_pi.mass()   
-#           tofill['pi_q'    ] = event.the_pi.charge()   
-#           tofill['pi_pdgid'] = event.the_pi.pdgId()   
-  
+   
     if event.the_pl:
        tofill['l0_pt'      ] = event.the_pl.pt()
        tofill['l0_eta'     ] = event.the_pl.eta()
@@ -472,49 +440,50 @@ def runGenTreeProducer(infiles='./step*root',outfilename='out.root',this_mass=1,
        tofill['l0_mass'    ] = event.the_pl.mass()
        tofill['l0_q'       ] = event.the_pl.charge()
        tofill['l0_pdgid'   ] = event.the_pl.pdgId()
+ 
+    if event.the_hn: 
+      if event.the_hn.lep:
+         tofill['l1_pt'      ] = event.the_hn.lep.pt()
+         tofill['l1_eta'     ] = event.the_hn.lep.eta()
+         tofill['l1_phi'     ] = event.the_hn.lep.phi()
+         tofill['l1_mass'    ] = event.the_hn.lep.mass()
+         tofill['l1_q'       ] = event.the_hn.lep.charge()
+         tofill['l1_pdgid'   ] = event.the_hn.lep.pdgId()
+    
+      if event.the_hn.pi:   
+         tofill['pi1_pt'      ] = event.the_hn.pi.pt()
+         tofill['pi1_eta'     ] = event.the_hn.pi.eta()
+         tofill['pi1_phi'     ] = event.the_hn.pi.phi()
+         tofill['pi1_mass'    ] = event.the_hn.pi.mass()
+         tofill['pi1_q'       ] = event.the_hn.pi.charge()
+         tofill['pi1_pdgid'   ] = event.the_hn.pi.pdgId()
   
-    if event.the_hn.lep:
-       tofill['l1_pt'      ] = event.the_hn.lep.pt()
-       tofill['l1_eta'     ] = event.the_hn.lep.eta()
-       tofill['l1_phi'     ] = event.the_hn.lep.phi()
-       tofill['l1_mass'    ] = event.the_hn.lep.mass()
-       tofill['l1_q'       ] = event.the_hn.lep.charge()
-       tofill['l1_pdgid'   ] = event.the_hn.lep.pdgId()
-  
-    if event.the_hn.pi:   
-       tofill['pi1_pt'      ] = event.the_hn.pi.pt()
-       tofill['pi1_eta'     ] = event.the_hn.pi.eta()
-       tofill['pi1_phi'     ] = event.the_hn.pi.phi()
-       tofill['pi1_mass'    ] = event.the_hn.pi.mass()
-       tofill['pi1_q'       ] = event.the_hn.pi.charge()
-       tofill['pi1_pdgid'   ] = event.the_hn.pi.pdgId()
-  
-    # invariant mass
-    tofill['lep_pi_invmass' ] = event.the_hnldaughters.mass()
-    tofill['bpartial_invmass'] = event.the_bdaughters_partial.mass()
-    #if doBtoD and len(the_ds):
-    #  tofill['k_pi_invmass' ] = event.the_d0daughters.mass()
+      tofill['lep_pi_invmass' ] = event.the_hnldaughters.mass()
+      tofill['bpartial_invmass'] = event.the_bdaughters_partial.mass()
     #tofill['b_invmass'] = event.the_bdaughters_all.mass()
     
-    # hnl charge
-    tofill['hnl_q'      ] = event.the_hn.lep.charge() + event.the_hn.pi.charge() 
-    tofill['hnl_qprop']   = event.the_hn.charge()
+      # hnl charge
+      if event.the_hn.lep and event.the_hn.pi:
+        tofill['hnl_q'      ] = event.the_hn.lep.charge() + event.the_hn.pi.charge() 
+      tofill['hnl_qprop']   = event.the_hn.charge()
     
-    if len(the_pls) and len(the_lep_daughters):
+    if len(the_pls)!=0 and len(the_lep_daughters)!=0:
       tofill['Lz'        ] = event.Lz
       tofill['Lxy'        ] = event.Lxy
       tofill['Lxyz'       ] = event.Lxyz
       #tofill['Lxy_cos'    ] = event.cos_pointing
   
-    tofill['Lxyz_l0'] = event.Lxyz_pl
+    if event.the_pl and event.the_b_mother:
+      tofill['Lxyz_l0'] = event.Lxyz_pl
 
-    tofill['weight_reco'] = event.weight_reco
-  
     # weights for ctau reweighting 
-    for vv in new_vvs:
-        tofill['weight_%s'      %(str(vv).replace('-', 'm'))] = weight_to_new_ctau(old_ctau=this_ctau, old_v2=this_vv, new_v2=vv, ct=event.the_hn.ct_reco)[0]
-        tofill['ctau_%s'        %(str(vv).replace('-', 'm'))] = weight_to_new_ctau(old_ctau=this_ctau, old_v2=this_vv, new_v2=vv, ct=event.the_hn.ct_reco)[1]
-        tofill['xs_scale_to_%s' %(str(vv).replace('-', 'm'))] = vv / this_vv
+    if event.the_hn:
+      for vv in new_vvs:
+          tofill['weight_%s'      %(str(vv).replace('-', 'm'))] = weight_to_new_ctau(old_ctau=this_ctau, old_v2=this_vv, new_v2=vv, ct=event.the_hn.ct_reco)[0]
+          tofill['ctau_%s'        %(str(vv).replace('-', 'm'))] = weight_to_new_ctau(old_ctau=this_ctau, old_v2=this_vv, new_v2=vv, ct=event.the_hn.ct_reco)[1]
+          tofill['xs_scale_to_%s' %(str(vv).replace('-', 'm'))] = vv / this_vv
+  
+    tofill['weight_reco'] = event.weight_reco
          
     ntuple.Fill(array('f',tofill.values()))
   
@@ -531,7 +500,6 @@ def getOptions():
    #parser.add_argument('--expr', type=str, dest='expr', help='file regular expression', default='step1*root')
    parser.add_argument('--points', type=str, dest='pointFile', help='name of file contaning information on scan to be run', default='points.py')
    parser.add_argument('--maxEvts', type=int, dest='maxEvts', help='max number of events to be run', default=-1)
-   parser.add_argument('--doBtoD', dest='doBtoD', help='do exclusive decay B->DmuHNL', action='store_true', default=False)
    parser.add_argument('--doDebug', dest='doDebug', help='', action='store_true', default=False)
    parser.add_argument('--doFromMini', dest='doFromMini', help='run on the miniAOD, as opposed to the GEN-SIM', action='store_true', default=False)
    parser.add_argument('--doSaveScratch', dest='doSaveScratch', help='save on scratch, not on work', action='store_true', default=False)
@@ -549,9 +517,9 @@ if __name__ == "__main__":
   for p in ps.points:
 
     user = os.environ["USER"] 
-    #fileExpr = 'step1*nj*root' if not opt.doFromMini else 'step4*root'
-    fileExpr = 'step1_nj1.root' 
+    fileExpr = 'step1*nj*root' if not opt.doFromMini else 'step4*root'
     expr = '/pnfs/psi.ch/cms/trivcat/store/user/{usr}/BHNLsGen/{pl}/mass{m}_ctau{ctau}/{ex}'.format(usr=user,pl=opt.pl,m=p.mass,ctau=p.ctau,ex=fileExpr)
+    #expr = '/work/mratti/GEN_HNL/CMSSW_10_2_15/src/HNLsGen/slurm/pilot_V15_control_BfilterNoMufilter/BPH-step1_numEvent357.root'
     #expr = '/work/mratti/GEN_HNL_newPythia/fragments_test/CMSSW_10_2_15/src/ok_BToNMuX_NToEMuPi_test.root'
     #expr = '/work/mratti/GEN_HNL_newPythia/fragments_test/CMSSW_10_2_15/src/BToNMuX_NToEMuPi_test.root'
     #expr = '/work/mratti/GEN_HNL_newPythia/fragments_test/CMSSW_10_2_27/src/BToNMuX_NToEMuPi_test.root'
@@ -571,5 +539,5 @@ if __name__ == "__main__":
     print('   ctau: {} mm'.format(p.ctau))
     print('   VV  : {} \n'.format(p.vv))
 
-    runGenTreeProducer(infiles=expr,outfilename=outfilename,this_mass=p.mass,this_ctau=p.ctau,this_vv=p.vv,doBtoD=opt.doBtoD,doFromMini=opt.doFromMini)
+    runGenTreeProducer(infiles=expr,outfilename=outfilename,this_mass=p.mass,this_ctau=p.ctau,this_vv=p.vv,doFromMini=opt.doFromMini)
 
