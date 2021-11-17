@@ -98,6 +98,7 @@ branches = [
    
     # invariant masses
     'lep_pi_invmass',
+    'lep_mu_invmass',
     'k_pi_invmass',
     #'b_invmass',
     'bpartial_invmass',
@@ -329,6 +330,7 @@ def runGenTreeProducer(infiles='./step*root',outfilename='out.root',this_mass=1,
       # # # partial
       if len(the_pls)!=0 and len(the_hns)!=0:
         event.the_bdaughters_partial = event.the_hn.p4() + event.the_pl.p4()
+        event.the_bdaughters_mu_lep  = event.the_pl.p4() + event.the_hn.lep.p4()
       # # # total
       #event.the_bdaughters_all = sum([ii.p4() for ii in event.the_b_mother.daughters])
       
@@ -460,6 +462,7 @@ def runGenTreeProducer(infiles='./step*root',outfilename='out.root',this_mass=1,
   
       tofill['lep_pi_invmass' ] = event.the_hnldaughters.mass()
       tofill['bpartial_invmass'] = event.the_bdaughters_partial.mass()
+      tofill['lep_mu_invmass'] = event.the_bdaughters_mu_lep.mass()
     #tofill['b_invmass'] = event.the_bdaughters_all.mass()
     
       # hnl charge

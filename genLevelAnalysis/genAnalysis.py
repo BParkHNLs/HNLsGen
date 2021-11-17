@@ -181,6 +181,7 @@ class Sample(object):
     'hnl_invmass'   : PlotOpt('lep_pi_invmass', '(50,0,5)', 'HNL invariant mass, m(#mu,#pi) [GeV]', 'a.u.', False, False),     
 #    'd_invmass'     : PlotOpt('k_pi_invmass', '(50,0,5)', 'D meson invariant mass, m(K,#pi) [GeV]', 'a.u.', False, False),      
     #'b_invmass'     : PlotOpt('b_invmass', '(50,2,7)', 'B invariant mass [GeV]', 'a.u.', False, False),     
+    'mulep_invmass'    : PlotOpt('lep_mu_invmass', '(70,0,7)', 'm(#ell,#mu^{trig}) [GeV]', 'a.u.', False, False),     
     'bpartial_invmass'     : PlotOpt('bpartial_invmass', '(70,0,7)', 'm(HNL,#mu^{trig}) [GeV]', 'a.u.', False, False),     
     'bpartial_invmass_log'     : PlotOpt('bpartial_invmass', '(70,0,7)', 'm(HNL,#mu^{trig}) [GeV]', 'a.u.', False, True),     
     #'Lxy_cos', # cosine of the pointing angle in the transverse plane
@@ -699,6 +700,8 @@ class SampleList(object):
         h.Draw(opt)
         hMax[what].append(h)
         h.SetLineColor(self.colors[i])
+        #hMax[what][0].GetXaxis().SetTitle(h.GetXaxis().GetTitle())
+        #hMax[what][0].GetYaxis().SetTitle(h.GetYaxis().GetTitle())
         h.SetMarkerColor(self.colors[i])
         h.SetMarkerStyle(self.styles[i])
         h.SetMarkerSize(4)
@@ -731,6 +734,7 @@ class SampleList(object):
       canv.SaveAs('./plots/' + self.label + suffix + '/' + cname + norm_suffix + '.png')
       canv.SaveAs('./plots/' + self.label + suffix + '/' + cname + norm_suffix + '.pdf')
       canv.SaveAs('./plots/' + self.label + suffix + '/' + cname + norm_suffix + '.C')
+      canv.SaveAs('./plots/' + self.label + suffix + '/' + cname + norm_suffix + '.root')
   
   def plotRatios(self):
     ''' 
@@ -1011,19 +1015,19 @@ if __name__ == "__main__":
   doSkipDispl = False #
   doDisplZ = False #
   doSkipHNLptEta = False
-  doCompareAnalysis = True
+  doCompareAnalysis = False
   doTestAnalysis = False
   doFixedMassAnalysis = False
   doOld = False
   doRwAnalysis = False
   doFixedVVAnalysis = False
-  doBenchmarkAnalysis = False
+  doBenchmarkAnalysis = True
   doGridAnalysis = False
   doGridBc = False
   muTrigPt = 9 # 0 1 2 5 7 9
   ####
 
-  suffix='_incl' # if doInclusive else '_excl'
+  suffix='' 
   if doSkipDispl: suffix += '_skipDispl'
   if doDisplZ: suffix += '_wLz'
   if doSkipHNLptEta: suffix += '_skipHNLptEta'
