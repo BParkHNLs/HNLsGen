@@ -742,7 +742,10 @@ class SampleList(object):
     ''' 
     snum = self.samples[0]
     sden = self.samples[1]
-    sden2 = self.samples[2]
+    if len(self.samples) > 2: 
+      sden2 = self.samples[2]
+    else:
+      sden2 = None
 
     for j, what in enumerate(snum.histos.keys()):     
       hNum = snum.histos[what]
@@ -848,8 +851,7 @@ def doAnalysis(path,pl,points,name,leglabel='',path2=None,pl2=None,points2=None,
       s.fillHistoStats()
       s.fillHistos()
     elif doFixedMassAnalysis:
-      pass 
-      # do not fill histograms, only acceptance is needed
+      s.fillHistos()
     else:
       s.fillHistos() # no selection
 
@@ -1017,7 +1019,7 @@ if __name__ == "__main__":
   doSkipHNLptEta = False
   doCompareAnalysis = False
   doTestAnalysis = False
-  doFixedMassAnalysis = False
+  doFixedMassAnalysis = True
   doOld = False
   doRwAnalysis = False
   doFixedVVAnalysis = False
@@ -1054,9 +1056,17 @@ if __name__ == "__main__":
     #points = [Point(mass=2.0,ctau=None,vv=1.5e-05,is_ctau_rw=False)]
     #points2 = [Point(mass=2.0,ctau=None,vv=1.5e-05,is_ctau_rw=False)]
     #points  = [Point(mass=3.0,ctau=184.256851021,vv=None,is_ctau_rw=False)]
-    points  = [Point(mass=3.0,ctau=184.0,vv=None,is_ctau_rw=False)]
-    points2 = [Point(mass=3.0,ctau=184.0,vv=None,is_ctau_rw=False)]
-    points3 = [Point(mass=3.0,ctau=184.0,vv=None,is_ctau_rw=False)]
+    points  = [ 
+               #Point(mass=3.0,ctau=100.0,vv=None,is_ctau_rw=False),
+               #Point(mass=4.5,ctau=1.0,  vv=None,is_ctau_rw=False), 
+               Point(mass=4.5,ctau=1.0,  vv=None,is_ctau_rw=False), 
+              ]
+    points2 = [
+               #Point(mass=3.0,ctau=100.0,vv=None,is_ctau_rw=False),
+               #Point(mass=4.5,ctau=1.0,  vv=None,is_ctau_rw=False),
+               Point(mass=5.5,ctau=1.0,  vv=None,is_ctau_rw=False), 
+               ]
+    #points3 = [Point(mass=3.0,ctau=100.0,vv=None,is_ctau_rw=False)]
     #points = [ Point(mass=2.0, ctau=100.0,  vv=None,is_reco_rw=False,),]
     #points2 =[ Point(mass=2.0, ctau=100.0,  vv=None,is_reco_rw=False,),]
 
@@ -1067,7 +1077,7 @@ if __name__ == "__main__":
       p.stamp()
     existing_points2=checkFiles(path=path2,points=points2)
     if not opt.pl3: 
-      doAnalysis(path=path,pl=opt.pl,points=existing_points,name='comp_BvsBc',path2=path2,pl2=opt.pl2,points2=existing_points2,leglabel='B^{#pm},B^{0},B_{s}', leglabel2='B_{c}')
+      doAnalysis(path=path,pl=opt.pl,points=existing_points,name='comp_BvsBc_phaseSpClosing',path2=path2,pl2=opt.pl2,points2=existing_points2,leglabel='B^{#pm},B^{0},B_{s}', leglabel2='B_{c}')
     else:
       for p in points3:
         p.stamp()
@@ -1326,23 +1336,16 @@ if __name__ == "__main__":
   if doBenchmarkAnalysis:
     ################
     points = [
-    
-##      Point(mass=0.5,ctau=None,vv=2e-05,orig_vv=8.6e-02,is_ctau_rw=True),
-##      Point(mass=1.0,ctau=None,vv=8e-06,orig_vv=2.7e-03,is_ctau_rw=True),
-#      Point(mass=1.5,ctau=None,vv=2e-06,orig_vv=3.5e-04,is_ctau_rw=True),
-##      Point(mass=2.0,ctau=None,vv=2e-06,orig_vv=8.4e-05,is_ctau_rw=True),
-##      Point(mass=3.0,ctau=None,vv=1e-05,orig_vv=1.1e-05,is_ctau_rw=True),
-##      Point(mass=4.5,ctau=None,vv=1e-04,orig_vv=2.0e-04,is_ctau_rw=True),
-#      Point(mass=0.5,ctau=None,vv=2e-05,is_ctau_rw=False),
-#      Point(mass=1.0,ctau=None,vv=8e-06,is_ctau_rw=False),
-#      Point(mass=1.5,ctau=None,vv=2e-06,is_ctau_rw=False),
-#      Point(mass=2.0,ctau=None,vv=2e-06,is_ctau_rw=False),
-#      Point(mass=3.0,ctau=None,vv=1e-05,is_ctau_rw=False),
-#      Point(mass=4.5,ctau=None,vv=1e-04,is_ctau_rw=False),
-      Point(mass=1.0,ctau=10000.0,vv=None,is_ctau_rw=False),
+      # B 
+      #Point(mass=1.0,ctau=10000.0,vv=None,is_ctau_rw=False),
+      #Point(mass=1.5,ctau=1000.0,vv=None,is_ctau_rw=False),
+      #Point(mass=2.0,ctau=100.0,vv=None,is_ctau_rw=False),
+      #Point(mass=3.0,ctau=100.0,vv=None,is_ctau_rw=False),
+      #Point(mass=4.5,ctau=1.0,vv=None,is_ctau_rw=False),
+      # Bc
       Point(mass=3.0,ctau=100.0,vv=None,is_ctau_rw=False),
       Point(mass=4.5,ctau=1.0,vv=None,is_ctau_rw=False),
-
+      Point(mass=5.5,ctau=1.0,vv=None,is_ctau_rw=False), 
     ]
 
     for p in points:
