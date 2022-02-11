@@ -1,5 +1,7 @@
 '''
-This script is used to produce several plots regarding the HNL decay (lifetime, BRs, comparison between Peskin and Bondarenko)
+This script is used to produce several plots regarding the HNL decay (lifetime, BRs)
+In particular it was used to perform the Bondarenko vs Peskin studies shown in 
+https://indico.cern.ch/event/978280/contributions/4120549/attachments/2148757/3653052/2020_11_26_Bpark_HNL.pdf
 '''
 
 from decays import *
@@ -34,7 +36,7 @@ labels = ['Leptonic', 'Hadronic', 'Neutrinos', 'Total']
 
 ####
 ## Partial widths, comparison between Peskin and Bondarenko, as a function of HNL mass
-## slide 6 https://indico.cern.ch/event/978280/contributions/4120549/attachments/2148757/3653052/2020_11_26_Bpark_HNL.pdf
+## slide 6 
 ####
 
 ### Log Plot
@@ -92,7 +94,7 @@ fig.savefig('./plots/HNLlifetime_ratio_lin.png')
 ####
 ## Branching ratio composition for different processes, as a function of HNL mass
 ## Figure 13 right of Bondarenko
-## Slide 7, left https://indico.cern.ch/event/978280/contributions/4120549/attachments/2148757/3653052/2020_11_26_Bpark_HNL.pdf
+## Slide 7,
 ####
 gammas_bondarenko_lep = [2*decays[im].decay_rate['tot_lep'] for im,m in enumerate(masses)]
 gammas_bondarenko_had = [2*decays[im].decay_rate['tot_had'] for im,m in enumerate(masses)]
@@ -123,7 +125,7 @@ fig.savefig('./plots/HNL_BR_bon_log.png')
 
 ####
 ## Lifetime of N as a function of HNL mass
-## slide 7 right https://indico.cern.ch/event/978280/contributions/4120549/attachments/2148757/3653052/2020_11_26_Bpark_HNL.pdf
+## slide 7 right
 ####
 
 taus_bondarenko_tot = [ctau / const_c * 0.001 for ctau in ctaus_bondarenko_tot ]
@@ -160,7 +162,7 @@ fig.savefig('./plots/HNL_gamma_over_mass_log.png')
 
 ####
 ## BR comparison between Peskin and Bondarenko, as a function of HNL mass 
-## see slide 8 of https://indico.cern.ch/event/978280/contributions/4120549/attachments/2148757/3653052/2020_11_26_Bpark_HNL.pdf
+## see slide 8
 ####
 # compare BRs (N->mupi)
 gammas_bondarenko_Nmupi = [2*decays[im].decay_rate['mupi'] for im,m in enumerate(masses)]
