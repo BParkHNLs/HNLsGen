@@ -91,8 +91,7 @@ fig.savefig('./plots/HNLlifetime_ratio_lin.png')
 
 ####
 ## Branching ratio composition for different processes, as a function of HNL mass
-## Figure 5 of AN 
-## Figure 12 right of Bondarenko
+## Figure 13 right of Bondarenko
 ## Slide 7, left https://indico.cern.ch/event/978280/contributions/4120549/attachments/2148757/3653052/2020_11_26_Bpark_HNL.pdf
 ####
 gammas_bondarenko_lep = [2*decays[im].decay_rate['tot_lep'] for im,m in enumerate(masses)]
