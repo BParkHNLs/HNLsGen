@@ -1,3 +1,10 @@
+'''
+This script was used to estimate the relative importance between two contributions: (B -> mu N X) and (B -> X D -> mu N X)
+The calculations are purely based on BRs.
+See the presentation for more details:
+https://indico.cern.ch/event/1045239/contributions/4390951/attachments/2270279/3855507/2021_06_24_Bpark_BtoD.pdf
+'''
+
 import os
 import sys
 import numpy as np
@@ -6,6 +13,7 @@ from array import array
 
 from python.common import *
 from python.decays import Decays
+
 
 #from python.old_common import BR__B_l_N, BR__B_D0_l_N, BR__B_l_nu, BR__B_D0_l_nu, # BR_HNLmupion
 
