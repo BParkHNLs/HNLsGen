@@ -1,3 +1,7 @@
+'''
+This version should only be used to make comparisons between Peskin and Bondarenko
+'''
+
 
 import numpy as np
 import math
