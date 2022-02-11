@@ -1,6 +1,7 @@
 '''
 Plotting script for the 3D ctau plot as a function of VV and mass - main grid
 Includes ctau levels and a grid of points that were requested for central production
+Figure 8 of AN
 '''
 
 from common import getCtau
