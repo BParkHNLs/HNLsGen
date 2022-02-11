@@ -1,4 +1,6 @@
-# http://home.thep.lu.se/~torbjorn/talks/fnal04lha.pdf
+'''
+Script to produce gen-level ntuples out of GEN-SIM files
+'''
 
 import sys
 import os
