@@ -162,7 +162,6 @@ for vv in new_vvs:
 import pandas as pd
 bins_pt  = [(0,7), (7,10), (10,15),(15,30), (30,1000)] #rows
 bins_lxy = [(0,10),(10,30),(30,50),(50,100),(100,150),(150,300),(300,500),(500,1e10)] #columns, everything in mm
-#reco_weights = pd.read_csv('reco_weights_updated_merged.csv', sep=',', comment='#') 
 reco_weights = pd.read_csv('reco_weights_updated.csv', sep=',', comment='#') # version of 07/07 
 
 ###################

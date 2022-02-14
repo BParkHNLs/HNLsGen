@@ -8,13 +8,6 @@ from spares import *
 from glob import glob
 from array import array
 import ratioplot as RP
-# couplings to be tested, for which the reweight is run
-
-#from genTreeProducer import new_vvs
-#small_new_vvs = new_vvs[::4]  # only select one every three elements
-#small_new_vvs.reverse()
-#new_vvs.reverse()
-#small_new_vvs = new_vvs[0:10]
 
 from python.common import *
 from python.decays import Decays

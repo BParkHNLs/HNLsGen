@@ -53,11 +53,9 @@ Therefore adopt different strategy:
 
 ## Drivers 
 ```
-BPH_start_cfg.py                  => mod tau->3mu  with Fall18, starting point
-BPH_mod_cfg.py                    => FROZEN DRIVER, for sharing (version shared with Rome)
-step1.py                          => HNL from B species other than Bc
-step1_Bc.py                       => HNL from Bcs 
-step1_control.py                  => control channel generation                
+(step1.py)[./cmsDrivers/step1.py]                          => HNL from B species other than Bc
+(step1_Bc.py)[./cmsDrivers/step1_Bc.py]                       => HNL from Bcs 
+(step1_control.py)[./cmsDrivers/step1_control.py]                  => control channel generation                
 ```
 
 ## Production
@@ -73,7 +71,7 @@ python prodHelper.py --help
 The ```genHelper.py``` is now deprecated.
 
 ### Notes for Bc production
-We currently shower Bc+ events, starting from LHE files produced by someone else.
+We currently shower Bc+ events, starting from existing LHE files.
 
 The LHE => ROOT conversion is done via ```cmsDrivers/BHNL_Bc_LHEtoRoot_TEMPLATE.py``` and submitted via ```slurm/submitter_lhegen.py```
 
@@ -95,19 +93,5 @@ python genTreeProducer.py --pl V05_muFromB_pt5_eta1p6_n600000_njt30 --points V05
 To analyze the gen-level ntuples, edit possible options and then run:
 ```
 python genAnalysis.py --pl V05_muFromB_pt5_eta1p6_n600000_njt30
-```
-
-
-***OBOLETE***
-Proto-analyzer of ```edm::HepMCProduct```
-```
-cd genLevelAnalysis
-cmsRun test_EvtGenTestAnalyzer.py
-```
-
-To analyze particles' distributions
-```
-cd genLevelAnalysis
-python hnl_signal_reweighter.py
 ```
 
