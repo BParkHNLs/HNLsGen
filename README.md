@@ -51,14 +51,21 @@ Therefore adopt different strategy:
 * the follow again above mentioend twiki page...
 
 
-## Drivers 
+## The [./python](./python) directory
+Besides the classes for HNL production and decay, it includes several plotting scripts, denoted with prefix “study”. Each script has a short comment at the beginning for documentation purposes.
+
+## The [./cmsDrivers](./cmsDrivers) directory
+It contains the cmsdrivers used for steering the production
 ```
-(step1.py)[./cmsDrivers/step1.py]                          => HNL from B species other than Bc
-(step1_Bc.py)[./cmsDrivers/step1_Bc.py]                       => HNL from Bcs 
-(step1_control.py)[./cmsDrivers/step1_control.py]                  => control channel generation                
+[step1.py](./cmsDrivers/step1.py)                          => HNL from B species other than Bc
+[step1_Bc.py](./cmsDrivers/step1_Bc.py)                       => HNL from Bcs 
+[step1_control.py](./cmsDrivers/step1_control.py)                  => control channel generation                
 ```
 
-## Production
+## The [./evtGenData](./evtGenData) directory
+It contains files needed by evtgen for the definition of the HNL and its properties, as well as for the decay chain including the HNL.
+
+## Production, the [./slurm](./slurm) directory
 ### vacuum ==> GEN-SIM ==> miniAOD
 Submission to slurm:
 ```
@@ -77,7 +84,7 @@ The LHE => ROOT conversion is done via ```cmsDrivers/BHNL_Bc_LHEtoRoot_TEMPLATE.
 
 For showering, instead of using the ```GeneratorFilter```, we use the ```HadronizerFilter```, details in ```cmsDrivers/step1_Bc.py```
 
-## Analyze
+## Analyze, the [./genLevelAnalysis](./genLevelAnalysis) directory
 To visualize the decay chain in a tree (printout to screen), using ```vector<reco::genParticles>```
 ```
 cd genLevelAnalysis
