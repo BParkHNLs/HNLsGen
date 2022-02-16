@@ -51,16 +51,21 @@ Therefore adopt different strategy:
 * the follow again above mentioend twiki page...
 
 
-## Drivers 
+## The [./python](./python) directory
+Besides the classes for HNL production and decay, it includes several plotting scripts, denoted with prefix “study”. Each script has a short comment at the beginning for documentation purposes.
+
+## The [./cmsDrivers](./cmsDrivers) directory
+It contains the cmsdrivers used for steering the production
 ```
-BPH_start_cfg.py                  => mod tau->3mu  with Fall18, starting point
-BPH_mod_cfg.py                    => FROZEN DRIVER, for sharing (version shared with Rome)
-step1.py                          => HNL from B species other than Bc
-step1_Bc.py                       => HNL from Bcs 
-step1_control.py                  => control channel generation                
+[step1.py](./cmsDrivers/step1.py)                          => HNL from B species other than Bc
+[step1_Bc.py](./cmsDrivers/step1_Bc.py)                       => HNL from Bcs 
+[step1_control.py](./cmsDrivers/step1_control.py)                  => control channel generation                
 ```
 
-## Production
+## The [./evtGenData](./evtGenData) directory
+It contains files needed by evtgen for the definition of the HNL and its properties, as well as for the decay chain including the HNL.
+
+## Production, the [./slurm](./slurm) directory
 ### vacuum ==> GEN-SIM ==> miniAOD
 Submission to slurm:
 ```
@@ -73,13 +78,13 @@ python prodHelper.py --help
 The ```genHelper.py``` is now deprecated.
 
 ### Notes for Bc production
-We currently shower Bc+ events, starting from LHE files produced by someone else.
+We currently shower Bc+ events, starting from existing LHE files.
 
 The LHE => ROOT conversion is done via ```cmsDrivers/BHNL_Bc_LHEtoRoot_TEMPLATE.py``` and submitted via ```slurm/submitter_lhegen.py```
 
 For showering, instead of using the ```GeneratorFilter```, we use the ```HadronizerFilter```, details in ```cmsDrivers/step1_Bc.py```
 
-## Analyze
+## Analyze, the [./genLevelAnalysis](./genLevelAnalysis) directory
 To visualize the decay chain in a tree (printout to screen), using ```vector<reco::genParticles>```
 ```
 cd genLevelAnalysis
@@ -95,19 +100,5 @@ python genTreeProducer.py --pl V05_muFromB_pt5_eta1p6_n600000_njt30 --points V05
 To analyze the gen-level ntuples, edit possible options and then run:
 ```
 python genAnalysis.py --pl V05_muFromB_pt5_eta1p6_n600000_njt30
-```
-
-
-***OBOLETE***
-Proto-analyzer of ```edm::HepMCProduct```
-```
-cd genLevelAnalysis
-cmsRun test_EvtGenTestAnalyzer.py
-```
-
-To analyze particles' distributions
-```
-cd genLevelAnalysis
-python hnl_signal_reweighter.py
 ```
 

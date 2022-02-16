@@ -660,7 +660,7 @@ def getOptions():
   parser.add_argument('--maxdisplacement', type=float, dest='maxdisplacement', help='maximum 2D displacement in mm', default=1300)
   parser.add_argument('--mintrackpt', type=float, dest='mintrackpt', help='minimum track pt', default=0.0)
   parser.add_argument('--minleptonpt', type=float, dest='minleptonpt', help='minimum lepton pt', default=0.0)
-  parser.add_argument('--dofragments', dest='dofragments', help='write the relevant fragments', action='store_true', default=False)
+  parser.add_argument('--dofragments', dest='dofragments', help='write the relevant fragments (not used for the jobs though)', action='store_true', default=False)
 
 
   return parser.parse_args()

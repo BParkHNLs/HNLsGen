@@ -1,4 +1,6 @@
-# http://home.thep.lu.se/~torbjorn/talks/fnal04lha.pdf
+'''
+Script to produce gen-level ntuples out of GEN-SIM files
+'''
 
 import sys
 import os
@@ -98,6 +100,7 @@ branches = [
    
     # invariant masses
     'lep_pi_invmass',
+    'lep_mu_invmass',
     'k_pi_invmass',
     #'b_invmass',
     'bpartial_invmass',
@@ -159,7 +162,6 @@ for vv in new_vvs:
 import pandas as pd
 bins_pt  = [(0,7), (7,10), (10,15),(15,30), (30,1000)] #rows
 bins_lxy = [(0,10),(10,30),(30,50),(50,100),(100,150),(150,300),(300,500),(500,1e10)] #columns, everything in mm
-#reco_weights = pd.read_csv('reco_weights_updated_merged.csv', sep=',', comment='#') 
 reco_weights = pd.read_csv('reco_weights_updated.csv', sep=',', comment='#') # version of 07/07 
 
 ###################
@@ -329,6 +331,7 @@ def runGenTreeProducer(infiles='./step*root',outfilename='out.root',this_mass=1,
       # # # partial
       if len(the_pls)!=0 and len(the_hns)!=0:
         event.the_bdaughters_partial = event.the_hn.p4() + event.the_pl.p4()
+        event.the_bdaughters_mu_lep  = event.the_pl.p4() + event.the_hn.lep.p4()
       # # # total
       #event.the_bdaughters_all = sum([ii.p4() for ii in event.the_b_mother.daughters])
       
@@ -460,6 +463,7 @@ def runGenTreeProducer(infiles='./step*root',outfilename='out.root',this_mass=1,
   
       tofill['lep_pi_invmass' ] = event.the_hnldaughters.mass()
       tofill['bpartial_invmass'] = event.the_bdaughters_partial.mass()
+      tofill['lep_mu_invmass'] = event.the_bdaughters_mu_lep.mass()
     #tofill['b_invmass'] = event.the_bdaughters_all.mass()
     
       # hnl charge

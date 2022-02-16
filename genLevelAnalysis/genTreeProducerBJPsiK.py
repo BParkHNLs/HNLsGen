@@ -1,4 +1,8 @@
-# http://home.thep.lu.se/~torbjorn/talks/fnal04lha.pdf
+'''
+Script to produce gen-level ntuples out of GEN-SIM files - specific of the B->JpsiK channel
+this was needed to calculate some truth-level information for the fiducial measurement. 
+It is expected that this will not be needed anymore.
+'''
 
 import sys
 import os

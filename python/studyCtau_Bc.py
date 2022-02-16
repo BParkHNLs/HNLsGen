@@ -1,3 +1,8 @@
+'''
+Plotting script for the 3D ctau plot as a function of VV and mass - Bc grid
+Includes ctau levels and a grid of points that were requested for central production
+Figure 8 of AN
+'''
 
 from common import getCtau
 
@@ -19,7 +24,8 @@ masses = np.array( [float('{:.2f}'.format(0.8+i*0.1)) for i in range(0,53) ] )# 
 #vvs = np.logspace( np.log10(1e-06), np.log10(3e-04), 50, base=10)
 vvs = np.logspace( np.log10(1e-06), np.log10(1), 200, base=10)
 #vvs = np.logspace( np.log10(1e-06), np.log10(1), 10, base=10)
-ctau_levels = np.array([0.00001,0.0001,0.001, 0.01, 0.1, 1.,10.])
+#ctau_levels = np.array([0.00001,0.0001,0.001, 0.01, 0.1, 1.,10.])
+ctau_levels = np.array([0.00001,0.0001,0.001, 0.01, 0.1, 1.])
 mycolors = ['black','blue', 'darkcyan', 'green', 'lawngreen','yellow','orange', 'red']
 
 ctaus = []
