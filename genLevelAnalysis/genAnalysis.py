@@ -967,6 +967,7 @@ if __name__ == "__main__":
   #### options
   debug = False
   norm = True
+  suffix = ''
   doCompareAnalysis = False     # Test a signal point from different productions
   doTestAnalysis = False        # Test a particular point
   doRwAnalysis = False          # Test reweighting closure
