@@ -107,7 +107,7 @@ if __name__ == "__main__":
 
 
     # get the size from the root files
-    rootfiles = '/pnfs/psi.ch/cms/trivcat/store/user/mratti/BHNLsGen/{v}/mass{m}_ctau{ctau}/step1*.root'.format(v=opt.ver,m=p.mass,ctau=p.ctau)
+    rootfiles = '/pnfs/psi.ch/cms/trivcat/store/user/anlyon/BHNLsGen/{v}/mass{m}_ctau{ctau}/step1*.root'.format(v=opt.ver,m=p.mass,ctau=p.ctau)
     if len(glob.glob(rootfiles)) == 0: print 'WARNING: no root files!'
     for rootfile in glob.glob(rootfiles):
       sizeKB = os.path.getsize(rootfile)/(1024.)
@@ -128,7 +128,7 @@ if __name__ == "__main__":
     final_lines_for_table.append(this_line_for_table)
 
   print('\nSummary table')
-  print('\n{:12s} {:12s} {:12s} {:12s} {:12s} {:12s} {:12s} {:12s}').format('Mass', 'ctau(mm)', 'Avg Filter Eff', 'NGen', 'NTot', 'Avg Time (s)', 'AvgTime/evt (s)', 'AvgSize/evt (MB)')
+  print('\n{:12s} {:12s} {:12s} {:12s} {:12s} {:12s} {:12s} {:12s}').format('Mass', 'ctau(mm)', 'Avg Filter Eff', 'NGen', 'NTot', 'Avg Time (s)', 'AvgTime/Genevt (s)', 'AvgTime/evt (s)', 'AvgSize/evt (MB)')
   print('\n'.join(final_lines))
 
   print('\nTable for point file')
