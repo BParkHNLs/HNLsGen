@@ -105,7 +105,8 @@ process.maxEvents = cms.untracked.PSet(
 
 # Input source
 ### LHE->root files, each file has 1 M events, _0.root does not work, start from 1
-LHErootfile = 'root://t3dcachedb.psi.ch:1094//pnfs/psi.ch/cms/trivcat/store/user/mratti/BHNLsGen/BHNL_Bc_LHEGEN_v0/BHNL_Bc_LHEtoRoot_step0_nj{ijob}.root'.format(ijob=options.seedOffset)
+#LHErootfile = 'root://t3dcachedb.psi.ch:1094//pnfs/psi.ch/cms/trivcat/store/user/mratti/BHNLsGen/BHNL_Bc_LHEGEN_v0/BHNL_Bc_LHEtoRoot_step0_nj{ijob}.root'.format(ijob=options.seedOffset)
+LHErootfile = 'file:/pnfs/psi.ch/cms/trivcat/store/user/mratti/BHNLsGen/BHNL_Bc_LHEGEN_v0_mgSecondRun/BHNL_Bc_LHEtoRoot_step0_njAll.root'
 process.source = cms.Source("PoolSource",
   dropDescendantsOfDroppedBranches = cms.untracked.bool(False),
   fileNames = cms.untracked.vstring(LHErootfile),
@@ -187,16 +188,25 @@ process.BFilter = cms.EDFilter("MCMultiParticleFilter",
    Status = cms.vint32(0), 
 )
 
+process.DoubleMuFilter = cms.EDFilter("MCParticlePairFilter",
+    MaxEta = cms.untracked.vdouble(1.55, 2.45),   # apply trigger acceptance cut on one muon only
+    MinEta = cms.untracked.vdouble(-1.55, -2.45), # apply trigger acceptance cut on one muon only
+    MinPt = cms.untracked.vdouble(6.8, 1.0),      # apply trigger acceptance cut on one muon only
+    ParticleID1 = cms.untracked.vint32(-13, 13),  # added negative pdgId, for safety
+    ParticleID2 = cms.untracked.vint32(-13, 13),  # added negative pdgId, for safety
+    MaxInvMass = cms.untracked.double(10.),       # added to reduce events with wrong topology
+    Status = cms.untracked.vint32(1, 1),          # stability requirement
+)
 
 if options.doDisplFilter:
   maxDispl = cms.untracked.double(options.maxDisplacement) 
 else:
   maxDispl = cms.untracked.double(-1)
 
-process.SingleMuFilter = cms.EDFilter("PythiaFilterMotherSister", 
-    MaxEta = cms.untracked.double(1.55),
-    MinEta = cms.untracked.double(-1.55),
-    MinPt = cms.untracked.double(6.8), 
+process.HNLDisplacementFilter = cms.EDFilter("PythiaFilterMotherSister", 
+    #MaxEta = cms.untracked.double(1.55),
+    #MinEta = cms.untracked.double(-1.55),
+    #MinPt = cms.untracked.double(6.8), 
     ParticleID = cms.untracked.int32(13), # abs value is taken
     MotherIDs = cms.untracked.vint32(541), # require muon to come from Bc+/Bc- decay
     SisterID = cms.untracked.int32(9900015), # require HNL sister
@@ -292,7 +302,7 @@ process.generator = cms.EDFilter("Pythia8HadronizerFilter",
 if options.doSkipMuonFilter:
   process.ProductionFilterSequence = cms.Sequence(process.generator+process.BFilter) 
 else:
-  process.ProductionFilterSequence = cms.Sequence(process.generator+process.BFilter+process.SingleMuFilter)
+  process.ProductionFilterSequence = cms.Sequence(process.generator+process.BFilter+process.DoubleMuFilter+process.HNLDisplacementFilter)
 
 
 # Path and EndPath definitions
