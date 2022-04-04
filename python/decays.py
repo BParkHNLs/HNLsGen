@@ -217,6 +217,13 @@ class Decays(object):
     self.Bs_to_DsstartHNL = Decay(B_sub_s_meson, [D_sub_sstar_meson, tau], hnl, V_tau_square, Vcb_pdg, 'semileptonic_vector', formFactorLabel='Bs_to_Dsstar') 
     self.Bs_to_KstartHNL  = Decay(B_sub_s_meson, [Kstar_meson, tau]      , hnl, V_tau_square, Vub_pdg, 'semileptonic_vector', formFactorLabel='Bs_to_Kstar' )
 
+    self.BR_tot_mu = B_meson.fraction       * (self.B_to_uHNL.BR    + self.B_to_D0uHNL.BR  + self.B_to_pi0uHNL.BR     + self.B_to_rho0uHNL.BR   + self.B_to_D0staruHNL.BR) \
+                   + B0_meson.fraction      * (self.B0_to_piuHNL.BR + self.B0_to_DuHNL.BR  + self.B0_to_DstaruHNL.BR  + self.B0_to_rhouHNL.BR                            ) \
+                   + B_sub_s_meson.fraction * (self.Bs_to_KuHNL.BR  + self.Bs_to_DsuHNL.BR + self.Bs_to_DsstaruHNL.BR + self.Bs_to_KstaruHNL.BR                          )
+
+    self.BR_tot_mu_Bc = B_sub_c_meson.fraction * self.Bc_to_uHNL.BR
+
+
 ## HNL DECAYS ##
 class HNLDecays(object):
   def __init__(self, mass, mixing_angle_square): 
