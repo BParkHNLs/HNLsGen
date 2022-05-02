@@ -1,3 +1,7 @@
+'''
+Common use functions and definitions
+'''
+
 from python.decays import HNLDecays
 
 import numpy as np
@@ -35,14 +39,14 @@ def BR_HNLmupion(mass): # vv is irrelevant, as it cancels out in the ratio
 
 def getCtau(mass=-99,vv=-99,ismaj=True):
     '''
-    Helper function to go from vv,m -> ctau
+    Helper function to go from vv,m(GeV) -> ctau (mm)
     '''
     mult = 2. if ismaj else 1.
     return ctau_from_gamma(mult*gamma_total(mass=mass,vv=vv))
 
 def getVV(mass=-99.,ctau=-99.,ismaj=True):
     '''
-    Helper function to go from ctau,m -> vv
+    Helper function to go from ctau(mm),m(GeV) -> vv
     '''
     mult = 2. if ismaj else 1.
     ref_m = 1. # GeV

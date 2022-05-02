@@ -1,3 +1,9 @@
+'''
+This script is used to produce several plots regarding the HNL decay (lifetime, BRs)
+In particular it was used to perform the Bondarenko vs Peskin studies shown in 
+https://indico.cern.ch/event/978280/contributions/4120549/attachments/2148757/3653052/2020_11_26_Bpark_HNL.pdf
+'''
+
 from decays import *
 from old_common import *
 
@@ -27,6 +33,13 @@ ctaus_bondarenko = [ctaus_bondarenko_lep, ctaus_bondarenko_had, ctaus_bondarenko
 
 labels = ['Leptonic', 'Hadronic', 'Neutrinos', 'Total']
 
+
+####
+## Partial widths, comparison between Peskin and Bondarenko, as a function of HNL mass
+## slide 6 
+####
+
+### Log Plot
 fig, axes = plt.subplots(1, 4, figsize=(5.5*4, 5))
 for i,ax in enumerate(axes):
   ax.plot(masses, ctaus_peskin[i], 'b', label='{} (Peskin)'.format(labels[i]))
@@ -37,8 +50,10 @@ for i,ax in enumerate(axes):
   ax.grid(which='both', axis='both')
   ax.set_yscale('log')
  
-fig.savefig('HNLlifetime_check_log.pdf')
-fig.savefig('HNLlifetime_check_log.png')
+
+### Lin Plot
+fig.savefig('./plots/HNLlifetime_check_log.pdf')
+fig.savefig('./plots/HNLlifetime_check_log.png')
 
 fig, axes = plt.subplots(1, 4, figsize=(5.5*4, 5))
 for i,ax in enumerate(axes):
@@ -50,11 +65,11 @@ for i,ax in enumerate(axes):
   ax.grid(which='both', axis='both')
   #ax.set_yscale('log')
  
-fig.savefig('HNLlifetime_check_lin.pdf')
-fig.savefig('HNLlifetime_check_lin.png')
+fig.savefig('./plots/HNLlifetime_check_lin.pdf')
+fig.savefig('./plots/HNLlifetime_check_lin.png')
 
 
-# ratio
+### Ratio plot
 ctaus_ratios = []
 for pes,bon in zip(ctaus_peskin,ctaus_bondarenko):
   ctaus_ratio = []
@@ -72,10 +87,15 @@ for i,ax in enumerate(axes):
   ax.grid(which='both', axis='both')
   #ax.set_yscale('log')
 fig.suptitle('Ratio Peskin/Bondarenko', fontsize=14) 
-fig.savefig('HNLlifetime_ratio_lin.pdf')
-fig.savefig('HNLlifetime_ratio_lin.png')
+fig.savefig('./plots/HNLlifetime_ratio_lin.pdf')
+fig.savefig('./plots/HNLlifetime_ratio_lin.png')
 
-# figure 12 right of Bondarenko, ratio between quarks, leptons, neutrinos
+
+####
+## Branching ratio composition for different processes, as a function of HNL mass
+## Figure 13 right of Bondarenko
+## Slide 7,
+####
 gammas_bondarenko_lep = [2*decays[im].decay_rate['tot_lep'] for im,m in enumerate(masses)]
 gammas_bondarenko_had = [2*decays[im].decay_rate['tot_had'] for im,m in enumerate(masses)]
 gammas_bondarenko_neu = [2*decays[im].decay_rate['tot_neu'] for im,m in enumerate(masses)]
@@ -99,10 +119,15 @@ ax.grid(which='both', axis='both')
 ax.set_yscale('log')
 ax.set_xscale('log')
 
-fig.savefig('HNL_BR_bon_log.pdf')
-fig.savefig('HNL_BR_bon_log.png')
+fig.savefig('./plots/HNL_BR_bon_log.pdf')
+fig.savefig('./plots/HNL_BR_bon_log.png')
 
-# lifetime figure
+
+####
+## Lifetime of N as a function of HNL mass
+## slide 7 right
+####
+
 taus_bondarenko_tot = [ctau / const_c * 0.001 for ctau in ctaus_bondarenko_tot ]
 
 fig, ax = plt.subplots(1, 1, figsize=(5.5*1, 5))
@@ -117,23 +142,28 @@ ax.grid(which='both', axis='both')
 ax.set_yscale('log')
 ax.set_xscale('log')
 
-fig.savefig('HNL_tau_bon_log.pdf')
-fig.savefig('HNL_tau_bon_log.png')
+fig.savefig('./plots/HNL_tau_bon_log.pdf')
+fig.savefig('./plots/HNL_tau_bon_log.png')
 
 
-#gammas_bondarenko_tot = [2*decays[im].decay_rate['tot']     for im,m in enumerate(masses)]
-gammas_bondarenko_tot_Over_mass = [gamma/m for gamma,m in zip(gammas_bondarenko_tot,masses)]
+####
+## Width of N / Mass, as a function of mass
+## To check narrow width approximation
+####
 fig, ax = plt.subplots(1, 1, figsize=(5.5*1, 5))
 ax.plot(masses, gammas_bondarenko_tot_Over_mass, 'r', label='bondarenko')
 ax.set_ylabel('$\\Gamma/m $')
 ax.set_xlabel('HNL mass (GeV)')
 ax.grid(which='both', axis='both')
 ax.set_yscale('log')
-fig.savefig('HNL_gamma_over_mass_log.pdf')
-fig.savefig('HNL_gamma_over_mass_log.png')
+fig.savefig('./plots/HNL_gamma_over_mass_log.pdf')
+fig.savefig('./plots/HNL_gamma_over_mass_log.png')
 
 
-
+####
+## BR comparison between Peskin and Bondarenko, as a function of HNL mass 
+## see slide 8
+####
 # compare BRs (N->mupi)
 gammas_bondarenko_Nmupi = [2*decays[im].decay_rate['mupi'] for im,m in enumerate(masses)]
 brs_bondarenko_Nmupi = [gp / gtot for gp,gtot in zip(gammas_bondarenko_Nmupi, gammas_bondarenko_tot)]
@@ -165,10 +195,9 @@ ax[1].grid(which='both', axis='both')
 ax[1].legend(loc='upper right', frameon=False) 
 ax[1].set_ylim(0.2,1.4)
 
-fig.savefig('HNL_BR.pdf')
-fig.savefig('HNL_BR.png')
+fig.savefig('./plots/HNL_BR.pdf')
+fig.savefig('./plots/HNL_BR.png')
 
 
-#gammas_bondarenko_tot =
 
 
