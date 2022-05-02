@@ -1,6 +1,7 @@
 # http://home.thep.lu.se/~torbjorn/talks/fnal04lha.pdf
 
 import sys
+import glob
 import ROOT
 import numpy as np
 from array import array
@@ -182,8 +183,8 @@ handles['genP'] = ('genParticles' , Handle('std::vector<reco::GenParticle>'))
 
 # output file and tree gymnastics
 #outfile = ROOT.TFile.Open('genNTuples_ctau100mm_fullEvtGen_10k.root', 'recreate')
-#outfile = ROOT.TFile.Open('myGenTest.root', 'recreate')
-outfile = ROOT.TFile.Open('outputfiles/genNTuples_V02_testLeptonic.root', 'recreate')
+outfile = ROOT.TFile.Open('myGen_V31.root', 'recreate')
+#outfile = ROOT.TFile.Open('outputfiles/genNTuples_V04_semileptonic_higherDisplacement.root', 'recreate')
 ntuple  = ROOT.TNtuple('tree', 'tree', ':'.join(branches))
 tofill = OrderedDict(zip(branches, [-99.]*len(branches))) # initialise all branches to unphysical -99       
 
@@ -191,7 +192,8 @@ tofill = OrderedDict(zip(branches, [-99.]*len(branches))) # initialise all branc
 
 # get to the real thing
 print 'loading the file ...'
-events = Events('/pnfs/psi.ch/cms/trivcat/store/user/anlyon/BHNLsGen/V02_testLeptonic_n450000_njt100/mass1.5_ctau51.922757246/step1_nj95.root')
+#events = Events('/pnfs/psi.ch/cms/trivcat/store/user/anlyon/BHNLsGen/V02_testLeptonic_n450000_njt100/mass1.5_ctau51.922757246/step1_nj95.root')
+#events = Events('/pnfs/psi.ch/cms/trivcat/store/user/anlyon/BHNLsGen/V01_n9000000_njt300/mass1.5_ctau51.922757246/step1*.root')
 #events = Events('../genSimFiles/step1.root')
 #events = Events('samples/BPH-test_numEvent50.root')
 #events = Events('samples/BPH-test_numEvent100_Bmod.root')
@@ -200,6 +202,26 @@ events = Events('/pnfs/psi.ch/cms/trivcat/store/user/anlyon/BHNLsGen/V02_testLep
 #events = Events('root://t3dcachedb.psi.ch:1094//pnfs/psi.ch/cms/trivcat/store/user/mratti/BHNLsGen/TEST_ctau1_m1/BPH-test_numEvent10000.root')
 #events = Events('root://t3dcachedb.psi.ch:1094//pnfs/psi.ch/cms/trivcat/store/user/mratti/BHNLsGen/TEST_ctau1_m1_fullEvtGen/BPH-test_numEvent10000.root')
 #events = Events('root://t3dcachedb.psi.ch:1094//pnfs/psi.ch/cms/trivcat/store/user/mratti/BHNLsGen/TEST_mupt5_ctau100mm/BPH-test_numEvent80000.root')
+
+#infiles = '/pnfs/psi.ch/cms/trivcat/store/user/anlyon/BHNLsGen/V02_testLeptonic_n450000_njt100/mass1.5_ctau51.922757246/step1_nj95.root'
+#infiles = '/pnfs/psi.ch/cms/trivcat/store/user/anlyon/BHNLsGen/V01_n9000000_njt300/mass1.5_ctau51.922757246/step1*.root'
+#infiles = '/pnfs/psi.ch/cms/trivcat/store/user/anlyon/BHNLsGen/V02_testLeptonic_n450000_njt100/mass1.5_ctau51.922757246/step1*.root'
+#infiles = '/pnfs/psi.ch/cms/trivcat/store/user/anlyon/BHNLsGen/V05_leptonic_modMuFilter_n450000_njt100/mass1.5_ctau51.922757246/step1*.root'
+#infiles = '/pnfs/psi.ch/cms/trivcat/store/user/anlyon/BHNLsGen/V03_leptonic_n900000_njt200/mass1.5_ctau17307.5857487/step1*.root'
+#infiles = '/pnfs/psi.ch/cms/trivcat/store/user/anlyon/BHNLsGen/V04_semileptonic_n9000000_njt200/mass1.5_ctau17307.5857487/step1*.root'
+#infiles = '/pnfs/psi.ch/cms/trivcat/store/user/mratti/BHNLsGen/V11_inclB_n25000000_njt200/mass2.0_ctau821.434245494/step4*.root'
+#infiles = '/pnfs/psi.ch/cms/trivcat/store/user/anlyon/BHNLsGen/T1_topicmerged_inicmsdrivers_n15000_njt1/mass1.5_ctau51.922757246/step1*.root'
+#infiles = '/pnfs/psi.ch/cms/trivcat/store/user/anlyon/BHNLsGen/T2_release10215_inicmsdrivers_n15000_njt1/mass1.5_ctau51.922757246/step1*.root'
+#infiles = '/pnfs/psi.ch/cms/trivcat/store/user/anlyon/BHNLsGen/T3_fixedtopicmerged_inirelease_inicmsdrivers_n20000_njt1/mass1.5_ctau51.922757246/step1_nj1.root'
+#infiles = '/pnfs/psi.ch/cms/trivcat/store/user/mratti/BHNLsGen/V15_full/mass3.0_ctau184.256851021/step1_nj1.root'
+#infiles = '/pnfs/psi.ch/cms/trivcat/store/user/mratti/BHNLsGen/V16_testDisplMuons_moreEvts/mass3.0_ctau184.256851021/step1_nj.root'
+#infiles = '/work/anlyon/test_toremove/CMSSW_10_2_24_patch1/src/HNLsGen/slurm/control_channel/BPH-step1_numEvent10496.root'
+#infiles = '/pnfs/psi.ch/cms/trivcat/store/user/mratti/BHNLsGen/V20_emu/mass3.0_ctau184.0/step1*.root'
+infiles = '/pnfs/psi.ch/cms/trivcat/store/user/anlyon/BHNLsGen/V31/mass4.5_ctau1.0/step1.root'
+
+files = glob.glob(infiles)
+events = Events(files)
+print 'nevts: ',events.size()
 print '... done!'
 
 for i, event in enumerate(events):
@@ -233,10 +255,11 @@ for i, event in enumerate(events):
   if len(the_hns):
      event.the_hn = the_hns[0] # one per event
      #print '0. found hnl of pdgId {a}'.format(a=event.the_hn.pdgId())
+
   
   # find the B mother  
   event.the_hn.mothers = [event.the_hn.mother(jj) for jj in range(event.the_hn.numberOfMothers())]
-  the_b_mothers = sorted([ii for ii in event.the_hn.mothers if abs(ii.pdgId())==521], key = lambda x : x.pt(), reverse=True)
+  the_b_mothers = sorted([ii for ii in event.the_hn.mothers if (abs(ii.pdgId())==521 or abs(ii.pdgId())==511 or abs(ii.pdgId())==531)], key = lambda x : x.pt(), reverse=True)
   if len(the_b_mothers):
     event.the_b_mother = the_b_mothers[0]
     #print '1. found a B of pdgId {a}'.format(a=event.the_b_mother.pdgId())
@@ -443,6 +466,8 @@ for i, event in enumerate(events):
   # reset before filling
   for k, v in tofill.iteritems(): tofill[k] = -99. # initialise before filling
 
+  #if event.the_pl.pt() > 9 and abs(event.the_pl.eta()) < 1.5 and event.the_hn.lep.pt() > 3 and abs(event.the_hn.lep.eta()) < 2.5: # and event.Lxy < 1:
+
   tofill['run'        ] = event.eventAuxiliary().run()
   tofill['lumi'       ] = event.eventAuxiliary().luminosityBlock()
   tofill['event'      ] = event.eventAuxiliary().event()
@@ -519,8 +544,8 @@ for i, event in enumerate(events):
 
   # invariant mass
      tofill['lep_pi_invmass' ] = event.the_hnldaughters.mass()
-  if len(the_ds):
-    tofill['k_pi_invmass' ] = event.the_d0daughters.mass()
+  #if len(the_ds):
+    #tofill['k_pi_invmass' ] = event.the_d0daughters.mass()
   tofill['hn_d_pl_invmass'] = event.the_bdaughters.mass()
   
   # hnl charge

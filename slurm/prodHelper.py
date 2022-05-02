@@ -24,10 +24,14 @@ class Job(object):
     self.nthr = 8 if self.domultithread else 1
 
     self.user = os.environ["USER"]
-    if self.dobc:
+    if self.dobc and not self.dogenonly:
       self.jop1_in = 'step1_Bc.py'
     elif self.docontrol:
       self.jop1_in = 'step1_control.py'
+    elif self.dogenonly and not self.dobc:
+      self.jop1_in = 'step1_genonly.py' 
+    elif self.dobc and self.dogenonly:
+      self.jop1_in = 'step1_Bc_genonly.py'
     else:
       self.jop1_in = 'step1.py' 
     self.jop1 = 'step1.py'
@@ -330,7 +334,7 @@ class Job(object):
         '#SBATCH -o logs/prod_mass{m}_ctau{ctau}_%a.log', 
         '#SBATCH -e logs/prod_mass{m}_ctau{ctau}_%a.log',
         '#SBATCH -p standard',
-        '#SBATCH -t {hh}:00:00',
+        #'#SBATCH -t {hh}:00:00',
         '#SBATCH --mem {mem}',
         '#SBATCH --array={arr}',
         '#SBATCH --ntasks=1',

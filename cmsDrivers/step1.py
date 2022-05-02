@@ -61,6 +61,7 @@ options.register('scaleToFilter',
                  'Pythia parameter to scale the pt cut on the b quark (?)')
 options.register('maxDisplacement',
                  1300,
+                 #-1,
                  VarParsing.multiplicity.singleton,
                  VarParsing.varType.float,
                  'Maximum 2D displacement, in mm')
@@ -159,8 +160,30 @@ process.MuFilter = cms.EDFilter("MCParticlePairFilter",
     MinEta = cms.untracked.vdouble(-2.45, -2.45),
     MinPt = cms.untracked.vdouble(2.7, 2.7),
     ParticleID1 = cms.untracked.vint32(13),
-    ParticleID2 = cms.untracked.vint32(13)
+    ParticleID2 = cms.untracked.vint32(13),
 )
+
+process.DoubleMuFilter = cms.EDFilter("MCParticlePairFilter",
+    MaxEta = cms.untracked.vdouble(1.55, 2.45),   # apply trigger acceptance cut on one muon only
+    MinEta = cms.untracked.vdouble(-1.55, -2.45), # apply trigger acceptance cut on one muon only
+    MinPt = cms.untracked.vdouble(6.8, 1.0),      # apply trigger acceptance cut on one muon only
+    ParticleID1 = cms.untracked.vint32(-13, 13),  # added negative pdgId, for safety
+    ParticleID2 = cms.untracked.vint32(-13, 13),  # added negative pdgId, for safety
+    MaxInvMass = cms.untracked.double(10.),       # added to reduce events with wrong topology
+    Status = cms.untracked.vint32(1, 1),          # stability requirement
+    # no requirement on the charge  (particleCharge), default is 0, which means no condition on the relative charge of the two muons (either OS or SS)
+    # impose condition on maxDeltaR or minDeltaR?
+)
+
+#process.HNLDisplacementFilter = cms.EDFilter("MCSingleParticleDisplacementFilter",
+#    #ParticleID = cms.untracked.vint32(9900015),                        # absolute value is taken
+#    ParticleID = cms.untracked.vint32(13),                        # absolute value is taken
+#    MaxDisplacement = cms.untracked.vdouble(options.maxDisplacement), 
+#    #Status = cms.untracked.vint32(0),                                  # stability requirement
+#    #MaxEta = cms.untracked.vdouble(1.55, 2.45),   
+#    #MinEta = cms.untracked.vdouble(-1.55, -2.45), 
+#    #MinPt = cms.untracked.vdouble(6.8, 1.0),      
+#)
 
 
 ### Operates on all particles in the HepMC::GenEvent
@@ -188,10 +211,23 @@ if options.doDisplFilter:
 else:
   maxDispl = cms.untracked.double(-1)
 
-process.SingleMuFilter = cms.EDFilter("PythiaFilterMotherSister", 
+
+process.SingleMuFromBFilter = cms.EDFilter("PythiaFilterMotherSister", 
     MaxEta = cms.untracked.double(1.55),
     MinEta = cms.untracked.double(-1.55),
     MinPt = cms.untracked.double(6.8), 
+    ParticleID = cms.untracked.int32(13), # abs value is taken
+    MotherIDs = cms.untracked.vint32(521, 511, 531), # require muon to come from B+/B- decay
+    SisterID = cms.untracked.int32(9900015), # require HNL sister
+    MaxSisterDisplacement = maxDispl, # max Lxy(z) displacement to generate in mm, -1 for no max
+    NephewIDs = cms.untracked.vint32(11,13,211), # ids of the nephews you want to check the pt of
+    MinNephewPts = cms.untracked.vdouble(options.minLeptonPt,options.minLeptonPt,options.minTrackPt),
+)
+
+process.DisplacementFilter = cms.EDFilter("PythiaFilterMotherSister", 
+    #MaxEta = cms.untracked.double(1.55),
+    #MinEta = cms.untracked.double(-1.55),
+    #MinPt = cms.untracked.double(6.8), 
     ParticleID = cms.untracked.int32(13), # abs value is taken
     MotherIDs = cms.untracked.vint32(521, 511, 531), # require muon to come from B+/B- decay
     SisterID = cms.untracked.int32(9900015), # require HNL sister
@@ -316,7 +352,8 @@ process.generator = cms.EDFilter("Pythia8GeneratorFilter",
 if options.doSkipMuonFilter:
   process.ProductionFilterSequence = cms.Sequence(process.generator+process.BFilter) 
 else:
-  process.ProductionFilterSequence = cms.Sequence(process.generator+process.BFilter+process.SingleMuFilter)
+  #process.ProductionFilterSequence = cms.Sequence(process.generator+process.BFilter+process.SingleMuFromBFilter)
+  process.ProductionFilterSequence = cms.Sequence(process.generator+process.BFilter+process.DoubleMuFilter+process.DisplacementFilter)
 
 
 # Path and EndPath definitions

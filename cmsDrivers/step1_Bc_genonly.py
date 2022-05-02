@@ -81,7 +81,7 @@ import FWCore.ParameterSet.Config as cms
 
 from Configuration.StandardSequences.Eras import eras
 
-process = cms.Process('SIM',eras.Run2_2018)
+process = cms.Process('GEN',eras.Run2_2018)
 
 # import of standard configurations
 process.load('Configuration.StandardSequences.Services_cff')
@@ -107,7 +107,6 @@ process.maxEvents = cms.untracked.PSet(
 ### LHE->root files, each file has 1 M events, _0.root does not work, start from 1
 #LHErootfile = 'root://t3dcachedb.psi.ch:1094//pnfs/psi.ch/cms/trivcat/store/user/mratti/BHNLsGen/BHNL_Bc_LHEGEN_v0/BHNL_Bc_LHEtoRoot_step0_nj{ijob}.root'.format(ijob=options.seedOffset)
 LHErootfile = 'file:/pnfs/psi.ch/cms/trivcat/store/user/mratti/BHNLsGen/BHNL_Bc_LHEGEN_v0_mgSecondRun/BHNL_Bc_LHEtoRoot_step0_njAll.root'
-
 process.source = cms.Source("PoolSource",
   dropDescendantsOfDroppedBranches = cms.untracked.bool(False),
   fileNames = cms.untracked.vstring(LHErootfile),
@@ -137,7 +136,7 @@ process.RAWSIMoutput = cms.OutputModule("PoolOutputModule",
     compressionAlgorithm = cms.untracked.string('LZMA'),
     compressionLevel = cms.untracked.int32(1),
     dataset = cms.untracked.PSet(
-        dataTier = cms.untracked.string('GEN-SIM'),
+        dataTier = cms.untracked.string('GEN'),
         filterName = cms.untracked.string('')
     ),
     eventAutoFlushCompressedSize = cms.untracked.int32(20971520),
@@ -182,7 +181,6 @@ process.BpFilter = cms.EDFilter("PythiaFilter",
 process.BFilter = cms.EDFilter("MCMultiParticleFilter",
    NumRequired = cms.int32(1),
    AcceptMore = cms.bool(True),
-   #ParticleID = cms.vint32(521,511,531), # abs not needed
    ParticleID = cms.vint32(541), # abs already taken into account, Bc+, Bc-
    PtMin = cms.vdouble(0.),
    EtaMax = cms.vdouble(10.),
@@ -212,8 +210,8 @@ process.HNLDisplacementFilter = cms.EDFilter("PythiaFilterMotherSister",
     MotherIDs = cms.untracked.vint32(541), # require muon to come from Bc+/Bc- decay
     SisterID = cms.untracked.int32(9900015), # require HNL sister
     MaxSisterDisplacement = maxDispl, # max Lxy(z) displacement to generate in mm, -1 for no max
-    NephewIDs = cms.untracked.vint32(11,13,211), # ids of the nephews you want to check the pt of
-    MinNephewPts = cms.untracked.vdouble(options.minLeptonPt,options.minLeptonPt,options.minTrackPt),
+    NephewIDs = cms.untracked.vint32(13,211), # ids of the nephews you want to check the pt of
+    MinNephewPts = cms.untracked.vdouble(options.minLeptonPt,options.minTrackPt),
 )
 
 process.generator = cms.EDFilter("Pythia8HadronizerFilter",
@@ -308,13 +306,13 @@ else:
 
 # Path and EndPath definitions
 process.generation_step = cms.Path(process.pgen)
-process.simulation_step = cms.Path(process.psim)
+#process.simulation_step = cms.Path(process.psim)
 process.genfiltersummary_step = cms.EndPath(process.genFilterSummary)
 process.endjob_step = cms.EndPath(process.endOfProcess)
 process.RAWSIMoutput_step = cms.EndPath(process.RAWSIMoutput)
 
 # Schedule definition
-process.schedule = cms.Schedule(process.generation_step,process.genfiltersummary_step,process.simulation_step,process.endjob_step,process.RAWSIMoutput_step)
+process.schedule = cms.Schedule(process.generation_step,process.genfiltersummary_step,process.endjob_step,process.RAWSIMoutput_step)
 from PhysicsTools.PatAlgos.tools.helpers import associatePatAlgosToolsTask
 associatePatAlgosToolsTask(process)
 # filter all path with the production filter sequence
