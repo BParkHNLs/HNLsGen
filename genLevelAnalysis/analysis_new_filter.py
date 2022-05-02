@@ -120,7 +120,7 @@ branches = [
     'weight_reco',
 
     # ct weight (used for lifetime reweighting study)
-    'weight_ct',
+    #'weight_ct',
 ]
 
 # couplings to be tested, for which the reweight is run
@@ -199,8 +199,8 @@ def treeProducer(infiles, outdir, outfilename):
   reco_weights = pd.read_csv('reco_weights_updated.csv', sep=',', comment='#')
 
   # file ct weight
-  file_ct = ROOT.TFile.Open('weight_ct_m3_ctau1.root', 'READ')
-  hist_weight_ct = file_ct.Get('hist_weight')
+  #file_ct = ROOT.TFile.Open('weight_ct_m3_ctau1.root', 'READ')
+  #hist_weight_ct = file_ct.Get('hist_weight')
 
   for i, event in enumerate(events):
     # access the handles
@@ -398,9 +398,7 @@ def treeProducer(infiles, outdir, outfilename):
         if event.Lxy > bin_lxy[0] and event.Lxy < bin_lxy[1] and event.the_hn.pt() > bin_pt[0] and event.the_hn.pt() < bin_pt[1]:
           event.weight_reco = reco_weights.iloc[i][j] 
 
-    event.weight_ct = hist_weight_ct.GetBinContent(hist_weight_ct.GetXaxis().FindBin(event.the_hn.ct_reco/10.)) 
-    #print '{} {}'.format(event.the_hn.ct_reco, event.weight_ct)
-    #print event.weight_ct
+    #event.weight_ct = hist_weight_ct.GetBinContent(hist_weight_ct.GetXaxis().FindBin(event.the_hn.ct_reco/10.)) 
    
     # reset before filling
     for k, v in tofill.iteritems(): tofill[k] = -99. # initialise before filling
@@ -492,7 +490,7 @@ def treeProducer(infiles, outdir, outfilename):
     tofill['weight_reco'] = event.weight_reco
 
     # ct weight
-    tofill['weight_ct'] = event.weight_ct
+    #tofill['weight_ct'] = event.weight_ct
     
     ntuple.Fill(array('f',tofill.values()))
 
