@@ -118,6 +118,9 @@ branches = [
 
      # reconstruction efficiency weight
     'weight_reco',
+
+    # ct weight (used for lifetime reweighting study)
+    'weight_ct',
 ]
 
 # couplings to be tested, for which the reweight is run
@@ -195,6 +198,10 @@ def treeProducer(infiles, outdir, outfilename):
   bins_lxy = [(0,10),(10,30),(30,50),(50,100),(100,150),(150,300),(300,500),(500,1e10)] #columns, everything in mm
   reco_weights = pd.read_csv('reco_weights_updated.csv', sep=',', comment='#')
 
+  # file ct weight
+  file_ct = ROOT.TFile.Open('weight_ct_m3_ctau1.root', 'READ')
+  hist_weight_ct = file_ct.Get('hist_weight')
+
   for i, event in enumerate(events):
     # access the handles
     for k, v in handles.iteritems():
@@ -206,7 +213,7 @@ def treeProducer(infiles, outdir, outfilename):
         print '\t===> processing %d / %d event \t completed %.1f%s' %(i, events.size(), percentage, '%')
 
     #print '\n Event {a}'.format(a=i)
-    if float(i)>5000.: continue
+    #if float(i)>5000.: continue
         
     # get the heavy neutrino
     the_hns = [ip for ip in event.genP if abs(ip.pdgId())==9900015 and ip.isLastCopy()] 
@@ -249,6 +256,10 @@ def treeProducer(infiles, outdir, outfilename):
       the_Xs = sorted([ii for ii in event.the_b_mother.daughters if abs(ii.pdgId()) not in [11, 13, 15, 9900015]], key = lambda x : x.pt(), reverse=True)
       if len(the_Xs):
         event.the_X = the_Xs[0]
+        #if len(the_Xs) != 1 and abs(the_Xs[0].pdgId()) == 22:
+        #  print '\n'
+        #  for ix, X in enumerate(the_Xs):
+        #    print the_Xs[ix].pdgId()
         #if abs(event.the_b_mother.pdgId()==531): print 'found accompagnying meson of pdgId {a}'.format(a=event.the_X.pdgId())
       else:
         event.the_X = None
@@ -352,6 +363,9 @@ def treeProducer(infiles, outdir, outfilename):
       event.the_hn.ct_reco = event.Lxyz / (event.the_hn.beta * event.the_hn.gamma)
       #print 'hnl ct reco: {a}'.format(a=event.the_hn.ct_reco)
 
+    # temporary condition
+    #if event.the_hn.ct_reco > 150: continue 
+
     # pointing angle    
     #if len(the_pls) and len(the_lep_daughters):
     #  hn_pt_vect = ROOT.math.XYZVector(event.the_hnldaughters.px(),
@@ -383,6 +397,10 @@ def treeProducer(infiles, outdir, outfilename):
       for j,bin_lxy in enumerate(bins_lxy):
         if event.Lxy > bin_lxy[0] and event.Lxy < bin_lxy[1] and event.the_hn.pt() > bin_pt[0] and event.the_hn.pt() < bin_pt[1]:
           event.weight_reco = reco_weights.iloc[i][j] 
+
+    event.weight_ct = hist_weight_ct.GetBinContent(hist_weight_ct.GetXaxis().FindBin(event.the_hn.ct_reco/10.)) 
+    #print '{} {}'.format(event.the_hn.ct_reco, event.weight_ct)
+    #print event.weight_ct
    
     # reset before filling
     for k, v in tofill.iteritems(): tofill[k] = -99. # initialise before filling
@@ -472,6 +490,9 @@ def treeProducer(infiles, outdir, outfilename):
       
     # reconstruction weight
     tofill['weight_reco'] = event.weight_reco
+
+    # ct weight
+    tofill['weight_ct'] = event.weight_ct
     
     ntuple.Fill(array('f',tofill.values()))
 
@@ -483,10 +504,9 @@ def treeProducer(infiles, outdir, outfilename):
 if __name__ == "__main__":
   #version_label = 'V34_newfilter_genstudy_v3'
   #version_label = 'V34_newfilter_genstudy_Bc_v1'
-  #version_label = 'test_modfilter_v3_n10000000_njt500'
-  #version_label = 'test_modfilter_Bc_v2'
-  version_label = 'V33_stats_Lxy1300_tkPt500MeV_lepPt400MeV_Bc'
-  user = 'mratti'
+  #version_label = 'V38_request_Bc'
+  version_label = 'test_displacementFilter1e9mm'
+  user = 'anlyon'
 
   indirectory = '/pnfs/psi.ch/cms/trivcat/store/user/{}/BHNLsGen/{}'.format(user, version_label)
   # get all the subdirectories (signal points)
@@ -497,26 +517,7 @@ if __name__ == "__main__":
     print ' Analysing {}'.format(pointdir)
     print '----------------------'
 
-    #if pointdir != '/pnfs/psi.ch/cms/trivcat/store/user/anlyon/BHNLsGen/V35_oldfilter_genstudy_v1/mass1.0_ctau1000.0': continue
-    #if pointdir != '/pnfs/psi.ch/cms/trivcat/store/user/mratti/BHNLsGen/V33_stats_Lxy1300_tkPt500MeV_lepPt400MeV/mass1.0_ctau1000.0': continue
-
-
-    if pointdir == '/pnfs/psi.ch/cms/trivcat/store/user/mratti/BHNLsGen/V33_stats_Lxy1300_tkPt500MeV_lepPt400MeV_Bc/mass2.0_ctau1000.0': continue
-    if pointdir == '/pnfs/psi.ch/cms/trivcat/store/user/mratti/BHNLsGen/V33_stats_Lxy1300_tkPt500MeV_lepPt400MeV_Bc/mass3.0_ctau1000.0': continue
-    if pointdir == '/pnfs/psi.ch/cms/trivcat/store/user/mratti/BHNLsGen/V33_stats_Lxy1300_tkPt500MeV_lepPt400MeV_Bc/mass2.0_ctau100.0': continue
-
-    if pointdir == '/pnfs/psi.ch/cms/trivcat/store/user/mratti/BHNLsGen/V33_stats_Lxy1300_tkPt500MeV_lepPt400MeV_Bc/mass3.0_ctau100.0': continue
-    if pointdir == '/pnfs/psi.ch/cms/trivcat/store/user/mratti/BHNLsGen/V33_stats_Lxy1300_tkPt500MeV_lepPt400MeV_Bc/mass4.5_ctau100.0': continue
-    if pointdir == '/pnfs/psi.ch/cms/trivcat/store/user/mratti/BHNLsGen/V33_stats_Lxy1300_tkPt500MeV_lepPt400MeV_Bc/mass4.5_ctau10.0': continue
-    if pointdir == '/pnfs/psi.ch/cms/trivcat/store/user/mratti/BHNLsGen/V33_stats_Lxy1300_tkPt500MeV_lepPt400MeV_Bc/mass5.5_ctau10.0': continue
-    if pointdir == '/pnfs/psi.ch/cms/trivcat/store/user/mratti/BHNLsGen/V33_stats_Lxy1300_tkPt500MeV_lepPt400MeV_Bc/mass4.5_ctau0.1': continue
-    if pointdir == '/pnfs/psi.ch/cms/trivcat/store/user/mratti/BHNLsGen/V33_stats_Lxy1300_tkPt500MeV_lepPt400MeV_Bc/mass5.5_ctau0.01': continue
-
-    if pointdir == '/pnfs/psi.ch/cms/trivcat/store/user/mratti/BHNLsGen/V33_stats_Lxy1300_tkPt500MeV_lepPt400MeV_Bc/mass4.5_ctau1.0': continue
-    if pointdir == '/pnfs/psi.ch/cms/trivcat/store/user/mratti/BHNLsGen/V33_stats_Lxy1300_tkPt500MeV_lepPt400MeV_Bc/mass2.0_ctau10.0': continue
-    if pointdir == '/pnfs/psi.ch/cms/trivcat/store/user/mratti/BHNLsGen/V33_stats_Lxy1300_tkPt500MeV_lepPt400MeV_Bc/mass3.0_ctau1.0': continue
-    if pointdir == '/pnfs/psi.ch/cms/trivcat/store/user/mratti/BHNLsGen/V33_stats_Lxy1300_tkPt500MeV_lepPt400MeV_Bc/mass3.0_ctau10.0': continue
-    if pointdir == '/pnfs/psi.ch/cms/trivcat/store/user/mratti/BHNLsGen/V33_stats_Lxy1300_tkPt500MeV_lepPt400MeV_Bc/mass5.5_ctau0.0': continue
+    #if pointdir != '/pnfs/psi.ch/cms/trivcat/store/user/anlyon/BHNLsGen/V38_request/mass4.5_ctau1.0': continue
 
     pointname = pointdir[pointdir.rfind('/')+1:].replace('.', 'p')
 
