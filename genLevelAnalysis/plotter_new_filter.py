@@ -53,7 +53,7 @@ def plotTagRate(version_label):
   signal_points = []
   for mass in masses:
     for filename in filenames:
-      if mass not in filename: continue
+      if 'mass'+mass not in filename: continue
       ctau = filename[filename.rfind('ctau')+4:filename.rfind('.root')]
       signal_points.append(SignalPoint(mass=mass, ctau=ctau))
       
@@ -118,7 +118,7 @@ def plotMuFromHNLTriggeringRate(version_label):
   signal_points = []
   for mass in masses:
     for filename in filenames:
-      if mass not in filename: continue
+      if 'mass'+mass not in filename: continue
       ctau = filename[filename.rfind('ctau')+4:filename.rfind('.root')]
       signal_points.append(SignalPoint(mass=mass, ctau=ctau))
       
@@ -183,7 +183,7 @@ def plotNumberTriggeringMuons(version_label):
   signal_points = []
   for mass in masses:
     for filename in filenames:
-      if mass not in filename: continue
+      if 'mass'+mass not in filename: continue
       ctau = filename[filename.rfind('ctau')+4:filename.rfind('.root')]
       signal_points.append(SignalPoint(mass=mass, ctau=ctau))
       
@@ -229,6 +229,172 @@ def plotNumberTriggeringMuons(version_label):
   ax.figure.savefig('plots/number_triggering_muons_{}.pdf'.format(version_label),bbox_extra_artists=(lgd,), bbox_inches='tight')
 
   print '--> plots/number_triggering_muons_{}.png created'.format(version_label)
+
+
+def plotBspecies(version_label):
+  print '----------------------'
+  print 'Will plot B species for ntuples {}'.format(version_label)
+  print '----------------------'
+
+  b_pdgid = Quantity('fabs(b_pdgid)', 'B pdgId', 'b_pdgid', 600, 0, 600)
+
+  filenames = [f for f in glob.glob('./outputfiles/{}/*'.format(version_label))]
+
+  # get the masses
+  masses = []
+  for filename in filenames:
+    mass = filename[filename.rfind('mass')+4:filename.rfind('_ctau')]
+    if mass not in masses:
+      masses.append(mass)
+
+  # get the signal points
+  signal_points = []
+  for mass in masses:
+    for filename in filenames:
+      if 'mass'+mass not in filename: continue
+      ctau = filename[filename.rfind('ctau')+4:filename.rfind('.root')]
+      signal_points.append(SignalPoint(mass=mass, ctau=ctau))
+      
+  # get the tag and probe rates
+  b_species = {}
+  for mass in masses:
+    for signal_point in signal_points:
+      if signal_point.mass != mass: continue
+      ctau = signal_point.ctau
+
+      for filename in filenames:
+        if mass not in filename or ctau not in filename: continue
+
+        f = ROOT.TFile.Open(filename, 'READ')
+        tree = f.Get('tree')
+
+        hist_name = 'hist_b_pdgid_{}_{}'.format(mass, ctau)
+        hist = ROOT.TH1D(hist_name, hist_name, b_pdgid.nbins, b_pdgid.bin_min, b_pdgid.bin_max)
+        tree.Project(hist_name, 'fabs(b_pdgid)', '')
+        #tree.Project(hist_name, 'fabs(b_pdgid)', 'hnl_tag_side==1')
+        hist.SetDirectory(0)
+
+        b_isB = hist.GetBinContent(hist.GetXaxis().FindBin(521)) / hist.GetEntries()
+        b_isB0 = hist.GetBinContent(hist.GetXaxis().FindBin(511)) / hist.GetEntries()
+        b_isBs = hist.GetBinContent(hist.GetXaxis().FindBin(531)) / hist.GetEntries()
+        b_species['mass{}_ctau{}'.format(mass, ctau)] = [b_isB, b_isB0, b_isBs]
+
+  # plot the rates
+  the_df = pd.DataFrame(b_species, index=['B', 'B0', 'Bs'])
+  the_df = the_df.transpose()
+
+  ax = the_df.plot.barh(stacked=True, colormap='Set3', figsize=(7, 10))#'Set3')#'Pastel1')#'OrRd')#,colormap='PiYG')
+  lgd = ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+  #ax.set_title('Mass 4.5 GeV')
+  for ictau, tag in enumerate(b_species):
+    widths_B = the_df['B']
+    widths_B0 = the_df['B0']
+    widths_Bs = the_df['Bs']
+    #xpos_tag = 0.2 # widths_tag[ictau]/2.
+    #xpos_probe = 1 - widths_probe[ictau]/2.
+    xpos_B = 0.25
+    xpos_B0 = 0.75
+    xpos_Bs = 0.96
+    ypos = ictau
+    ax.text(xpos_B, ypos, round(widths_B[ictau], 2), ha='center', va='center',color='black')
+    ax.text(xpos_B0, ypos, round(widths_B0[ictau], 2), ha='center', va='center',color='black')
+    ax.text(xpos_Bs, ypos, round(widths_Bs[ictau], 2), ha='center', va='center',color='black')
+    #ax.text(xpos_tag, ypos, round(widths_tag[ictau], 2), ha='center', va='center',color='black')
+    #ax.text(xpos_probe, ypos, round(widths_probe[ictau], 2), ha='center', va='center',color='black')
+  ax.figure.savefig('plots/b_species_{}.png'.format(version_label),bbox_extra_artists=(lgd,), bbox_inches='tight')
+  ax.figure.savefig('plots/b_species_{}.pdf'.format(version_label),bbox_extra_artists=(lgd,), bbox_inches='tight')
+
+  print '--> plots/b_species_{}.png created'.format(version_label)
+
+
+def plotAccompagnyingMeson(version_label):
+  print '----------------------'
+  print 'Will plot X pdgId for ntuples {}'.format(version_label)
+  print '----------------------'
+
+  X_pdgid = Quantity('fabs(X_pdgid)', 'X pdgid', 'X_pdgid', 600, 0, 600)
+
+  filenames = [f for f in glob.glob('./outputfiles/{}/*'.format(version_label))]
+
+  # get the masses
+  masses = []
+  for filename in filenames:
+    mass = filename[filename.rfind('mass')+4:filename.rfind('_ctau')]
+    if mass not in masses:
+      masses.append(mass)
+
+  # get the signal points
+  signal_points = []
+  for mass in masses:
+    for filename in filenames:
+      if 'mass'+mass not in filename: continue
+      ctau = filename[filename.rfind('ctau')+4:filename.rfind('.root')]
+      signal_points.append(SignalPoint(mass=mass, ctau=ctau))
+      
+  # get the tag and probe rates
+  X_pdgids = {}
+  for mass in masses:
+    for signal_point in signal_points:
+      if signal_point.mass != mass: continue
+      ctau = signal_point.ctau
+
+      for filename in filenames:
+        if mass not in filename or ctau not in filename: continue
+
+        f = ROOT.TFile.Open(filename, 'READ')
+        tree = f.Get('tree')
+
+        hist_name = 'hist_X_pdgid_{}_{}'.format(mass, ctau)
+        hist = ROOT.TH1D(hist_name, hist_name, X_pdgid.nbins, X_pdgid.bin_min, X_pdgid.bin_max)
+        #tree.Project(hist_name, 'fabs(X_pdgid)', '')
+        tree.Project(hist_name, 'fabs(X_pdgid)', 'hnl_tag_side==1')
+        hist.SetDirectory(0)
+
+        X_isD0 = hist.GetBinContent(hist.GetXaxis().FindBin(421)) / hist.GetEntries()
+        X_isD0star = hist.GetBinContent(hist.GetXaxis().FindBin(423)) / hist.GetEntries()
+        X_isD = hist.GetBinContent(hist.GetXaxis().FindBin(411)) / hist.GetEntries()
+        X_isDstar = hist.GetBinContent(hist.GetXaxis().FindBin(413)) / hist.GetEntries()
+        X_isDs = hist.GetBinContent(hist.GetXaxis().FindBin(431)) / hist.GetEntries()
+        X_isDsstar = hist.GetBinContent(hist.GetXaxis().FindBin(433)) / hist.GetEntries()
+        X_isK = hist.GetBinContent(hist.GetXaxis().FindBin(321)) / hist.GetEntries()
+        X_isKstar = hist.GetBinContent(hist.GetXaxis().FindBin(323)) / hist.GetEntries()
+        X_ispi = hist.GetBinContent(hist.GetXaxis().FindBin(211)) / hist.GetEntries()
+        X_ispi0 = hist.GetBinContent(hist.GetXaxis().FindBin(111)) / hist.GetEntries()
+        X_isrho = hist.GetBinContent(hist.GetXaxis().FindBin(213)) / hist.GetEntries()
+        X_isrho0 = hist.GetBinContent(hist.GetXaxis().FindBin(113)) / hist.GetEntries()
+        X_isgamma = hist.GetBinContent(hist.GetXaxis().FindBin(22)) / hist.GetEntries()
+        X_isNothing = hist.GetBinContent(hist.GetXaxis().FindBin(99)) / hist.GetEntries()
+
+        X_pdgids['mass{}_ctau{}'.format(mass, ctau)] = [X_isD0, X_isD0star, X_isD, X_isDstar, X_isDs, X_isDsstar, X_isK, X_isKstar, X_ispi, X_ispi0, X_isrho, X_isrho0, X_isgamma, X_isNothing]
+        #print X_isD0 + X_isD0star + X_isD + X_isDstar + X_isDs + X_isDsstar + X_isK + X_isKstar + X_ispi + X_ispi0 + X_isrho + X_isrho0 + X_isgamma + X_isNothing 
+
+  # plot the rates
+  the_df = pd.DataFrame(X_pdgids, index=['D0', 'D0star', 'D', 'Dstar', 'Ds', 'Dsstar', 'K', 'Kstar', 'pi', 'pi0', 'rho', 'rho0', 'gamma', '-'])
+  the_df = the_df.transpose()
+
+  ax = the_df.plot.barh(stacked=True, colormap='PiYG', figsize=(7, 10))#RdBu#'Set3')#'Pastel1')#'OrRd')#,colormap='PiYG')
+  lgd = ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+  ax.set_title('Inclusive B-decay (tag side)')
+  #for ictau, tag in enumerate(b_species):
+  #  widths_B = the_df['B']
+  #  widths_B0 = the_df['B0']
+  #  widths_Bs = the_df['Bs']
+  #  #xpos_tag = 0.2 # widths_tag[ictau]/2.
+  #  #xpos_probe = 1 - widths_probe[ictau]/2.
+  #  xpos_B = 0.25
+  #  xpos_B0 = 0.75
+  #  xpos_Bs = 0.96
+  #  ypos = ictau
+  #  ax.text(xpos_B, ypos, round(widths_B[ictau], 2), ha='center', va='center',color='black')
+  #  ax.text(xpos_B0, ypos, round(widths_B0[ictau], 2), ha='center', va='center',color='black')
+  #  ax.text(xpos_Bs, ypos, round(widths_Bs[ictau], 2), ha='center', va='center',color='black')
+  #  #ax.text(xpos_tag, ypos, round(widths_tag[ictau], 2), ha='center', va='center',color='black')
+  #  #ax.text(xpos_probe, ypos, round(widths_probe[ictau], 2), ha='center', va='center',color='black')
+  plt.xlim([0, 1])
+  ax.figure.savefig('plots/accompagnying_meson_pdgId_{}.png'.format(version_label),bbox_extra_artists=(lgd,), bbox_inches='tight')
+  ax.figure.savefig('plots/accompagnying_meson_pdgId_{}.pdf'.format(version_label),bbox_extra_artists=(lgd,), bbox_inches='tight')
+
+  print '--> plots/accompagnying_meson_pdgId_{}.png created'.format(version_label)
 
 
 def computeSignalYields(sample, do_old, do_bc):
@@ -286,82 +452,6 @@ def computeSignalYields(sample, do_old, do_bc):
   print '{:.2e}'.format(yields)
 
   return v_square, yields
-
-
-def plotBspecies(version_label):
-  print '----------------------'
-  print 'Will plot B species for ntuples {}'.format(version_label)
-  print '----------------------'
-
-  b_pdgid = Quantity('fabs(b_pdgid)', 'B pdgId', 'b_pdgid', 600, 0, 600)
-
-  filenames = [f for f in glob.glob('./outputfiles/{}/*'.format(version_label))]
-
-  # get the masses
-  masses = []
-  for filename in filenames:
-    mass = filename[filename.rfind('mass')+4:filename.rfind('_ctau')]
-    if mass not in masses:
-      masses.append(mass)
-
-  # get the signal points
-  signal_points = []
-  for mass in masses:
-    for filename in filenames:
-      if mass not in filename: continue
-      ctau = filename[filename.rfind('ctau')+4:filename.rfind('.root')]
-      signal_points.append(SignalPoint(mass=mass, ctau=ctau))
-      
-  # get the tag and probe rates
-  b_species = {}
-  for mass in masses:
-    for signal_point in signal_points:
-      if signal_point.mass != mass: continue
-      ctau = signal_point.ctau
-
-      for filename in filenames:
-        if mass not in filename or ctau not in filename: continue
-
-        f = ROOT.TFile.Open(filename, 'READ')
-        tree = f.Get('tree')
-
-        hist_name = 'hist_b_pdgid_{}_{}'.format(mass, ctau)
-        hist = ROOT.TH1D(hist_name, hist_name, b_pdgid.nbins, b_pdgid.bin_min, b_pdgid.bin_max)
-        tree.Project(hist_name, 'fabs(b_pdgid)', '')
-        #tree.Project(hist_name, 'fabs(b_pdgid)', 'hnl_tag_side==1')
-        hist.SetDirectory(0)
-
-        b_isB = hist.GetBinContent(hist.GetXaxis().FindBin(521)) / hist.GetEntries()
-        b_isB0 = hist.GetBinContent(hist.GetXaxis().FindBin(511)) / hist.GetEntries()
-        b_isBs = hist.GetBinContent(hist.GetXaxis().FindBin(531)) / hist.GetEntries()
-        b_species['mass{}_ctau{}'.format(mass, ctau)] = [b_isB, b_isB0, b_isBs]
-
-  # plot the rates
-  the_df = pd.DataFrame(b_species, index=['B', 'B0', 'Bs'])
-  the_df = the_df.transpose()
-
-  ax = the_df.plot.barh(stacked=True, colormap='Set3', figsize=(7, 10))#'Set3')#'Pastel1')#'OrRd')#,colormap='PiYG')
-  lgd = ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
-  #ax.set_title('Mass 4.5 GeV')
-  for ictau, tag in enumerate(b_species):
-    widths_B = the_df['B']
-    widths_B0 = the_df['B0']
-    widths_Bs = the_df['Bs']
-    #xpos_tag = 0.2 # widths_tag[ictau]/2.
-    #xpos_probe = 1 - widths_probe[ictau]/2.
-    xpos_B = 0.25
-    xpos_B0 = 0.75
-    xpos_Bs = 0.96
-    ypos = ictau
-    ax.text(xpos_B, ypos, round(widths_B[ictau], 2), ha='center', va='center',color='black')
-    ax.text(xpos_B0, ypos, round(widths_B0[ictau], 2), ha='center', va='center',color='black')
-    ax.text(xpos_Bs, ypos, round(widths_Bs[ictau], 2), ha='center', va='center',color='black')
-    #ax.text(xpos_tag, ypos, round(widths_tag[ictau], 2), ha='center', va='center',color='black')
-    #ax.text(xpos_probe, ypos, round(widths_probe[ictau], 2), ha='center', va='center',color='black')
-  ax.figure.savefig('plots/b_species_{}.png'.format(version_label),bbox_extra_artists=(lgd,), bbox_inches='tight')
-  ax.figure.savefig('plots/b_sepcies_{}.pdf'.format(version_label),bbox_extra_artists=(lgd,), bbox_inches='tight')
-
-  print '--> plots/b_species_{}.png created'.format(version_label)
 
 
 def plotSignalYields():
@@ -779,14 +869,15 @@ def plotSignalYieldsBc():
 
 if __name__ == "__main__":
 
-  version_label = 'V34_newfilter_genstudy_v3'
+  version_label = 'V38_request_Bc'
   #version_label = 'V34_newfilter_genstudy_Bc_v1'
   #version_label = 'test_modfilter_v3_n10000000_njt500'
 
-  #plotTagRate(version_label=version_label)
-  #plotMuFromHNLTriggeringRate(version_label=version_label)
-  #plotNumberTriggeringMuons(version_label=version_label)
+  plotTagRate(version_label=version_label)
+  plotMuFromHNLTriggeringRate(version_label=version_label)
+  plotNumberTriggeringMuons(version_label=version_label)
   plotBspecies(version_label=version_label)
+  plotAccompagnyingMeson(version_label=version_label)
 
   #plotSignalYields()
   #plotSignalYieldsBc()
