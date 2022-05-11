@@ -397,6 +397,106 @@ def plotAccompagnyingMeson(version_label):
   print '--> plots/accompagnying_meson_pdgId_{}.png created'.format(version_label)
 
 
+def plotChannelComposition(version_label):
+  print '----------------------'
+  print 'Will plot the channel composition for ntuples {}'.format(version_label)
+  print '----------------------'
+
+  pdgid = Quantity('fabs(mu_fromB_pdgid)', 'lepton from B pdgid', 'mu_fromB_pdgid', 20, 0, 20)
+
+  filenames = [f for f in glob.glob('./outputfiles/{}/*'.format(version_label))]
+
+  # get the masses
+  masses = []
+  for filename in filenames:
+    mass = filename[filename.rfind('mass')+4:filename.rfind('_ctau')]
+    if mass not in masses:
+      masses.append(mass)
+
+  # get the signal points
+  signal_points = []
+  for mass in masses:
+    for filename in filenames:
+      if 'mass'+mass not in filename: continue
+      ctau = filename[filename.rfind('ctau')+4:filename.rfind('.root')]
+      signal_points.append(SignalPoint(mass=mass, ctau=ctau))
+      
+  # get the tag and probe rates
+  channels = {}
+  for mass in masses:
+    for signal_point in signal_points:
+      if signal_point.mass != mass: continue
+      ctau = signal_point.ctau
+
+      for filename in filenames:
+        if mass not in filename or ctau not in filename: continue
+
+        f = ROOT.TFile.Open(filename, 'READ')
+        tree = f.Get('tree')
+
+        hist_name_VmuVmu = 'VmuVmu_{}_{}'.format(mass, ctau)
+        hist_VmuVmu = ROOT.TH1D(hist_name_VmuVmu, hist_name_VmuVmu, pdgid.nbins, pdgid.bin_min, pdgid.bin_max)
+        #tree.Project(hist_name_VmuVmu, 'fabs(mu_fromB_pdgid)', 'fabs(mu_fromB_pdgid)==13 && fabs(mu_fromHNL_pdgid)==13')
+        tree.Project(hist_name_VmuVmu, 'fabs(mu_fromB_pdgid)', 'fabs(mu_fromB_pdgid)==13 && fabs(mu_fromHNL_pdgid)==13 && hnl_tag_side==1')
+        #tree.Project(hist_name_VmuVmu, 'fabs(mu_fromB_pdgid)', 'fabs(mu_fromHNL_pdgid)==13')
+        hist_VmuVmu.SetDirectory(0)
+
+        hist_name_VmuVe = 'VmuVe_{}_{}'.format(mass, ctau)
+        hist_VmuVe = ROOT.TH1D(hist_name_VmuVe, hist_name_VmuVe, pdgid.nbins, pdgid.bin_min, pdgid.bin_max)
+        #tree.Project(hist_name_VmuVe, 'fabs(mu_fromB_pdgid)', 'fabs(mu_fromB_pdgid)==13 && fabs(mu_fromHNL_pdgid)==11')
+        tree.Project(hist_name_VmuVe, 'fabs(mu_fromB_pdgid)', 'fabs(mu_fromB_pdgid)==13 && fabs(mu_fromHNL_pdgid)==11 && hnl_tag_side==1')
+        #tree.Project(hist_name_VmuVe, 'fabs(mu_fromB_pdgid)', 'fabs(mu_fromHNL_pdgid)==11')
+        hist_VmuVe.SetDirectory(0)
+
+        hist_name_VeVmu = 'VeVmu_{}_{}'.format(mass, ctau)
+        hist_VeVmu = ROOT.TH1D(hist_name_VeVmu, hist_name_VeVmu, pdgid.nbins, pdgid.bin_min, pdgid.bin_max)
+        #tree.Project(hist_name_VeVmu, 'fabs(mu_fromB_pdgid)', 'fabs(mu_fromB_pdgid)==11 && fabs(mu_fromHNL_pdgid)==13')
+        tree.Project(hist_name_VeVmu, 'fabs(mu_fromB_pdgid)', 'fabs(mu_fromB_pdgid)==11 && fabs(mu_fromHNL_pdgid)==13 && hnl_tag_side==1')
+        hist_VeVmu.SetDirectory(0)
+
+        tot = hist_VmuVmu.GetEntries() + hist_VmuVe.GetEntries() + hist_VeVmu.GetEntries()
+        #tot = hist_VmuVmu.GetEntries() + hist_VmuVe.GetEntries()
+
+        VmuVmu = float(hist_VmuVmu.GetEntries()) / float(tot)
+        VmuVe = float(hist_VmuVe.GetEntries()) / float(tot)
+        VeVmu = float(hist_VeVmu.GetEntries()) / float(tot)
+
+        print '{} {} {} {}'.format(VmuVmu, VmuVe, VeVmu, VmuVmu+VmuVe+VeVmu)
+        #print '{} {} {}'.format(VmuVmu, VmuVe, VmuVmu+VmuVe)
+
+        channels['mass{}_ctau{}'.format(mass, ctau)] = [VmuVmu, VmuVe, VeVmu]
+        #channels['mass{}_ctau{}'.format(mass, ctau)] = [VmuVmu, VmuVe]
+
+  # plot the rates
+  the_df = pd.DataFrame(channels, index=['VmuVmu', 'VmuVe', 'VeVmu'])
+  #the_df = pd.DataFrame(channels, index=['HNL->mupi', 'HNL->epi'])
+  the_df = the_df.transpose()
+
+  ax = the_df.plot.barh(stacked=True, colormap='PiYG', figsize=(7, 10))#RdBu#'Set3')#'Pastel1')#'OrRd')#,colormap='PiYG')
+  lgd = ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+  ax.set_title('Channels')
+  #for ictau, tag in enumerate(b_species):
+  #  widths_B = the_df['B']
+  #  widths_B0 = the_df['B0']
+  #  widths_Bs = the_df['Bs']
+  #  #xpos_tag = 0.2 # widths_tag[ictau]/2.
+  #  #xpos_probe = 1 - widths_probe[ictau]/2.
+  #  xpos_B = 0.25
+  #  xpos_B0 = 0.75
+  #  xpos_Bs = 0.96
+  #  ypos = ictau
+  #  ax.text(xpos_B, ypos, round(widths_B[ictau], 2), ha='center', va='center',color='black')
+  #  ax.text(xpos_B0, ypos, round(widths_B0[ictau], 2), ha='center', va='center',color='black')
+  #  ax.text(xpos_Bs, ypos, round(widths_Bs[ictau], 2), ha='center', va='center',color='black')
+  #  #ax.text(xpos_tag, ypos, round(widths_tag[ictau], 2), ha='center', va='center',color='black')
+  #  #ax.text(xpos_probe, ypos, round(widths_probe[ictau], 2), ha='center', va='center',color='black')
+  #plt.xlim([0, 1])
+  ax.figure.savefig('plots/channel_composition_{}.png'.format(version_label),bbox_extra_artists=(lgd,), bbox_inches='tight')
+  ax.figure.savefig('plots/channel_composition_{}.pdf'.format(version_label),bbox_extra_artists=(lgd,), bbox_inches='tight')
+
+  print '--> plots/channel_composition_{}.png created'.format(version_label)
+
+
 def computeSignalYields(sample, do_old, do_bc):
   '''
   yields = sigma * lumi * filter_eff * acc_eff
@@ -869,15 +969,22 @@ def plotSignalYieldsBc():
 
 if __name__ == "__main__":
 
-  version_label = 'V38_request_Bc'
+  #version_label = 'V38_request_Bc'
   #version_label = 'V34_newfilter_genstudy_Bc_v1'
   #version_label = 'test_modfilter_v3_n10000000_njt500'
+  #version_label = 'test_commonfilter_bothchannels_v3'
+  #version_label = 'test_commonfilter_muonchannel_emu_v4'
+  #version_label = 'test_muonfilter_emu_v2'
+  #version_label = 'test_commonfilter_electrononly_v1'
+  version_label = 'test_commonfilter_twoaliases_v1'
+  #version_label = 'V33_stats_Lxy1300_tkPt500MeV_lepPt400MeV_v2'
 
-  plotTagRate(version_label=version_label)
-  plotMuFromHNLTriggeringRate(version_label=version_label)
-  plotNumberTriggeringMuons(version_label=version_label)
-  plotBspecies(version_label=version_label)
-  plotAccompagnyingMeson(version_label=version_label)
+  #plotTagRate(version_label=version_label)
+  #plotMuFromHNLTriggeringRate(version_label=version_label)
+  #plotNumberTriggeringMuons(version_label=version_label)
+  #plotBspecies(version_label=version_label)
+  #plotAccompagnyingMeson(version_label=version_label)
+  plotChannelComposition(version_label=version_label)
 
   #plotSignalYields()
   #plotSignalYieldsBc()
