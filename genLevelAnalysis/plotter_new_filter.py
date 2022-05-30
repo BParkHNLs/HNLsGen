@@ -475,17 +475,17 @@ def plotChannelComposition(version_label):
   ax = the_df.plot.barh(stacked=True, colormap='PiYG', figsize=(7, 10))#RdBu#'Set3')#'Pastel1')#'OrRd')#,colormap='PiYG')
   lgd = ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
   ax.set_title('Channels')
-  #for ictau, tag in enumerate(b_species):
-  #  widths_B = the_df['B']
+  for ictau, tag in enumerate(channels):
+    widths_B = the_df['VmuVmu']
   #  widths_B0 = the_df['B0']
   #  widths_Bs = the_df['Bs']
   #  #xpos_tag = 0.2 # widths_tag[ictau]/2.
   #  #xpos_probe = 1 - widths_probe[ictau]/2.
-  #  xpos_B = 0.25
+    xpos_B = 0.25
   #  xpos_B0 = 0.75
   #  xpos_Bs = 0.96
-  #  ypos = ictau
-  #  ax.text(xpos_B, ypos, round(widths_B[ictau], 2), ha='center', va='center',color='black')
+    ypos = ictau
+    ax.text(xpos_B, ypos, round(widths_B[ictau], 2), ha='center', va='center',color='white')
   #  ax.text(xpos_B0, ypos, round(widths_B0[ictau], 2), ha='center', va='center',color='black')
   #  ax.text(xpos_Bs, ypos, round(widths_Bs[ictau], 2), ha='center', va='center',color='black')
   #  #ax.text(xpos_tag, ypos, round(widths_tag[ictau], 2), ha='center', va='center',color='black')
@@ -970,20 +970,13 @@ def plotSignalYieldsBc():
 if __name__ == "__main__":
 
   #version_label = 'V38_request_Bc'
-  #version_label = 'V34_newfilter_genstudy_Bc_v1'
-  #version_label = 'test_modfilter_v3_n10000000_njt500'
-  #version_label = 'test_commonfilter_bothchannels_v3'
-  #version_label = 'test_commonfilter_muonchannel_emu_v4'
-  #version_label = 'test_muonfilter_emu_v2'
-  #version_label = 'test_commonfilter_electrononly_v1'
-  version_label = 'test_commonfilter_twoaliases_v1'
-  #version_label = 'V33_stats_Lxy1300_tkPt500MeV_lepPt400MeV_v2'
+  version_label = 'V40_request_common_Bc_electron'
 
-  #plotTagRate(version_label=version_label)
-  #plotMuFromHNLTriggeringRate(version_label=version_label)
-  #plotNumberTriggeringMuons(version_label=version_label)
-  #plotBspecies(version_label=version_label)
-  #plotAccompagnyingMeson(version_label=version_label)
+  plotTagRate(version_label=version_label)
+  plotMuFromHNLTriggeringRate(version_label=version_label)
+  plotNumberTriggeringMuons(version_label=version_label)
+  plotBspecies(version_label=version_label)
+  plotAccompagnyingMeson(version_label=version_label)
   plotChannelComposition(version_label=version_label)
 
   #plotSignalYields()
