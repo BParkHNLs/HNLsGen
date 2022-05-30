@@ -24,11 +24,13 @@ class Job(object):
     self.nthr = 8 if self.domultithread else 1
 
     self.user = os.environ["USER"]
-    if self.dobc and not self.dogenonly:
+    if self.dobc and not self.dogenonly and not self.docontrol:
       self.jop1_in = 'step1_Bc.py'
-    elif self.docontrol:
+    elif self.docontrol and not self.dobc:
       self.jop1_in = 'step1_control.py'
-    elif self.dogenonly and not self.dobc:
+    elif self.docontrol and self.dobc:
+      self.jop1_in = 'step1_control_Bc.py'
+    elif self.dogenonly and not self.dobc and not self.docontrol:
       self.jop1_in = 'step1_genonly.py' 
     elif self.dobc and self.dogenonly:
       self.jop1_in = 'step1_Bc_genonly.py'
@@ -327,6 +329,53 @@ class Job(object):
   def makeTemplates(self):
     for p in self.points:
       nevtsjob_toset = self.nevtsjob if not self.override else p.cfg.nevtsjob 
+      if not self.docontrol:
+        if not self.dobc:
+          command_cms = 'cmsRun {jop1} maxEvents={nevtsjob} nThr={nthr} mass={m} ctau={ctau} outputFile=BPH-step1.root seedOffset=$SLURM_ARRAY_TASK_ID doSkipMuonFilter={dsmf} doDisplFilter={ddf} doMajorana={dmj} doElectron={de} scaleToFilter={stf} minTrackPt={mtpt} minLeptonPt={mlpt} maxDisplacement={mtdd}'.format(
+          m=p.mass,
+          ctau=p.ctau,
+          jop1=self.jop1,
+          nevtsjob=nevtsjob_toset,
+          nthr=self.nthr,
+          dsmf=self.doskipmuonfilter,
+          ddf=self.dodisplfilter,
+          dmj=self.domajorana,
+          de=self.doelectron,
+          stf=self.pythiascale,
+          mtpt=self.mintrackpt,
+          mlpt=self.minleptonpt,
+          mtdd=self.maxdisplacement,
+          )
+        else:
+          # find lhe file
+          lhe_filename = '../data/lhe_samples/Bc_m{}_ctau{}.txt'.format(str(p.mass).replace('.', 'p'), str(p.ctau).replace('.', 'p'))
+          lhe_file = open(lhe_filename)
+          the_lhe_file = lhe_file.readlines()[0]
+          command_cms = 'cmsRun {jop1} maxEvents={nevtsjob} nThr={nthr} mass={m} ctau={ctau} outputFile=BPH-step1.root seedOffset=$SLURM_ARRAY_TASK_ID doSkipMuonFilter={dsmf} doDisplFilter={ddf} doMajorana={dmj} doElectron={de} scaleToFilter={stf} minTrackPt={mtpt} minLeptonPt={mlpt} maxDisplacement={mtdd} lheFile={lhe}'.format(
+            m=p.mass,
+            ctau=p.ctau,
+            jop1=self.jop1,
+            nevtsjob=nevtsjob_toset,
+            nthr=self.nthr,
+            dsmf=self.doskipmuonfilter,
+            ddf=self.dodisplfilter,
+            dmj=self.domajorana,
+            de=self.doelectron,
+            stf=self.pythiascale,
+            mtpt=self.mintrackpt,
+            mlpt=self.minleptonpt,
+            mtdd=self.maxdisplacement,
+            lhe = the_lhe_file,
+            )
+      else: # control channel
+        command_cms = 'cmsRun {jop1} maxEvents={nevtsjob} nThr={nthr} outputFile=BPH-step1.root seedOffset=$SLURM_ARRAY_TASK_ID'
+
+        command_cms = command_cms.format(
+          jop1=self.jop1,
+          nevtsjob=nevtsjob_toset,
+          nthr=self.nthr,
+          )
+
       template = [
         '#!/bin/bash',
         '',
@@ -381,7 +430,7 @@ class Job(object):
         'pwd',
         'echo "Going to run step1"',
         'DATE_START_step1=`date +%s`',
-        'cmsRun {jop1} maxEvents={nevtsjob} nThr={nthr} mass={m} ctau={ctau} outputFile=BPH-step1.root seedOffset=$SLURM_ARRAY_TASK_ID doSkipMuonFilter={dsmf} doDisplFilter={ddf} doMajorana={dmj} doElectron={de} scaleToFilter={stf} minTrackPt={mtpt} minLeptonPt={mlpt} maxDisplacement={mtdd}',
+        '{commandcms}',
         'DATE_END_step1=`date +%s`',
         'if [ $? -eq 0 ]; then echo "Successfully run step 1"; else exit $?; fi',
         'echo "Finished running step1"',
@@ -413,24 +462,15 @@ class Job(object):
           arr='1-{}'.format(self.njobs if not self.override else p.cfg.njobs),
           pl=self.prodLabel,
           user=self.user,
-          jop1=self.jop1,
-          dsmf=self.doskipmuonfilter,
-          ddf=self.dodisplfilter,
-          dmj=self.domajorana,
-          de=self.doelectron,
-          stf=self.pythiascale,
-          mtpt=self.mintrackpt,
-          mlpt=self.minleptonpt,
-          mtdd=self.maxdisplacement,
+          commandcms = command_cms,
           nevtsjob=nevtsjob_toset,
-          nthr=self.nthr,
+          jop1=self.jop1,
           jop2=self.jop2,
           jop3=self.jop3,
           jop4=self.jop4,
           addstep2=self.appendTemplate(self.jop2,self.jop1,self.nthr,nevtsjob_toset),
           addstep3=self.appendTemplate(self.jop3,self.jop2,self.nthr,nevtsjob_toset),
           addstep4=self.appendTemplate(self.jop4,self.jop3,self.nthr,nevtsjob_toset),
-
           timestamp=self.makeTimeStamp()
           )
       launcherFile = '{pl}/slurm_mass{m}_ctau{ctau}_prod.sh'.format(pl=self.prodLabel,m=p.mass,ctau=p.ctau)
