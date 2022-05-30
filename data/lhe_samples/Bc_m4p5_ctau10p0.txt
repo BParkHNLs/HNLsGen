@@ -1,0 +1,1 @@
+/store/mc/RunIIFall18pLHE/BcToNMuX_NToEMuPi_SoftQCD_b_mN4p5_ctau10p0mm_TuneCP5_13TeV-pythia8-evtgen/LHE/102X_upgrade2018_realistic_v11-v3/50000/8BE6ABCB-F5FF-574C-B4E0-82A41F31920A.root  
