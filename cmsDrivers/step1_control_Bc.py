@@ -1,5 +1,5 @@
 '''
-Job option for the B-initiated HNL generation - specialised for the Bc case
+Job option for the B-initiated HNL generation
 '''
 
 from FWCore.ParameterSet.VarParsing import VarParsing
@@ -24,61 +24,6 @@ options.register('seedOffset',
                  VarParsing.multiplicity.singleton,
                  VarParsing.varType.int,
                  'Seed offset')
-options.register('mass',
-                 1,
-                 VarParsing.multiplicity.singleton,
-                 VarParsing.varType.float,
-                 'mass of the HNL')
-options.register('ctau',
-                 100,
-                 VarParsing.multiplicity.singleton,
-                 VarParsing.varType.float,
-                 'ctau of the HNL [mm]')
-options.register('doSkipMuonFilter',    
-                  False, 
-                  VarParsing.multiplicity.singleton, 
-                  VarParsing.varType.bool, 
-                  'Skip the muon filter' )
-options.register('doDisplFilter',    
-                  False, 
-                  VarParsing.multiplicity.singleton, 
-                  VarParsing.varType.bool, 
-                  'In muon filter, add a cut on the HNL displacement' )
-options.register('doMajorana',    
-                  False, 
-                  VarParsing.multiplicity.singleton, 
-                  VarParsing.varType.bool, 
-                  'HNL is majorana particle, otherwise dirac' )
-options.register('doElectron',    
-                  False, 
-                  VarParsing.multiplicity.singleton, 
-                  VarParsing.varType.bool, 
-                  'HNL can decay to epi too, otherwise mupi only' )
-options.register('scaleToFilter',
-                 1.0,
-                 VarParsing.multiplicity.singleton,
-                 VarParsing.varType.float,
-                 'Pythia parameter to scale the pt cut on the b quark (?)')
-options.register('maxDisplacement',
-                 1300,
-                 VarParsing.multiplicity.singleton,
-                 VarParsing.varType.float,
-                 'Maximum 2D displacement, in mm')
-options.register('minTrackPt',
-                 0.0,
-                 VarParsing.multiplicity.singleton,
-                 VarParsing.varType.float,
-                 'Minimum track pt')
-options.register('minLeptonPt',
-                 0.0,
-                 VarParsing.multiplicity.singleton,
-                 VarParsing.varType.float,
-                 'Minimum lepton pt')
-options.register('lheFile',
-                 'test.root',
-                 VarParsing.multiplicity.singleton,
-                 VarParsing.varType.string,
-                 'LHE rootfile')
 options.parseArguments()
 print options
 
@@ -86,7 +31,7 @@ import FWCore.ParameterSet.Config as cms
 
 from Configuration.StandardSequences.Eras import eras
 
-process = cms.Process('GEN',eras.Run2_2018)
+process = cms.Process('SIM',eras.Run2_2018)
 
 # import of standard configurations
 process.load('Configuration.StandardSequences.Services_cff')
@@ -109,9 +54,10 @@ process.maxEvents = cms.untracked.PSet(
 )
 
 # Input source
+LHErootfile = '/store/mc/RunIIFall18pLHE/BcToNMuX_NToEMuPi_SoftQCD_b_mN3p0_ctau100p0mm_TuneCP5_13TeV-pythia8-evtgen/LHE/102X_upgrade2018_realistic_v11-v3/40000/B076BA85-2CE0-6148-95E6-D58A6AE53833.root'
 process.source = cms.Source("PoolSource",
   dropDescendantsOfDroppedBranches = cms.untracked.bool(False),
-  fileNames = cms.untracked.vstring(options.lheFile),
+  fileNames = cms.untracked.vstring(LHErootfile),
   #skipEvents=cms.untracked.uint32(2), ## not needed
   inputCommands = cms.untracked.vstring(
       'keep *', 
@@ -121,6 +67,7 @@ process.source = cms.Source("PoolSource",
 )
 
 process.options = cms.untracked.PSet(
+
 )
 
 # Production Info
@@ -131,6 +78,7 @@ process.configurationMetadata = cms.untracked.PSet(
 )
 
 # Output definition
+
 process.RAWSIMoutput = cms.OutputModule("PoolOutputModule",
     SelectEvents = cms.untracked.PSet(
         SelectEvents = cms.vstring('generation_step')
@@ -138,7 +86,7 @@ process.RAWSIMoutput = cms.OutputModule("PoolOutputModule",
     compressionAlgorithm = cms.untracked.string('LZMA'),
     compressionLevel = cms.untracked.int32(1),
     dataset = cms.untracked.PSet(
-        dataTier = cms.untracked.string('GEN'),
+        dataTier = cms.untracked.string('GEN-SIM'),
         filterName = cms.untracked.string('')
     ),
     eventAutoFlushCompressedSize = cms.untracked.int32(20971520),
@@ -163,57 +111,26 @@ process.genstepfilter.triggerConditions=cms.vstring("generation_step")
 from Configuration.AlCa.GlobalTag import GlobalTag
 process.GlobalTag = GlobalTag(process.GlobalTag, '102X_upgrade2018_realistic_v11', '')
 
-process.MuFilter = cms.EDFilter("MCParticlePairFilter",
-    MaxEta = cms.untracked.vdouble(2.45, 2.45),
-    MinEta = cms.untracked.vdouble(-2.45, -2.45),
-    MinPt = cms.untracked.vdouble(2.7, 2.7),
-    ParticleID1 = cms.untracked.vint32(13),
-    ParticleID2 = cms.untracked.vint32(13)
-)
-
-
 ### Operates on all particles in the HepMC::GenEvent
 ### accpects events if:
 ###  - there is at least one particle with specified pdgID in the entire HepMC::GenEvent
 ###  - any status (but can be specified)
-process.BpFilter = cms.EDFilter("PythiaFilter",
-    ParticleID = cms.untracked.int32(541) # Bc+ Bc- filter 
-)
-
 process.BFilter = cms.EDFilter("MCMultiParticleFilter",
    NumRequired = cms.int32(1),
    AcceptMore = cms.bool(True),
-   ParticleID = cms.vint32(541), # abs already taken into account, Bc+, Bc-
-   PtMin = cms.vdouble(0.),
-   EtaMax = cms.vdouble(10.),
-   Status = cms.vint32(0), 
+   ParticleID = cms.vint32(541), # abs not needed
+   PtMin = cms.vdouble(0.,0.),
+   EtaMax = cms.vdouble(10.,10.),
+   Status = cms.vint32(0,0), 
 )
 
-process.DoubleMuFilter = cms.EDFilter("MCParticlePairFilter",
-    MaxEta = cms.untracked.vdouble(1.55, 2.45),   # apply trigger acceptance cut on one muon only
-    MinEta = cms.untracked.vdouble(-1.55, -2.45), # apply trigger acceptance cut on one muon only
-    MinPt = cms.untracked.vdouble(6.8, 1.0),      # apply trigger acceptance cut on one muon only
-    ParticleID1 = cms.untracked.vint32(-13, 13),  # added negative pdgId, for safety
-    ParticleID2 = cms.untracked.vint32(-13, 13),  # added negative pdgId, for safety
-    MaxInvMass = cms.untracked.double(10.),       # added to reduce events with wrong topology
-    Status = cms.untracked.vint32(1, 1),          # stability requirement
-)
-
-if options.doDisplFilter:
-  maxDispl = cms.untracked.double(options.maxDisplacement) 
-else:
-  maxDispl = cms.untracked.double(-1)
-
-process.HNLDisplacementFilter = cms.EDFilter("PythiaFilterMotherSister", 
-    #MaxEta = cms.untracked.double(1.55),
-    #MinEta = cms.untracked.double(-1.55),
-    #MinPt = cms.untracked.double(6.8), 
+process.SingleMuFilter = cms.EDFilter("PythiaFilterMotherGrandMother",
+    MaxEta = cms.untracked.double(1.55),
+    MinEta = cms.untracked.double(-1.55),
+    MinPt = cms.untracked.double(6.8), # <=== keep it a bit lower than the pt cut at reco level... 
     ParticleID = cms.untracked.int32(13), # abs value is taken
-    MotherIDs = cms.untracked.vint32(541), # require muon to come from Bc+/Bc- decay
-    SisterID = cms.untracked.int32(9900015), # require HNL sister
-    MaxSisterDisplacement = maxDispl, # max Lxy(z) displacement to generate in mm, -1 for no max
-    NephewIDs = cms.untracked.vint32(13,211), # ids of the nephews you want to check the pt of
-    MinNephewPts = cms.untracked.vdouble(options.minLeptonPt,options.minTrackPt),
+    MotherID = cms.untracked.int32(443), # require muon to come from J/psi decay B+/B- decay
+    GrandMotherIDs = cms.untracked.vint32(541,541), # require Bc 
 )
 
 process.generator = cms.EDFilter("Pythia8HadronizerFilter",
@@ -236,29 +153,62 @@ process.generator = cms.EDFilter("Pythia8HadronizerFilter",
             operates_on_particles = cms.vint32(541, -541),  # 541 is Bc+
 
             ### The file with properties of all particles
-            particle_property_file = cms.FileInPath('HNLsGen/evtGenData/evt_2014_mass{m}_ctau{ctau}_{dm}.pdl'.format(\
-                                                       m=options.mass,ctau=options.ctau,dm='maj' if options.doMajorana else 'dirac')), 
-            #https://twiki.cern.ch/twiki/bin/view/CMSPublic/SWGuideEdmFileInPath 
-
+            particle_property_file = cms.FileInPath('HNLsGen/evtGenData/evt_2014.pdl'),
+            #https://twiki.cern.ch/twiki/bin/view/CMSPublic/SWGuideEdmFileInPath
+ 
             ### The decay file 
-            user_decay_file = cms.vstring('HNLsGen/evtGenData/HNLdecay_mass{m}_{dm}_{de}_Bc.DEC'.format(\
-                                             m=options.mass, 
-                                             dm='maj' if options.doMajorana else 'dirac',
-                                             de='emu' if options.doElectron else 'mu')),
+            user_decay_file = cms.vstring('HNLsGen/evtGenData/ControlChannel_Bc.DEC'),
 
         ),
         parameterSets = cms.vstring('EvtGen130')
     ),
     PythiaParameters = cms.PSet(
+        # take the same parameters as in step1_control.py, which are different that step1_Bc.py
         parameterSets = cms.vstring(
             'pythia8CommonSettings', 
+            #'pythia8CUEP8M1Settings',  # pythia8CP5Settings ?
+                                       # pythia8PSweightsSettings ?
             'pythia8CP5Settings', 
             'processParameters'
         ),
         processParameters = cms.vstring(
             '541:m0 = 6.275',
             '541:tau0 = 0.153'
+            ## 'SoftQCD' vs 'HardQCD' 
+            ##     you want SoftQCD if you don#'t want to put any pT cut on the hard scatter process 
+            ##     http://home.thep.lu.se/~torbjorn/pythia81html/QCDProcesses.html
+            ##     eventually use SoftQCD if you#'re interested in the full bottom production at high energies
+
+            #### softqcd, includes gluon splitting and flavor excitation (b g ->  b g)
+            #'SoftQCD:nonDiffractive = on',             # default is off     
+            #'SoftQCD:singleDiffractive = off',         # default is off
+            #'SoftQCD:doubleDiffractive = off',         # default is off
+            #'PTFilter:filter = on',                    # default is off  # could not find **ANYWHERE** in the Pythia code PTFilter 
+            #'PTFilter:quarkToFilter = 5',                               # it's something that exists in CMSSW only, see Py8InterfaceBase.cc
+            #'PTFilter:scaleToFilter = 1.0'            # default is 0.4 
+           
+            ### settings to generate back-to-back b-jet production
+            ### tip https://twiki.cern.ch/twiki/bin/view/CMS/EvtGenInterface#Tips_for_Pythia8   
+            #'SoftQCD:nonDiffractive = off',            # 
+            #'SoftQCD:singleDiffractive = off',         #
+            #'SoftQCD:doubleDiffractive = off',         #
+            #'PTFilter:filter = off',                   #
+            #'HardQCD:gg2bbbar = on ',                  # default is off 
+            #'HardQCD:qqbar2bbbar = on ',               # default is off  
+            #'HardQCD:hardbbbar = off',                 # default is off  # should be set to off if gg2bbbar and hardbbbar on, otherwise double-counting
+            #'PhaseSpace:pTHatMin = 5.',               # default is 0    # minimum invariant pT
+            ## 'PhaseSpace' to constrain the kinematics of a 2->2 process, 
+            ##              for hard physics only, 
+            ##              in the rest frame of the hard process, 
+            ##              cross-section is adjusted to correspond for the allowed phase-space
         ),
+        #pythia8CUEP8M1Settings = cms.vstring( # these probably remain the same
+        #    'Tune:pp 14', 
+        #    'Tune:ee 7', 
+        #    'MultipartonInteractions:pT0Ref=2.4024',    # default is 2.28000 
+        #    'MultipartonInteractions:ecmPow=0.25208',   # default is 0.21500
+        #    'MultipartonInteractions:expPow=1.6'        # default is 1.85000
+        #),
         pythia8CP5Settings = cms.vstring(
             'Tune:pp 14', 
             'Tune:ee 7', 
@@ -299,22 +249,18 @@ process.generator = cms.EDFilter("Pythia8HadronizerFilter",
     pythiaPylistVerbosity = cms.untracked.int32(0)    # 1 for "normal" verbosity, 11 to display all Pythia Settings
 )
 
-
-if options.doSkipMuonFilter:
-  process.ProductionFilterSequence = cms.Sequence(process.generator+process.BFilter) 
-else:
-  process.ProductionFilterSequence = cms.Sequence(process.generator+process.BFilter+process.DoubleMuFilter+process.HNLDisplacementFilter)
+process.ProductionFilterSequence = cms.Sequence(process.generator+process.BFilter+process.SingleMuFilter)
 
 
 # Path and EndPath definitions
 process.generation_step = cms.Path(process.pgen)
-#process.simulation_step = cms.Path(process.psim)
+process.simulation_step = cms.Path(process.psim)
 process.genfiltersummary_step = cms.EndPath(process.genFilterSummary)
 process.endjob_step = cms.EndPath(process.endOfProcess)
 process.RAWSIMoutput_step = cms.EndPath(process.RAWSIMoutput)
 
 # Schedule definition
-process.schedule = cms.Schedule(process.generation_step,process.genfiltersummary_step,process.endjob_step,process.RAWSIMoutput_step)
+process.schedule = cms.Schedule(process.generation_step,process.genfiltersummary_step,process.simulation_step,process.endjob_step,process.RAWSIMoutput_step)
 from PhysicsTools.PatAlgos.tools.helpers import associatePatAlgosToolsTask
 associatePatAlgosToolsTask(process)
 # filter all path with the production filter sequence

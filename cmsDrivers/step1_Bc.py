@@ -74,6 +74,11 @@ options.register('minLeptonPt',
                  VarParsing.multiplicity.singleton,
                  VarParsing.varType.float,
                  'Minimum lepton pt')
+options.register('lheFile',
+                 'test.root',
+                 VarParsing.multiplicity.singleton,
+                 VarParsing.varType.string,
+                 'LHE rootfile')
 options.parseArguments()
 print options
 
@@ -104,13 +109,9 @@ process.maxEvents = cms.untracked.PSet(
 )
 
 # Input source
-### LHE->root files, each file has 1 M events, _0.root does not work, start from 1
-#LHErootfile = 'root://t3dcachedb.psi.ch:1094//pnfs/psi.ch/cms/trivcat/store/user/mratti/BHNLsGen/BHNL_Bc_LHEGEN_v0/BHNL_Bc_LHEtoRoot_step0_nj{ijob}.root'.format(ijob=options.seedOffset)
-LHErootfile = 'file:/pnfs/psi.ch/cms/trivcat/store/user/mratti/BHNLsGen/BHNL_Bc_LHEGEN_v0_mgSecondRun/BHNL_Bc_LHEtoRoot_step0_njAll.root'
-
 process.source = cms.Source("PoolSource",
   dropDescendantsOfDroppedBranches = cms.untracked.bool(False),
-  fileNames = cms.untracked.vstring(LHErootfile),
+  fileNames = cms.untracked.vstring(options.lheFile),
   #skipEvents=cms.untracked.uint32(2), ## not needed
   inputCommands = cms.untracked.vstring(
       'keep *', 

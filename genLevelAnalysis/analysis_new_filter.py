@@ -176,7 +176,7 @@ weights = OrderedDict(zip(new_v2s, np.ones(len(new_v2s))))
 ##infiles = '/pnfs/psi.ch/cms/trivcat/store/user/mratti/BHNLsGen/V33_stats_Lxy1300_tkPt500MeV_lepPt400MeV/mass4.5_ctau1.0/step1*root'
 
 
-def treeProducer(infiles, outdir, outfilename):
+def treeProducer(infiles, outdir, outfilename, lepton):
   # get the files
   print 'loading the file ...'
   files = glob.glob(infiles)
@@ -288,6 +288,10 @@ def treeProducer(infiles, outdir, outfilename):
     else:
        event.the_hn.pi = None
        print 'hnl pion not found'
+
+    # specify if needed the channel if needed
+    if lepton == 'muon' and (abs(event.the_pl.pdgId()) != 13 or abs(event.the_hn.lep.pdgId()) != 13): continue
+    if lepton == 'electron' and (abs(event.the_pl.pdgId()) != 11 and abs(event.the_hn.lep.pdgId()) != 11): continue
 
     # event topology
     if event.the_pl.satisfies_BParkHLT_cond + event.the_hn.lep.satisfies_BParkHLT_cond > 0:
@@ -503,8 +507,12 @@ if __name__ == "__main__":
   #version_label = 'V34_newfilter_genstudy_v3'
   #version_label = 'V34_newfilter_genstudy_Bc_v1'
   #version_label = 'V38_request_Bc'
-  version_label = 'test_displacementFilter1e9mm'
+  version_label = 'V40_request_common_Bc'
   user = 'anlyon'
+  lepton = 'all'
+
+  if lepton not in ['muon', 'electron', 'all']:
+    raise RuntimeError("Lepton not known. Choose among ['muon', 'electron', 'all']")
 
   indirectory = '/pnfs/psi.ch/cms/trivcat/store/user/{}/BHNLsGen/{}'.format(user, version_label)
   # get all the subdirectories (signal points)
@@ -520,11 +528,16 @@ if __name__ == "__main__":
     pointname = pointdir[pointdir.rfind('/')+1:].replace('.', 'p')
 
     infiles = '{}/step1*root'.format(pointdir)
-    outdir = './outputfiles/{}'.format(version_label)
+    if lepton == 'all':
+      outdir = './outputfiles/{}'.format(version_label)
+    elif lepton == 'muon':
+      outdir = './outputfiles/{}_muon'.format(version_label)
+    elif lepton == 'electron':
+      outdir = './outputfiles/{}_electron'.format(version_label)
     outfilename = 'genTree_{}.root'.format(pointname)
 
     if not path.exists(outdir):
       os.system('mkdir -p {}'.format(outdir))
 
-    treeProducer(infiles=infiles, outdir=outdir, outfilename=outfilename)
+    treeProducer(infiles=infiles, outdir=outdir, outfilename=outfilename, lepton=lepton)
 
