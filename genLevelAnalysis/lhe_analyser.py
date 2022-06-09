@@ -1,6 +1,7 @@
 import os
 import glob
 import ROOT
+import math
 
 
 def getFirstIndex(line, idx):
@@ -41,8 +42,8 @@ def getEnergy(line):
 print 'will analyse LHE file'
 
 #path = '/pnfs/psi.ch/cms/trivcat/store/user/anlyon/BHNLsGen/LHE_files/Bc_LHE_2M'
-path = '/pnfs/psi.ch/cms/trivcat/store/user/anlyon/BHNLsGen/LHE_files/Bc_LHE_600M'
-#path = '/pnfs/psi.ch/cms/trivcat/store/user/anlyon/BHNLsGen/LHE_files/Bc_LHE_2M_NoCut2022'
+#path = '/pnfs/psi.ch/cms/trivcat/store/user/anlyon/BHNLsGen/LHE_files/Bc_LHE_600M'
+path = '/pnfs/psi.ch/cms/trivcat/store/user/anlyon/BHNLsGen/LHE_files/Bc_LHE_2M_NoCut2022'
 
 max_events = 2000000
 
@@ -96,7 +97,8 @@ hist_y.Draw('hist')
 canv_y.SaveAs('./plots/lhe_Bc_y.png')
 
 efficiency = hist_num.Integral() / hist_deno.Integral()
-print 'efficiency = {} / {} = {}%'.format(hist_num.Integral(), hist_deno.Integral(), efficiency*100)
+err = efficiency * (math.sqrt(hist_num.Integral()) / hist_num.Integral() + math.sqrt(hist_deno.Integral()) / hist_deno.Integral())
+print 'efficiency = {} / {} = ({} +- {})%'.format(hist_num.Integral(), hist_deno.Integral(), efficiency*100, err*100)
 
 print 'Done'
 
