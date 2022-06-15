@@ -10,7 +10,7 @@ Then,
 ```
 cd HNLsGen/crab
 ```
-List the desired mass/ctau points to generate in <points>.py
+List the desired mass/ctau points to generate in `<points>.py`
 
 Make sure to have the necessary fragments/pdl files copied in the respective directories.
 
