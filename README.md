@@ -2,17 +2,10 @@
 
 First Installation
 ```
-cmsrel CMSSW_10_2_15
-cd CMSSW_10_2_15/src
+cmsrel CMSSW_10_2_28_patch1
+cd CMSSW_10_2_28_patch1/src
 cmsenv
 git cms-init
-
-git cms-merge-topic mgratti:BHNL
-
-# *commented lines are not needed*
-# git cms-addpkg GeneratorInterface/EvtGenInterface
-# git cms-addpkg GeneratorInterface/ExternalDecays
-# git cms-addpkg GeneratorInterface/Pythia8Interface
 
 git clone git@github.com:BParkHNLs/HNLsGen.git
 
@@ -28,28 +21,9 @@ export PYTHONPATH=$PYTHONPATH:$PWD
 
 After first installation:
 ```
-cd CMSSW_10_2_15/src/HNLsGen
-cmsenv
-export PYTHONPATH=$PYTHONPATH:$PWD 
+cd CMSSW_10_2_28_patch1/src/HNLsGen
+source setup.sh
 ```
-
-## NOT NEEDED ANYMORE - Instructions to set up a different version of Pythia within CMSSW
-
-This needs to be started from clean CMSSW directory, before cmsenv
-
-* On my laptop, cloned sonia's version of pythia
-* compiled there (make)
-* copied to t3
-* then followed https://twiki.cern.ch/twiki/bin/viewauth/CMS/Pythia8Interface#How_to_setup_the_SCRAM_tool_with 
-* however does not compile due to imcompatibility between versions 8.230 which is what is used by CMSSSW_10_2_0 and 8.240_sonia 
-
-Therefore adopt different strategy:
-* start from 8230 version (as obtained from pythia8 website)
-* compile on laptop => but then removed in /lib the file
-* copy it somewhere on t3
-* copy there from sonia's pythia the files she added / changed
-* the follow again above mentioend twiki page...
-
 
 ## The [./python](./python) directory
 Besides the classes for HNL production and decay, it includes several plotting scripts, denoted with prefix “study”. Each script has a short comment at the beginning for documentation purposes.
@@ -89,7 +63,7 @@ For showering, instead of using the ```GeneratorFilter```, we use the ```Hadroni
 To visualize the decay chain in a tree (printout to screen), using ```vector<reco::genParticles>```
 ```
 cd genLevelAnalysis
-cmsRun test_ParticleTreeDrawer.py maxEvents=1 inputFiles=file:/work/mratti/GEN_HNL/CMSSW_10_2_15/src/HNLsGen/genSimFiles/BPH-test_HardQCDon.root
+cmsRun test_ParticleTreeDrawer.py maxEvents=1 inputFiles=file:/work/mratti/GEN_HNL/CMSSW_10_2_28_patch1/src/HNLsGen/genSimFiles/BPH-test_HardQCDon.root
 ```
 
 To get the gen-level ntuples
