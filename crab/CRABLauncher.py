@@ -191,7 +191,7 @@ class CRABLauncher(object):
         os.system('sh submitter_tmp.sh > log.txt')
 
         percentage = float(ipoint+1) / float(len(self.points)) * 100
-        print '   ---> {}% completed'.format(percentage)
+        print '   ---> {}% completed'.format(round(percentage, 1))
 
         os.system('rm submitter_tmp.sh') 
         os.system('rm log.txt') 
@@ -204,7 +204,7 @@ class CRABLauncher(object):
       command_submit = 'crab submit -c crab_config.py > job_submit.log'
       os.system(command_submit)
       percentage = float(ipoint+1) / float(len(self.points)) * 100
-      print '   ---> {}% completed'.format(percentage)
+      print '   ---> {}% completed'.format(round(percentage, 1))
       os.chdir('../../')
 
 
