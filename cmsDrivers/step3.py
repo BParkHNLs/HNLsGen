@@ -15,11 +15,6 @@ options.register('nThr',
                  VarParsing.multiplicity.singleton,
                  VarParsing.varType.int,
                  'Number of threads')
-options.register('seedOffset',
-                 1,
-                 VarParsing.multiplicity.singleton,
-                 VarParsing.varType.int,
-                 'Seed offset')
 options.register('inputFile',
                  'step2.root',
                  VarParsing.multiplicity.singleton,
