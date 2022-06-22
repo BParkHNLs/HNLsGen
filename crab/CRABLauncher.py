@@ -71,6 +71,7 @@ class CRABLauncher(object):
         'ncores = 1',
         'mempecore = 3000',
         'config.JobType.maxMemoryMB  = ncores*mempecore',                                                                                                                                  
+        'config.JobType.maxJobRuntimeMin = {time}',
         'config.JobType.allowUndistributedCMSSW = True',
 
         'config.Data.outputPrimaryDataset = "mass{MASS}_ctau{CTAU}"',
@@ -95,6 +96,7 @@ class CRABLauncher(object):
           mass = point.mass,
           ctau = point.ctau,
           pl = self.pl,
+          time = 1800 if float(point.mass) < 3 else 3000,
           nevtsjob = self.nevents_perjob,
           njobs = self.njobs,
           )
