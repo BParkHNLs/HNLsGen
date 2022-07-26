@@ -1,6 +1,7 @@
 import os
 import sys
 from os import path
+import random
 
 #sys.path.append('../python')
 from python.common import Point
@@ -29,7 +30,7 @@ class CRABLauncher(object):
     self.points = ps.points
 
     # some fixed parameters
-    self.nevents_perjob = 100000
+    self.nevents_perjob = 25000 #100000 if not self.dobc else 50000
     self.eff_nanoaod = 0.1
 
 
@@ -38,6 +39,25 @@ class CRABLauncher(object):
       dirname = '{}/mass{mass:.2f}_ctau{ctau:.1f}'.format(self.pl, mass=point.mass, ctau=point.ctau)
       if not path.exists(dirname):
         os.system('mkdir -p {}'.format(dirname))
+
+
+  def getRandomLHEfiles(self, prefix=''):
+    random_lhe_files = []
+    # one lhe file contains 200k events, we input 5 of them for each point
+    for i in range(0, 5):
+      lhe_file_list = open('../data/lhe_files/full_list_lhe_files.txt')
+      lhe_files = lhe_file_list.readlines()
+      lhe_file_idx = random.randint(1,17127) # there are 17127 lhe files in total
+      for ifile, lhe_file in enumerate(lhe_files):
+        if ifile != lhe_file_idx: continue
+        random_lhe_file = lhe_file[:lhe_file.rfind('.xz')+3]
+      random_lhe_files.append(random_lhe_file)
+    for ifile, random_lhe_file in enumerate(random_lhe_files):
+      if ifile == 0:
+        random_lhe_files_str = prefix + random_lhe_file
+      else:
+        random_lhe_files_str += ',' + prefix + random_lhe_file
+    return random_lhe_files_str
 
 
   def createCRABConfig(self):
@@ -61,8 +81,8 @@ class CRABLauncher(object):
         'config.General.transferLogs = True',
         'config.General.workArea = "crab_workdir"',
         '',
-
         'config.JobType.pluginName = "PrivateMC"',
+        '{addgnrt}',
         'config.JobType.psetName = "step1.py"',
         'config.JobType.inputFiles = ["../../data/FrameworkJobReport.xml", "../../pdl_files/evt_BHNL_mass{mass:.2f}_ctau{ctau:.1f}_maj.pdl", "step1.py", "../../cmsDrivers/step2.py", "../../data/pileup_2018.root", "../../cmsDrivers/step3.py", "../../cmsDrivers/step4.py"]',
         'config.JobType.outputFiles = ["step4.root"]',
@@ -73,7 +93,8 @@ class CRABLauncher(object):
         'config.JobType.maxMemoryMB  = ncores*mempecore',                                                                                                                                  
         'config.JobType.maxJobRuntimeMin = {time}',
         'config.JobType.allowUndistributedCMSSW = True',
-
+        #'config.JobType.priority = 100',
+        '',
         'config.Data.outputPrimaryDataset = "mass{MASS}_ctau{CTAU}"',
         'config.Data.outLFNDirBase = "/store/user/anlyon/BHNLsGen/{pl}"',
         'NUMEVENTSPERJOB={nevtsjob}',
@@ -95,6 +116,7 @@ class CRABLauncher(object):
           CTAU = str(point.ctau).replace('.', 'p'),
           mass = point.mass,
           ctau = point.ctau,
+          addgnrt = 'config.JobType.generator = "lhe"' if self.dobc else '',
           pl = self.pl,
           time = 1800 if float(point.mass) < 3 else 3000,
           nevtsjob = self.nevents_perjob,
@@ -161,6 +183,27 @@ class CRABLauncher(object):
             mass = point.mass,
             ctau = point.ctau,
             )
+      else:
+        fragment_name = 'BcToNMuX_NToEMuPi_SoftQCD_b_mN{mass:.2f}_ctau{ctau:.1f}mm_TuneCP5_13TeV_pythia8-evtgen_cfi.py'.format(
+            mass = point.mass,
+            ctau = point.ctau,
+            )
+
+      if not self.dobc:
+        command = 'cmsDriver.py Configuration/GenProduction/python/fragment.py --fileout file:step1.root --mc --eventcontent FEVTDEBUG --datatier GEN-SIM --conditions 102X_upgrade2018_realistic_v11 --beamspot Realistic25ns13TeVEarly2018Collision --step GEN,SIM --geometry DB:Extended --era Run2_2018 --python_filename step1.py --no_exec --customise Configuration/DataProcessing/Utils.addMonitoring -n {nevts} --mc --customise_commands "from IOMC.RandomEngine.RandomServiceHelper import RandomNumberServiceHelper; randSvc = RandomNumberServiceHelper(process.RandomNumberGeneratorService); randSvc.populate()"'
+
+        command = command.format(
+              nevts = self.nevents_perjob,
+              )
+        command_replace = ''
+      else:
+        command = 'cmsDriver.py Configuration/GenProduction/python/fragment.py --fileout file:step1.root --mc --eventcontent FEVTDEBUG --datatier GEN-SIM --conditions 102X_upgrade2018_realistic_v11 --beamspot Realistic25ns13TeVEarly2018Collision --step GEN,SIM --geometry DB:Extended --era Run2_2018 --python_filename step1.py --no_exec --customise Configuration/DataProcessing/Utils.addMonitoring -n {nevts} --mc --customise_commands "from IOMC.RandomEngine.RandomServiceHelper import RandomNumberServiceHelper; randSvc = RandomNumberServiceHelper(process.RandomNumberGeneratorService); randSvc.populate()" --filein {lhefile}'
+        
+        command = command.format(
+              nevts = self.nevents_perjob,
+              lhefile = self.getRandomLHEfiles(prefix='gsiftp://storage01.lcg.cscs.ch/'),
+              )
+        command_replace = 'sed -i "s/PoolSource/LHESource/g" step1.py'
 
       if not path.exists('{pl}/mass{mass:.2f}_ctau{ctau:.1f}/step1.py'.format(pl=self.pl, mass=point.mass, ctau=point.ctau)):
         submitter_tmp = [
@@ -172,7 +215,8 @@ class CRABLauncher(object):
           'mkdir -p Configuration/GenProduction/python/',
           'cp $STARTDIR/fragments/{frgmt} Configuration/GenProduction/python/fragment.py',
           'scram b -j 8',
-          'cmsDriver.py Configuration/GenProduction/python/fragment.py --fileout file:step1.root --mc --eventcontent FEVTDEBUG --datatier GEN-SIM --conditions 102X_upgrade2018_realistic_v11 --beamspot Realistic25ns13TeVEarly2018Collision --step GEN,SIM --geometry DB:Extended --era Run2_2018 --python_filename step1.py --no_exec --customise Configuration/DataProcessing/Utils.addMonitoring -n {nevts} --mc --customise_commands "from IOMC.RandomEngine.RandomServiceHelper import RandomNumberServiceHelper; randSvc = RandomNumberServiceHelper(process.RandomNumberGeneratorService); randSvc.populate()"',
+          '{cmd}',
+          '{cmd_rpl}',
           'cp step1.py $PRODDIR/mass{mass:.2f}_ctau{ctau:.1f}/step1.py',
           'cd $STARTDIR',
           ]
@@ -181,7 +225,8 @@ class CRABLauncher(object):
         submitter_tmp = submitter_tmp.format(
             pl = self.pl,
             frgmt = fragment_name,
-            nevts = self.nevents_perjob,
+            cmd = command,
+            cmd_rpl = command_replace,
             mass = point.mass,
             ctau = point.ctau,
             )
