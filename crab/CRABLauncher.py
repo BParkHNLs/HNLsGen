@@ -43,8 +43,8 @@ class CRABLauncher(object):
 
   def getRandomLHEfiles(self, prefix=''):
     random_lhe_files = []
-    # one lhe file contains 200k events, we input 5 of them for each point
-    for i in range(0, 5):
+    # one lhe file contains 200k events, we input 1 of them for each point
+    for i in range(0, 1):
       lhe_file_list = open('../data/lhe_files/full_list_lhe_files.txt')
       lhe_files = lhe_file_list.readlines()
       lhe_file_idx = random.randint(1,17127) # there are 17127 lhe files in total
