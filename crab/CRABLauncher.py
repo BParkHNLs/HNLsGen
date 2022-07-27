@@ -30,7 +30,7 @@ class CRABLauncher(object):
     self.points = ps.points
 
     # some fixed parameters
-    self.nevents_perjob = 25000 #100000 if not self.dobc else 50000
+    self.nevents_perminiaod = 1500
     self.eff_nanoaod = 0.1
 
 
@@ -63,6 +63,9 @@ class CRABLauncher(object):
   def createCRABConfig(self):
     for point in self.points:
       self.nevents_togenerate = float(self.nevents) / (float(point.myfilterEff) * float(self.eff_nanoaod))
+      self.nevents_perjob = int(self.nevents_perminiaod / float(point.myfilterEff))
+      if self.nevents_perjob > 75000:
+        raise RuntimeError('WARNING - the number of events per job ({}) is larger than 75k. Number of events per LHE file is 200k. Set n_miniaod to a lower number')
       if self.nevents_togenerate > self.nevents_perjob:
         self.njobs = int(self.nevents_togenerate / self.nevents_perjob)
       else:
