@@ -40,6 +40,9 @@ It contains the cmsdrivers used for steering the production
 ## The [./evtGenData](./evtGenData) directory
 It contains files needed by evtgen for the definition of the HNL and its properties, as well as for the decay chain including the HNL.
 
+## Production on CRAB
+Follow the instructions of the corresponding [README.md](./crab/README.md)
+
 ## Production, the [./slurm](./slurm) directory
 ### vacuum ==> GEN-SIM ==> miniAOD
 Submission to slurm:
