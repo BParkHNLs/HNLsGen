@@ -17,7 +17,7 @@ options.register('randomizePremix',
                  VarParsing.varType.int,
                  'do randomization of list of premixed file names')
 options.register('nPremixFiles',
-                 20,
+                 2, # one premix file contains 25k events
                  VarParsing.multiplicity.singleton,
                  VarParsing.varType.int,
                  'number of premix files to read')
