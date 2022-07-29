@@ -30,7 +30,7 @@ class CRABLauncher(object):
     self.points = ps.points
 
     # some fixed parameters
-    self.nevents_perminiaod = 1500
+    self.nevents_perminiaod = 500
     self.eff_nanoaod = 0.1
 
 
