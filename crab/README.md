@@ -20,4 +20,3 @@ python CRABLauncher.py --pl <prod_label> --points <points>.py --nevents <nevents
 ```
 with nevents the requested number of events at analysis level.
 
-Note that the number of jobs is adapted such that each job processes 100k events.
