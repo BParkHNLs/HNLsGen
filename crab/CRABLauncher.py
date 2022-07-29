@@ -43,14 +43,14 @@ class CRABLauncher(object):
 
   def getRandomLHEfiles(self, prefix=''):
     random_lhe_files = []
-    # one lhe file contains 200k events, we input 1 of them for each point
+    # one lhe file contains 10M events, we input 1 of them for each point
     for i in range(0, 1):
-      lhe_file_list = open('../data/lhe_files/full_list_lhe_files.txt')
+      lhe_file_list = open('../data/lhe_files/list_lhe_files_merged.txt')
       lhe_files = lhe_file_list.readlines()
-      lhe_file_idx = random.randint(1,17127) # there are 17127 lhe files in total
+      lhe_file_idx = random.randint(1,376) # there are 376 lhe files in total
       for ifile, lhe_file in enumerate(lhe_files):
         if ifile != lhe_file_idx: continue
-        random_lhe_file = lhe_file[:lhe_file.rfind('.xz')+3]
+        random_lhe_file = lhe_file[:lhe_file.rfind('.lhe')+4]
       random_lhe_files.append(random_lhe_file)
     for ifile, random_lhe_file in enumerate(random_lhe_files):
       if ifile == 0:
@@ -204,7 +204,7 @@ class CRABLauncher(object):
         
         command = command.format(
               nevts = self.nevents_perjob,
-              lhefile = self.getRandomLHEfiles(prefix='gsiftp://storage01.lcg.cscs.ch/'),
+              lhefile = self.getRandomLHEfiles(prefix='root://xrootd-cms.infn.it/'),
               )
         command_replace = 'sed -i "s/PoolSource/LHESource/g" step1.py'
 
