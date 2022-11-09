@@ -7,7 +7,9 @@ from decays import *
 from common import *
 
 import matplotlib.pyplot as plt
-plt.style.use('./mystyle.mplstyle')
+import pandas as pd
+
+#plt.style.use('./mystyle.mplstyle')
 #masses = [0.5+i*0.1 for i in range(0,60) ] # GeV
 
 masses = [float('{:.2f}'.format(0.5+i*0.1)) for i in range(0,55) ] # GeV
@@ -25,13 +27,25 @@ decays_mixed = [HNLDecays(m,0.5,0.5,0) for m in masses]
 ctaus_bondarenko_tot_mixed = [ctau_from_gamma(2*decays_mixed[im].decay_rate['tot']    ) for im,m in enumerate(masses)]
 print ctaus_bondarenko_tot_mixed
 
+# get data extracted from Bondarenko paper
+file_bondarenko_quark = pd.read_csv('./bondarenko_data/bondarenko_quark.csv')
+mass_bondarenko_quark = file_bondarenko_quark['mass']
+BR_bondarenko_quark   = file_bondarenko_quark['BR']
 
+file_bondarenko_lepton = pd.read_csv('./bondarenko_data/bondarenko_lepton.csv')
+mass_bondarenko_lepton = file_bondarenko_lepton['mass']
+BR_bondarenko_lepton   = file_bondarenko_lepton['BR']
+
+file_bondarenko_invisible = pd.read_csv('./bondarenko_data/bondarenko_invisible.csv')
+mass_bondarenko_invisible = file_bondarenko_invisible['mass']
+BR_bondarenko_invisible   = file_bondarenko_invisible['BR']
 
 
 ####
 ## Total Ctau of N, as a function of mass
 ## Figure 6 left
 ###
+#fig, ax = plt.subplots(1, 1, figsize=(8, 8))
 fig, ax = plt.subplots(1, 1, figsize=(8, 8))
 #ax.plot(masses, ctaus_bondarenko_tot_muonic,     'r', label='$V_e^2=0,  V_{\\mu}^2=1,  V_{\\tau}^2=0$')
 #ax.plot(masses, ctaus_bondarenko_tot_electronic, 'g', label='$V_e^2=1,  V_{\\mu}^2=0,  V_{\\tau}^2=0$')
@@ -93,16 +107,23 @@ gammas_bondarenko_lepFrac = [x_lep / x_tot for x_lep,x_tot in zip(gammas_bondare
 gammas_bondarenko_hadFrac = [x_had / x_tot for x_had,x_tot in zip(gammas_bondarenko_had,gammas_bondarenko_tot)]
 gammas_bondarenko_neuFrac = [x_neu / x_tot for x_neu,x_tot in zip(gammas_bondarenko_neu,gammas_bondarenko_tot)]
 
-fig, ax = plt.subplots(1, 1, figsize=(8,8))
-ax.plot(masses, gammas_bondarenko_lepFrac, 'r', label='leptons')
-ax.plot(masses, gammas_bondarenko_hadFrac, 'b',  label='quarks')
-ax.plot(masses, gammas_bondarenko_neuFrac, 'g',  label='neutrinos')
+#fig, ax = plt.subplots(1, 1, figsize=(8,8))
+fig, ax = plt.subplots(1, 1, figsize=(7, 5))
+p1, = ax.plot(masses, gammas_bondarenko_lepFrac, 'r', label='leptons')
+p2, = ax.plot(masses, gammas_bondarenko_hadFrac, 'b',  label='quarks')
+p3, = ax.plot(masses, gammas_bondarenko_neuFrac, 'g',  label='neutrinos')
+
+p4, = ax.plot(mass_bondarenko_quark, BR_bondarenko_quark, linewidth=0,  marker='*', markersize=7, color='black', label='Bondarenko et al.')
+p5, = ax.plot(mass_bondarenko_lepton, BR_bondarenko_lepton, linewidth=0,  marker='*', markersize=7, color='black')#, label='Bondarenko et al.')
+p6, = ax.plot(mass_bondarenko_invisible, BR_bondarenko_invisible, linewidth=0,  marker='*', markersize=7, color='black')#, label='Bondarenko et al.')
+ax.legend(handles=[p1, p2, p3, p4],numpoints =1)
+
 ax.set_ylabel('BR')
 ax.set_xlabel('HNL mass (GeV)')
 ax.set_ylim(0.1,1.0)
 ax.set_xlim(1,5)
 ax.set_yticks([0.1,0.2,0.4,0.6,0.8,1.0], minor=True)
-ax.legend(loc='center right', frameon=True) 
+#ax.legend(loc='center right', frameon=True) 
 ax.grid(which='both', axis='both')
 ax.set_yscale('log')
 ax.set_xscale('log')
