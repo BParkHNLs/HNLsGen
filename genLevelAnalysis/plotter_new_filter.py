@@ -497,7 +497,7 @@ def plotChannelComposition(version_label):
   print '--> plots/channel_composition_{}.png created'.format(version_label)
 
 
-def computeSignalYields(sample, do_old, do_bc):
+def computeSignalYields(sample, do_old=False, do_bc=False):
   '''
   yields = sigma * lumi * filter_eff * acc_eff
   acc_eff comprises reco_eff, tag_eff
@@ -966,20 +966,174 @@ def plotSignalYieldsBc():
   canv.SaveAs('./plots/signal_yields_V34_vs_V33_Bc.png')
 
 
+def plotSignalYieldsComparison():
+
+  ROOT.gROOT.SetBatch(True)
+
+
+  samples_m3_nonBc = [
+    Sample('./outputfiles/V38_request/genTree_mass3p0_ctau1000p0.root', 3.0, 1000.0, 4.97e-3),
+    Sample('./outputfiles/V38_request/genTree_mass3p0_ctau100p0.root', 3.0, 100.0, 1.4e-2),
+    Sample('./outputfiles/V38_request/genTree_mass3p0_ctau10p0.root', 3.0, 10.0, 1.48e-2),
+    Sample('./outputfiles/V38_request/genTree_mass3p0_ctau1p0.root', 3.0, 1.0, 1.49e-2),
+  ]
+
+  samples_m4p5_nonBc = [
+    Sample('./outputfiles/V38_request/genTree_mass4p5_ctau100p0.root', 4.5, 100.0, 2.30e-2),
+    Sample('./outputfiles/V38_request/genTree_mass4p5_ctau10p0.root', 4.5, 10.0, 2.38e-2),
+    Sample('./outputfiles/V38_request/genTree_mass4p5_ctau1p0.root', 4.5, 1.0, 2.38e-2),
+    Sample('./outputfiles/V38_request/genTree_mass4p5_ctau0p1.root', 4.5, 0.1, 2.38e-2),
+  ]
+
+  samples_m3_Bc = [
+    Sample('./outputfiles/V38_request_Bc/genTree_mass3p0_ctau1000p0.root', 3.0, 1000.0, 8.72e-2*0.08244),
+    Sample('./outputfiles/V38_request_Bc/genTree_mass3p0_ctau100p0.root', 3.0, 100.0, 1.82e-1*0.08244),
+    Sample('./outputfiles/V38_request_Bc/genTree_mass3p0_ctau10p0.root', 3.0, 10.0, 1.99e-1*0.08244),
+    Sample('./outputfiles/V38_request_Bc/genTree_mass3p0_ctau1p0.root', 3.0, 1.0, 1.86e-1*0.08244),
+  ]
+
+  samples_m4p5_Bc = [
+    Sample('./outputfiles/V38_request_Bc/genTree_mass4p5_ctau100p0.root', 4.5, 100.0, 1.30e-1*0.08244),
+    Sample('./outputfiles/V38_request_Bc/genTree_mass4p5_ctau10p0.root', 4.5, 10.0, 1.32e-1*0.08244),
+    Sample('./outputfiles/V38_request_Bc/genTree_mass4p5_ctau1p0.root', 4.5, 1.0, 1.33e-1*0.08244),
+    Sample('./outputfiles/V38_request_Bc/genTree_mass4p5_ctau0p1.root', 4.5, 0.1, 1.31e-1*0.08244),
+  ]
+
+  canv = ROOT.TCanvas('canv', 'canv', 900, 800)
+  canv.SetLogx()
+  canv.SetLogy()
+  canv.SetGrid()
+
+  graph_m3_nonBc = ROOT.TGraph()
+  graph_m4p5_nonBc = ROOT.TGraph()
+  graph_m3_Bc = ROOT.TGraph()
+  graph_m4p5_Bc = ROOT.TGraph()
+
+  coupling_m3_nonBc = []
+  yields_m3_nonBc = []
+  for sample in samples_m3_nonBc:
+    coupling, signal_yield = computeSignalYields(sample, do_bc=False)
+    coupling_m3_nonBc.append(coupling)
+    yields_m3_nonBc.append(signal_yield)
+
+  for pt in range(0, len(coupling_m3_nonBc)):
+    point = graph_m3_nonBc.GetN()
+    graph_m3_nonBc.SetPoint(point, coupling_m3_nonBc[pt], yields_m3_nonBc[pt])
+
+  graph_m3_nonBc.SetMarkerStyle(24)
+  graph_m3_nonBc.SetMarkerSize(2)
+  graph_m3_nonBc.SetMarkerColor(ROOT.kRed+1)
+  graph_m3_nonBc.SetLineStyle(9)
+  graph_m3_nonBc.SetLineWidth(2)
+  graph_m3_nonBc.SetLineColor(ROOT.kRed+1)
+
+  coupling_m4p5_nonBc = []
+  yields_m4p5_nonBc = []
+  for sample in samples_m4p5_nonBc:
+    coupling, signal_yield = computeSignalYields(sample, do_bc=False)
+    coupling_m4p5_nonBc.append(coupling)
+    yields_m4p5_nonBc.append(signal_yield)
+
+  for pt in range(0, len(coupling_m4p5_nonBc)):
+    point = graph_m4p5_nonBc.GetN()
+    graph_m4p5_nonBc.SetPoint(point, coupling_m4p5_nonBc[pt], yields_m4p5_nonBc[pt])
+
+  graph_m4p5_nonBc.SetMarkerStyle(24)
+  graph_m4p5_nonBc.SetMarkerSize(2)
+  graph_m4p5_nonBc.SetMarkerColor(ROOT.kRed+4)
+  graph_m4p5_nonBc.SetLineStyle(9)
+  graph_m4p5_nonBc.SetLineWidth(2)
+  graph_m4p5_nonBc.SetLineColor(ROOT.kRed+4)
+
+  coupling_m3_Bc = []
+  yields_m3_Bc = []
+  for sample in samples_m3_Bc:
+    coupling, signal_yield = computeSignalYields(sample, do_bc=True)
+    coupling_m3_Bc.append(coupling)
+    yields_m3_Bc.append(signal_yield)
+
+  for pt in range(0, len(coupling_m3_Bc)):
+    point = graph_m3_Bc.GetN()
+    graph_m3_Bc.SetPoint(point, coupling_m3_Bc[pt], yields_m3_Bc[pt])
+
+  graph_m3_Bc.SetMarkerStyle(20)
+  graph_m3_Bc.SetMarkerSize(2)
+  graph_m3_Bc.SetMarkerColor(ROOT.kRed+1)
+  graph_m3_Bc.SetLineStyle(9)
+  graph_m3_Bc.SetLineWidth(2)
+  graph_m3_Bc.SetLineColor(ROOT.kRed+1)
+
+  coupling_m4p5_Bc = []
+  yields_m4p5_Bc = []
+  for sample in samples_m4p5_Bc:
+    coupling, signal_yield = computeSignalYields(sample, do_bc=True)
+    coupling_m4p5_Bc.append(coupling)
+    yields_m4p5_Bc.append(signal_yield)
+
+  for pt in range(0, len(coupling_m4p5_Bc)):
+    point = graph_m4p5_Bc.GetN()
+    graph_m4p5_Bc.SetPoint(point, coupling_m4p5_Bc[pt], yields_m4p5_Bc[pt])
+
+  graph_m4p5_Bc.SetMarkerStyle(20)
+  graph_m4p5_Bc.SetMarkerSize(2)
+  graph_m4p5_Bc.SetMarkerColor(ROOT.kRed+4)
+  graph_m4p5_Bc.SetLineStyle(9)
+  graph_m4p5_Bc.SetLineWidth(2)
+  graph_m4p5_Bc.SetLineColor(ROOT.kRed+4)
+
+  graph_dummy = ROOT.TGraph()
+  graph_dummy.SetPoint(0, 1e-6, 1e-2)
+  graph_dummy.SetPoint(1, 1e-2, 1e4)
+  graph_dummy.SetMarkerStyle(0)
+  graph_dummy.SetMarkerSize(0)
+  graph_dummy.SetMarkerColor(0)
+  graph_dummy.GetXaxis().SetTitle('|V^{2}|')
+  graph_dummy.GetXaxis().SetLabelSize(0.037)
+  graph_dummy.GetXaxis().SetTitleSize(0.042)
+  graph_dummy.GetXaxis().SetTitleOffset(1.1)
+  graph_dummy.GetYaxis().SetTitle('Yields')
+  graph_dummy.GetYaxis().SetLabelSize(0.037)
+  graph_dummy.GetYaxis().SetTitleSize(0.042)
+  graph_dummy.GetYaxis().SetTitleOffset(1.1)
+
+  graph_dummy.Draw('AP')
+
+  graph_m3_nonBc.Draw('PL same')
+  graph_m4p5_nonBc.Draw('PL same')
+
+  graph_m3_Bc.Draw('PL same')
+  graph_m4p5_Bc.Draw('PL same')
+
+  legend = ROOT.TLegend(0.55, 0.2, 0.8, 0.45)
+  legend.SetTextSize(0.03)
+  legend.SetLineColor(0)
+  legend.SetFillColor(0)
+  legend.SetBorderSize(0)
+  legend.AddEntry(graph_m3_nonBc, 'm=3GeV, non-Bc')
+  legend.AddEntry(graph_m3_Bc, 'm=3GeV, Bc')
+  legend.AddEntry(graph_m4p5_nonBc, 'm=4.5GeV, non-Bc')
+  legend.AddEntry(graph_m4p5_Bc, 'm=4.5GeV, Bc')
+  #legend.Draw()
+
+  canv.SaveAs('./plots/signal_yields_comparison_nonBc_vs_Bc.png')
+
 
 if __name__ == "__main__":
 
-  #version_label = 'V38_request_Bc'
-  version_label = 'V40_request_common_Bc_electron'
+  version_label = 'V38_request_Bc'
+  #version_label = 'V40_request_common_Bc_electron'
+  #version_label = 'V41_Bc'
+  #version_label = 'V20_emu'
 
-  plotTagRate(version_label=version_label)
-  plotMuFromHNLTriggeringRate(version_label=version_label)
-  plotNumberTriggeringMuons(version_label=version_label)
-  plotBspecies(version_label=version_label)
-  plotAccompagnyingMeson(version_label=version_label)
-  plotChannelComposition(version_label=version_label)
+  #plotTagRate(version_label=version_label)
+  #plotMuFromHNLTriggeringRate(version_label=version_label)
+  #plotNumberTriggeringMuons(version_label=version_label)
+  #plotBspecies(version_label=version_label)
+  #plotAccompagnyingMeson(version_label=version_label)
+  #plotChannelComposition(version_label=version_label)
 
   #plotSignalYields()
   #plotSignalYieldsBc()
+  plotSignalYieldsComparison()
 
 
