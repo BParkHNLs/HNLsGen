@@ -34,6 +34,11 @@ def weight_to_new_ctau(old_ctau, old_v2, new_v2, ct):
     weight = old_ctau/new_ctau * np.exp( (1./old_ctau - 1./new_ctau) * ct )
     return weight, new_ctau
 
+def get_dxy(input):
+  # taken from https://github.com/cms-sw/cmssw/blob/29f5fc15b34591745c5cd3c2c6eb9793aa6f371b/DataFormats/TrackReco/interface/TrackBase.h#L608
+  # taking (0, 0, 0) as reference
+  return (-input.vx() * input.py() + input.vy() * input.px()) / input.pt()
+
 branches = [
     'run',  
     'lumi', 
@@ -77,6 +82,7 @@ branches = [
     'mu_fromB_q',
     'mu_fromB_pdgid',
     'mu_fromB_satisfies_BParkHLT_cond',
+    'mu_fromB_dxy',
     
     # daughters of the HNL
     # # the lepton
@@ -87,6 +93,7 @@ branches = [
     'mu_fromHNL_q',
     'mu_fromHNL_pdgid',
     'mu_fromHNL_satisfies_BParkHLT_cond',
+    'mu_fromHNL_dxy',
 
     # # the pion
     'pi_fromHNL_pt',
@@ -95,6 +102,7 @@ branches = [
     'pi_fromHNL_mass',
     'pi_fromHNL_q',
     'pi_fromHNL_pdgid',
+    'pi_fromHNL_dxy',
 
     # event topology
     'hnl_tag_side',
@@ -107,6 +115,7 @@ branches = [
     # invariant masses
     'mu_pi_invmass',
     'mu_HNL_X_invmass',
+    'mu_HNL_invmass',
 
     # displacement
     'Lxy',   # 2D transverse displacement for the HNL
@@ -335,6 +344,8 @@ def treeProducer(infiles, outdir, outfilename, lepton):
     else:
       event.the_bdaughters = event.the_hn.p4() + event.the_pl.p4()
       
+    event.the_bpartialdaughters = event.the_hn.p4() + event.the_pl.p4()
+      
     # identify the primary vertex
     # for that, needs the B muon
     if len(the_pls):
@@ -409,6 +420,8 @@ def treeProducer(infiles, outdir, outfilename, lepton):
 
     #if event.the_pl.pt() > 9 and abs(event.the_pl.eta()) < 1.5 and event.the_hn.lep.pt() > 3 and abs(event.the_hn.lep.eta()) < 2.5: # and event.Lxy < 1:
 
+    if not event.hnl_tag_side: continue
+
     tofill['run'        ] = event.eventAuxiliary().run()
     tofill['lumi'       ] = event.eventAuxiliary().luminosityBlock()
     tofill['event'      ] = event.eventAuxiliary().event()
@@ -450,6 +463,7 @@ def treeProducer(infiles, outdir, outfilename, lepton):
        tofill['mu_fromB_q'       ] = event.the_pl.charge()
        tofill['mu_fromB_pdgid'   ] = event.the_pl.pdgId()
        tofill['mu_fromB_satisfies_BParkHLT_cond']   = event.the_pl.satisfies_BParkHLT_cond
+       tofill['mu_fromB_dxy'     ] = get_dxy(event.the_pl)
 
     if event.the_hn.lep:
        tofill['mu_fromHNL_pt'      ] = event.the_hn.lep.pt()
@@ -459,6 +473,7 @@ def treeProducer(infiles, outdir, outfilename, lepton):
        tofill['mu_fromHNL_q'       ] = event.the_hn.lep.charge()
        tofill['mu_fromHNL_pdgid'   ] = event.the_hn.lep.pdgId()
        tofill['mu_fromHNL_satisfies_BParkHLT_cond'] = event.the_hn.lep.satisfies_BParkHLT_cond
+       tofill['mu_fromHNL_dxy'     ] = get_dxy(event.the_hn.lep)
 
     if event.the_hn.pi:   
        tofill['pi_fromHNL_pt'      ] = event.the_hn.pi.pt()
@@ -467,6 +482,7 @@ def treeProducer(infiles, outdir, outfilename, lepton):
        tofill['pi_fromHNL_mass'    ] = event.the_hn.pi.mass()
        tofill['pi_fromHNL_q'       ] = event.the_hn.pi.charge()
        tofill['pi_fromHNL_pdgid'   ] = event.the_hn.pi.pdgId()
+       tofill['pi_fromHNL_dxy'     ] = get_dxy(event.the_hn.pi)
 
     # event topology
     tofill['hnl_tag_side'] = event.hnl_tag_side
@@ -479,6 +495,7 @@ def treeProducer(infiles, outdir, outfilename, lepton):
     # invariant mass
     tofill['mu_pi_invmass' ] = event.the_hnldaughters.mass()
     tofill['mu_HNL_X_invmass'] = event.the_bdaughters.mass()
+    tofill['mu_HNL_invmass'] = event.the_bpartialdaughters.mass()
     
     # hnl charge
     tofill['hnl_q'] = event.the_hn.lep.charge() + event.the_hn.pi.charge()   
@@ -507,7 +524,8 @@ if __name__ == "__main__":
   #version_label = 'V34_newfilter_genstudy_v3'
   #version_label = 'V34_newfilter_genstudy_Bc_v1'
   #version_label = 'V38_request_Bc'
-  version_label = 'V40_request_common_Bc'
+  version_label = 'V40_request_common'
+  #version_label = 'V41_Bc'
   user = 'anlyon'
   lepton = 'all'
 
@@ -515,6 +533,7 @@ if __name__ == "__main__":
     raise RuntimeError("Lepton not known. Choose among ['muon', 'electron', 'all']")
 
   indirectory = '/pnfs/psi.ch/cms/trivcat/store/user/{}/BHNLsGen/{}'.format(user, version_label)
+
   # get all the subdirectories (signal points)
   pointdirs = [f for f in glob.glob('{}/*'.format(indirectory))]
 
