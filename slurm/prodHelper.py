@@ -30,10 +30,22 @@ class Job(object):
       self.jop1_in = 'step1_control.py'
     elif self.docontrol and self.dobc:
       self.jop1_in = 'step1_control_Bc.py'
-    elif self.dogenonly and not self.dobc and not self.docontrol:
+    elif self.dogenonly and not self.dobc and not self.dobu and not self.dobd and not self.dobs and not self.docontrol:
       self.jop1_in = 'step1_genonly.py' 
     elif self.dobc and self.dogenonly:
       self.jop1_in = 'step1_Bc_genonly.py'
+    elif self.dobu and self.dogenonly:
+      self.jop1_in = 'step1_Bu_genonly.py'
+    elif self.dobu and not self.dogenonly:
+      self.jop1_in = 'step1_Bu.py'
+    elif self.dobd and self.dogenonly:
+      self.jop1_in = 'step1_Bd_genonly.py'
+    elif self.dobd and not self.dogenonly:
+      self.jop1_in = 'step1_Bd.py'
+    elif self.dobs and self.dogenonly:
+      self.jop1_in = 'step1_Bs_genonly.py'
+    elif self.dobs and not self.dogenonly:
+      self.jop1_in = 'step1_Bs.py'
     else:
       self.jop1_in = 'step1.py' 
     self.jop1 = 'step1.py'
@@ -174,55 +186,138 @@ class Job(object):
   def makeEvtGenDecay(self):
 
     for p in self.points:
-      decay_table = [
-       'Alias myB+ B+',
-       'Alias myB- B-',
-       'Alias myB0 B0',
-       'Alias myB0bar anti-B0',
-       'Alias myB0s B_s0',
-       'Alias myB0sbar anti-B_s0',
-       '',
-       'ChargeConj myB+ myB-',
-       'ChargeConj myB0 myB0bar',
-       'ChargeConj myB0s myB0sbar', 
-       '{cconj}',
-       '',
-       'Decay myB+',
-       '{Bp_br0:.10f}               mu+    hnl    PHSP;',
-       '{Bp_br1:.10f}    anti-D0    mu+    hnl    PHSP;',
-       '{Bp_br2:.10f}    anti-D*0   mu+    hnl    PHSP;',
-       '{Bp_br3:.10f}    pi0        mu+    hnl    PHSP;',
-       '{Bp_br4:.10f}    rho0       mu+    hnl    PHSP;',
-       'Enddecay',
-       'CDecay myB-',
-       '',
-       'Decay myB0',
-       '{B0_br1:.10f}    D-    mu+    hnl    PHSP;',
-       '{B0_br2:.10f}    D*-   mu+    hnl    PHSP;',
-       '{B0_br3:.10f}    pi-   mu+    hnl    PHSP;',
-       '{B0_br4:.10f}   rho-   mu+    hnl    PHSP;',
-       'Enddecay',
-       'CDecay myB0bar',
-       '',
-       'Decay myB0s',
-       '{B0s_br1:.10f}    D_s-    mu+    hnl    PHSP;',
-       '{B0s_br2:.10f}    D_s*-   mu+    hnl    PHSP;',
-       '{B0s_br3:.10f}    K-      mu+    hnl    PHSP;',
-       '{B0s_br4:.10f}    K*-     mu+    hnl    PHSP;',
-       'Enddecay',
-       'CDecay myB0sbar',
-       '',
-       'Decay hnl',
-       '0.5     mu-    pi+    PHSP;',
-       '{maj_decay}',
-       '{el_decay}',
-       '{el_maj_decay}',
-       'Enddecay',
-       '{cdec}',
-       '',
-       'End',      
-       '',
-      ]
+      if self.dobu + self.dobd + self.dobs == 0:
+        decay_table = [
+         'Alias myB+ B+',
+         'Alias myB- B-',
+         'Alias myB0 B0',
+         'Alias myB0bar anti-B0',
+         'Alias myB0s B_s0',
+         'Alias myB0sbar anti-B_s0',
+         '',
+         'ChargeConj myB+ myB-',
+         'ChargeConj myB0 myB0bar',
+         'ChargeConj myB0s myB0sbar', 
+         '{cconj}',
+         '',
+         'Decay myB+',
+         '{Bp_br0:.10f}               mu+    hnl    PHSP;',
+         '{Bp_br1:.10f}    anti-D0    mu+    hnl    PHSP;',
+         '{Bp_br2:.10f}    anti-D*0   mu+    hnl    PHSP;',
+         '{Bp_br3:.10f}    pi0        mu+    hnl    PHSP;',
+         '{Bp_br4:.10f}    rho0       mu+    hnl    PHSP;',
+         'Enddecay',
+         'CDecay myB-',
+         '',
+         'Decay myB0',
+         '{B0_br1:.10f}    D-    mu+    hnl    PHSP;',
+         '{B0_br2:.10f}    D*-   mu+    hnl    PHSP;',
+         '{B0_br3:.10f}    pi-   mu+    hnl    PHSP;',
+         '{B0_br4:.10f}   rho-   mu+    hnl    PHSP;',
+         'Enddecay',
+         'CDecay myB0bar',
+         '',
+         'Decay myB0s',
+         '{B0s_br1:.10f}    D_s-    mu+    hnl    PHSP;',
+         '{B0s_br2:.10f}    D_s*-   mu+    hnl    PHSP;',
+         '{B0s_br3:.10f}    K-      mu+    hnl    PHSP;',
+         '{B0s_br4:.10f}    K*-     mu+    hnl    PHSP;',
+         'Enddecay',
+         'CDecay myB0sbar',
+         '',
+         'Decay hnl',
+         '0.5     mu-    pi+    PHSP;',
+         '{maj_decay}',
+         '{el_decay}',
+         '{el_maj_decay}',
+         'Enddecay',
+         '{cdec}',
+         '',
+         'End',      
+         '',
+        ]
+      elif self.dobu:
+        decay_table = [
+         'Alias myB+ B+',
+         'Alias myB- B-',
+         '',
+         'ChargeConj myB+ myB-',
+         '{cconj}',
+         '',
+         'Decay myB+',
+         '{Bp_br0:.10f}               mu+    hnl    PHSP;',
+         '{Bp_br1:.10f}    anti-D0    mu+    hnl    PHSP;',
+         '{Bp_br2:.10f}    anti-D*0   mu+    hnl    PHSP;',
+         '{Bp_br3:.10f}    pi0        mu+    hnl    PHSP;',
+         '{Bp_br4:.10f}    rho0       mu+    hnl    PHSP;',
+         'Enddecay',
+         'CDecay myB-',
+         '',
+         'Decay hnl',
+         '0.5     mu-    pi+    PHSP;',
+         '{maj_decay}',
+         '{el_decay}',
+         '{el_maj_decay}',
+         'Enddecay',
+         '{cdec}',
+         '',
+         'End',      
+         '',
+        ]
+      elif self.dobd:
+        decay_table = [
+         'Alias myB0 B0',
+         'Alias myB0bar anti-B0',
+         '',
+         'ChargeConj myB0 myB0bar',
+         '{cconj}',
+         '',
+         'Decay myB0',
+         '{B0_br1:.10f}    D-    mu+    hnl    PHSP;',
+         '{B0_br2:.10f}    D*-   mu+    hnl    PHSP;',
+         '{B0_br3:.10f}    pi-   mu+    hnl    PHSP;',
+         '{B0_br4:.10f}   rho-   mu+    hnl    PHSP;',
+         'Enddecay',
+         'CDecay myB0bar',
+         '',
+         'Decay hnl',
+         '0.5     mu-    pi+    PHSP;',
+         '{maj_decay}',
+         '{el_decay}',
+         '{el_maj_decay}',
+         'Enddecay',
+         '{cdec}',
+         '',
+         'End',      
+         '',
+        ]
+      elif self.dobs:
+        decay_table = [
+         'Alias myB0s B_s0',
+         'Alias myB0sbar anti-B_s0',
+         '',
+         'ChargeConj myB0s myB0sbar', 
+         '{cconj}',
+         '',
+         'Decay myB0s',
+         '{B0s_br1:.10f}    D_s-    mu+    hnl    PHSP;',
+         '{B0s_br2:.10f}    D_s*-   mu+    hnl    PHSP;',
+         '{B0s_br3:.10f}    K-      mu+    hnl    PHSP;',
+         '{B0s_br4:.10f}    K*-     mu+    hnl    PHSP;',
+         'Enddecay',
+         'CDecay myB0sbar',
+         '',
+         'Decay hnl',
+         '0.5     mu-    pi+    PHSP;',
+         '{maj_decay}',
+         '{el_decay}',
+         '{el_maj_decay}',
+         'Enddecay',
+         '{cdec}',
+         '',
+         'End',      
+         '',
+        ]
 
       decay_table = '\n'.join(decay_table)
       dec = Decays(mass=p.mass, mixing_angle_square=1)
@@ -251,9 +346,21 @@ class Job(object):
                          el_maj_decay =  '0.5     e+     pi-    PHSP;' if self.doelectron and self.domajorana else '',
                          )
 
-      with open('../evtGenData/HNLdecay_mass{m}_{dm}_{de}.DEC'.format(m=p.mass, 
-                                                                      dm='maj' if self.domajorana else 'dirac', 
-                                                                      de='emu' if self.doelectron else 'mu'), 'w') as fout:
+      dec_filename = '../evtGenData/HNLdecay_mass{m}_{dm}_{de}'.format(
+                                                                        m=p.mass,
+                                                                        dm='maj' if self.domajorana else 'dirac', 
+                                                                        de='emu' if self.doelectron else 'mu'
+                                                                        )
+      if self.dobu:
+        dec_filename += '_Bu.DEC'
+      elif self.dobd:
+        dec_filename += '_Bd.DEC'
+      elif self.dobs:
+        dec_filename += '_Bs.DEC'
+      else:
+        dec_filename += '.DEC'
+
+      with open(dec_filename, 'w') as fout:
         fout.write(decay_table)
     print('===> Created evtGen decay files\n')
 
@@ -382,8 +489,10 @@ class Job(object):
         '#SBATCH -J prod_m{m}_ctau{ctau}',
         '#SBATCH -o logs/prod_mass{m}_ctau{ctau}_%a.log', 
         '#SBATCH -e logs/prod_mass{m}_ctau{ctau}_%a.log',
-        '#SBATCH -p standard',
+        #'#SBATCH -p standard',
+        '#SBATCH -p long',
         #'#SBATCH -t {hh}:00:00',
+        '#SBATCH -t 7-00:00:00',
         '#SBATCH --mem {mem}',
         '#SBATCH --array={arr}',
         '#SBATCH --ntasks=1',
@@ -697,6 +806,9 @@ def getOptions():
   parser.add_argument('--doskipmuonfilter', dest='doskipmuonfilter', help='skip the muon filter', action='store_true', default=False)
   parser.add_argument('--dodisplfilter', dest='dodisplfilter', help='add a filter on the HNL displacement, Lxyz<1.5m', action='store_true', default=False)
   parser.add_argument('--dobc', dest='dobc', help='do the Bc generation instead of other B species', action='store_true', default=False)
+  parser.add_argument('--dobu', dest='dobu', help='do the Bu generation only', action='store_true', default=False)
+  parser.add_argument('--dobd', dest='dobd', help='do the Bd generation only', action='store_true', default=False)
+  parser.add_argument('--dobs', dest='dobs', help='do the Bs generation only', action='store_true', default=False)
   parser.add_argument('--docontrol', dest='docontrol', help='do the generation for the control channel B->JpsiK', action='store_true', default=False)
   parser.add_argument('--domajorana', dest='domajorana', help='consider the HNL as a Majorana particle instead of Dirac', action='store_true', default=False)
   parser.add_argument('--doelectron', dest='doelectron', help='do electron decay in addition to muon', action='store_true', default=False)
