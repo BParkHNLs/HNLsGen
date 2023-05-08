@@ -1,6 +1,5 @@
 /eos/cms/store/group/phys_exotica/BHNLs/lheMerging/V05/BcToNMuX_NToEMuPi_SoftQCD_b_mN3p0_ctau1000p0mm_10M_0.lhe
 /eos/cms/store/group/phys_exotica/BHNLs/lheMerging/V05/BcToNMuX_NToEMuPi_SoftQCD_b_mN3p0_ctau1000p0mm_10M_1.lhe
-/eos/cms/store/group/phys_exotica/BHNLs/lheMerging/V05/BcToNMuX_NToEMuPi_SoftQCD_b_mN3p0_ctau1000p0mm_10M_1.lhe.xz
 /eos/cms/store/group/phys_exotica/BHNLs/lheMerging/V05/BcToNMuX_NToEMuPi_SoftQCD_b_mN3p0_ctau1000p0mm_10M_2.lhe
 /eos/cms/store/group/phys_exotica/BHNLs/lheMerging/V05/BcToNMuX_NToEMuPi_SoftQCD_b_mN3p0_ctau100p0mm_10M_0.lhe
 /eos/cms/store/group/phys_exotica/BHNLs/lheMerging/V05/BcToNMuX_NToEMuPi_SoftQCD_b_mN3p0_ctau10p0mm_10M_0.lhe

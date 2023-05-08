@@ -5,8 +5,8 @@ from Configuration.Generator.MCTunes2017.PythiaCP5Settings_cfi import *
 
 # Production Info
 configurationMetadata = cms.untracked.PSet(
-    annotation = cms.untracked.string('B -> mu N X, with long-lived N, m=3.20GeV, ctau=1.0mm'),
-    name = cms.untracked.string('B -> mu N X, with long-lived N, m=3.20GeV, ctau=1.0mm'),
+    annotation = cms.untracked.string('B -> mu N X, with long-lived N, m=3.20GeV, ctau=10.0mm'),
+    name = cms.untracked.string('B -> mu N X, with long-lived N, m=3.20GeV, ctau=10.0mm'),
     version = cms.untracked.string('$1.0$')
 )
 
@@ -69,11 +69,7 @@ generator = cms.EDFilter("Pythia8GeneratorFilter",
             ),
             
             operates_on_particles = cms.vint32(521, -521, 511, -511, 531, -531, 9900015), 
-            #particle_property_file = cms.FileInPath('GeneratorInterface/EvtGenInterface/data/evt_BHNL_mass3.20_ctau1.0_maj.pdl'),
-            #particle_property_file = cms.FileInPath('McRequest/evtGenData/evt_BHNL_mass3.20_ctau1.0_maj.pdl'),
-            particle_property_file = cms.FileInPath('evt_BHNL_mass3.20_ctau1.0_maj.pdl'),
-            #particle_property_file = cms.FileInPath('/GeneratorInterface/EvtGenInterface/data/evt_BHNL_mass3.20_ctau1.0_maj.pdl'),
-            #particle_property_file = cms.FileInPath('evt_BHNL_mass3.20_ctau1.0_maj.pdl'),
+            particle_property_file = cms.FileInPath('evt_BHNL_mass3.20_ctau10.0_maj.pdl'),
             user_decay_embedded = cms.vstring(
               
                'Alias myB+ B+',
@@ -105,6 +101,7 @@ generator = cms.EDFilter("Pythia8GeneratorFilter",
                '0.0152780433     rho0       e+     myHNL_mu    PHSP;',
                'Enddecay',
                'CDecay myB-',
+               
                'Decay myB0',
                '0.0053213381    D-     mu+    myHNL_mu    PHSP;',
                '0.0000000000    D*-    mu+    myHNL_mu    PHSP;',
@@ -120,6 +117,8 @@ generator = cms.EDFilter("Pythia8GeneratorFilter",
                '0.0283727379     rho-   e+     myHNL_mu    PHSP;',
                'Enddecay',
                'CDecay myB0bar',
+
+               
                'Decay myB0s',
                '0.0041007364    D_s-    mu+    myHNL_mu    PHSP;',
                '0.0000000000    D_s*-   mu+    myHNL_mu    PHSP;',
@@ -135,6 +134,7 @@ generator = cms.EDFilter("Pythia8GeneratorFilter",
                '0.0314769550    K*-      e+     myHNL_mu    PHSP;',
                'Enddecay',
                'CDecay myB0sbar',
+
                'Decay myHNL_mu',
                '0.5     mu-    pi+    PHSP;',
                '0.5     mu+    pi-    PHSP;',
