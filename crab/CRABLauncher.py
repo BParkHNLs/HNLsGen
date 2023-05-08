@@ -11,11 +11,12 @@ def getOptions():
   from argparse import ArgumentParser
   parser = ArgumentParser(description='CRAB Launcher', add_help=True)
 
-  parser.add_argument('--pl'      , type=str, dest='pl'         , help='production label'                 ,                      default='V00_v00')
-  parser.add_argument('--points'  , type=str, dest='points_file', help='point file'                       ,                      default='points.py')
-  parser.add_argument('--nevents' , type=str, dest='nevents'    , help='requested events (analysis level)',                      default='20000')
-  parser.add_argument('--dosubmit',           dest='dosubmit'   , help='submit to slurm'                  , action='store_true', default=False)
-  parser.add_argument('--dobc'    ,           dest='dobc'       , help='Bc grid'                          , action='store_true', default=False)
+  parser.add_argument('--pl'        , type=str, dest='pl'         , help='production label'                 ,                      default='V00_v00')
+  parser.add_argument('--points'    , type=str, dest='points_file', help='point file'                       ,                      default='points.py')
+  parser.add_argument('--nevents'   , type=str, dest='nevents'    , help='requested events (analysis level)',                      default='20000')
+  parser.add_argument('--dosubmit'  ,           dest='dosubmit'   , help='submit to CRAB'                   , action='store_true', default=False)
+  parser.add_argument('--doresubmit',           dest='doresubmit' , help='resubmit to CRAB'                 , action='store_true', default=False)
+  parser.add_argument('--dobc'      ,           dest='dobc'       , help='Bc grid'                          , action='store_true', default=False)
 
   return parser.parse_args()
 
@@ -30,7 +31,8 @@ class CRABLauncher(object):
     self.points = ps.points
 
     # some fixed parameters
-    self.nevents_perminiaod = 500
+    #self.nevents_perminiaod = 500
+    self.nevents_perminiaod = 200
     self.eff_nanoaod = 0.1
 
 
@@ -45,9 +47,9 @@ class CRABLauncher(object):
     random_lhe_files = []
     # one lhe file contains 10M events, we input 1 of them for each point
     for i in range(0, 1):
-      lhe_file_list = open('../data/lhe_files/list_lhe_files_merged.txt')
+      lhe_file_list = open('../data/lhe_files/list_lhe_files.txt')
       lhe_files = lhe_file_list.readlines()
-      lhe_file_idx = random.randint(1,376) # there are 376 lhe files in total
+      lhe_file_idx = random.randint(1,1845) # there are 1845 lhe files in total
       for ifile, lhe_file in enumerate(lhe_files):
         if ifile != lhe_file_idx: continue
         random_lhe_file = lhe_file[:lhe_file.rfind('.lhe')+4]
@@ -60,12 +62,16 @@ class CRABLauncher(object):
     return random_lhe_files_str
 
 
-  def createCRABConfig(self):
+  def getFileName(self, lhe_file):
+    return lhe_file[lhe_file.find('bcvegpy'):len(lhe_file)]
+    
+
+  def createCRABConfig(self, lhe_file=None):
     for point in self.points:
       self.nevents_togenerate = float(self.nevents) / (float(point.myfilterEff) * float(self.eff_nanoaod))
       self.nevents_perjob = int(self.nevents_perminiaod / float(point.myfilterEff))
-      if self.nevents_perjob > 75000:
-        raise RuntimeError('WARNING - the number of events per job ({}) is larger than 75k. Number of events per LHE file is 200k. Set n_miniaod to a lower number')
+      #if self.nevents_perjob > 75000:
+      #  raise RuntimeError('WARNING - the number of events per job ({}) is larger than 75k. Number of events per LHE file is 200k. Set n_miniaod to a lower number')
       if self.nevents_togenerate > self.nevents_perjob:
         self.njobs = int(self.nevents_togenerate / self.nevents_perjob)
       else:
@@ -87,7 +93,8 @@ class CRABLauncher(object):
         'config.JobType.pluginName = "PrivateMC"',
         '{addgnrt}',
         'config.JobType.psetName = "step1.py"',
-        'config.JobType.inputFiles = ["../../data/FrameworkJobReport.xml", "../../pdl_files/evt_BHNL_mass{mass:.2f}_ctau{ctau:.1f}_maj.pdl", "step1.py", "../../cmsDrivers/step2.py", "../../data/pileup_2018.root", "../../cmsDrivers/step3.py", "../../cmsDrivers/step4.py"]',
+        #'config.JobType.inputFiles = ["../../data/FrameworkJobReport.xml", "../../pdl_files/evt_BHNL_mass{mass:.2f}_ctau{ctau:.1f}_maj.pdl", "step1.py", "../../cmsDrivers/step2.py", "../../data/pileup_2018.root", "../../cmsDrivers/step3.py", "../../cmsDrivers/step4.py"]',
+        '{inputfiles}',
         'config.JobType.outputFiles = ["step4.root"]',
         'config.JobType.scriptExe = "submitter.sh"',
         'config.JobType.disableAutomaticOutputCollection = True',
@@ -109,7 +116,7 @@ class CRABLauncher(object):
         'config.Data.ignoreLocality = False',
         '',
         'config.Site.storageSite = "T3_CH_PSI"',
-        'config.Site.whitelist = ["T2_CH_CSCS"]',
+        #'config.Site.whitelist = ["T2_CH_CSCS"]',
         #'config.Site.whitelist = ["T1_US_FNAL", "T2_US_Caltech", "T2_CH_CSCS", "T2_US_MIT"]',
         ]
 
@@ -120,8 +127,9 @@ class CRABLauncher(object):
           mass = point.mass,
           ctau = point.ctau,
           addgnrt = 'config.JobType.generator = "lhe"' if self.dobc else '',
+          inputfiles = 'config.JobType.inputFiles = ["../../data/FrameworkJobReport.xml", "../../pdl_files/evt_BHNL_mass{mass:.2f}_ctau{ctau:.1f}_maj.pdl", "step1.py", "../../cmsDrivers/step2.py", "../../data/pileup_2018.root", "../../cmsDrivers/step3.py", "../../cmsDrivers/step4.py"]'.format(mass=point.mass, ctau=point.ctau) if not self.dobc else 'config.JobType.inputFiles = ["../../data/FrameworkJobReport.xml", "../../pdl_files/evt_BHNL_mass{mass:.2f}_ctau{ctau:.1f}_maj.pdl", "step1.py", "../../cmsDrivers/step2.py", "../../data/pileup_2018.root", "../../cmsDrivers/step3.py", "../../cmsDrivers/step4.py", "{lhefile}"]'.format(mass=point.mass, ctau=point.ctau, lhefile=lhe_file),
           pl = self.pl,
-          time = 1800 if float(point.mass) < 3 else 3000,
+          time = 3000, #1800 if float(point.mass) < 3 else 3000,
           nevtsjob = self.nevents_perjob,
           njobs = self.njobs,
           )
@@ -179,7 +187,7 @@ class CRABLauncher(object):
       submitter_file.close()
 
 
-  def createDriver(self):
+  def createDriver(self, lhe_file=None):
     for ipoint, point in enumerate(self.points):
       if not self.dobc:
         fragment_name = 'BToHNLEMuX_HNLToEMuPi_SoftQCD_b_mHNL{mass:.2f}_ctau{ctau:.1f}mm_TuneCP5_13TeV_pythia8-evtgen_cfi.py'.format(
@@ -204,11 +212,11 @@ class CRABLauncher(object):
         
         command = command.format(
               nevts = self.nevents_perjob,
-              lhefile = self.getRandomLHEfiles(prefix='root://xrootd-cms.infn.it/'),
+              lhefile = 'file:{}'.format(self.getFileName(lhe_file)),
               )
         command_replace = 'sed -i "s/PoolSource/LHESource/g" step1.py'
 
-      if not path.exists('{pl}/mass{mass:.2f}_ctau{ctau:.1f}/step1.py'.format(pl=self.pl, mass=point.mass, ctau=point.ctau)):
+      if self.doresubmit or not path.exists('{pl}/mass{mass:.2f}_ctau{ctau:.1f}/step1.py'.format(pl=self.pl, mass=point.mass, ctau=point.ctau)):
         submitter_tmp = [
           '#!/bin/bash',
           'STARTDIR=$PWD',
@@ -272,16 +280,21 @@ class CRABLauncher(object):
     print ' -> Creating output directories'
     self.createOuputDir()
 
+    lhe_file = None
+    if self.dobc:
+      print '\n -> Get LHE file'
+      lhe_file = self.getRandomLHEfiles(prefix='/')
+
     print '\n -> Creating CRAB configuration files'
-    self.createCRABConfig()
-      
+    self.createCRABConfig(lhe_file=lhe_file)
+
     print '\n -> Creating submitter files'
     self.createSubmitter()
 
     print '\n -> Creating cmsDrivers'
-    self.createDriver()
+    self.createDriver(lhe_file=lhe_file)
 
-    if self.dosubmit:
+    if self.dosubmit or self.doresubmit:
       print '\n --> Submitting...'
       self.submit()
 
