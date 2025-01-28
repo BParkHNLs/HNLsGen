@@ -16,6 +16,9 @@ def getOptions():
   parser.add_argument('--nevents'   , type=str, dest='nevents'    , help='requested events (analysis level)',                      default='20000')
   parser.add_argument('--dosubmit'  ,           dest='dosubmit'   , help='submit to CRAB'                   , action='store_true', default=False)
   parser.add_argument('--doresubmit',           dest='doresubmit' , help='resubmit to CRAB'                 , action='store_true', default=False)
+  parser.add_argument('--dobu'      ,           dest='dobu'       , help='Bu grid'                          , action='store_true', default=False)
+  parser.add_argument('--dobd'      ,           dest='dobd'       , help='Bd grid'                          , action='store_true', default=False)
+  parser.add_argument('--dobs'      ,           dest='dobs'       , help='Bs grid'                          , action='store_true', default=False)
   parser.add_argument('--dobc'      ,           dest='dobc'       , help='Bc grid'                          , action='store_true', default=False)
 
   return parser.parse_args()
@@ -32,7 +35,7 @@ class CRABLauncher(object):
 
     # some fixed parameters
     #self.nevents_perminiaod = 500
-    self.nevents_perminiaod = 200
+    self.nevents_perminiaod = 70
     self.eff_nanoaod = 0.1
 
 
@@ -189,13 +192,28 @@ class CRABLauncher(object):
 
   def createDriver(self, lhe_file=None):
     for ipoint, point in enumerate(self.points):
-      if not self.dobc:
-        fragment_name = 'BToHNLEMuX_HNLToEMuPi_SoftQCD_b_mHNL{mass:.2f}_ctau{ctau:.1f}mm_TuneCP5_13TeV_pythia8-evtgen_cfi.py'.format(
+      if self.dobu:
+        fragment_name = 'BToHNLEMuX_HNLToEMuPi_SoftQCD_b_mHNL{mass:.2f}_ctau{ctau:.1f}mm_TuneCP5_13TeV_pythia8-evtgen_cfi_Bu.py'.format(
+            mass = point.mass,
+            ctau = point.ctau,
+            )
+      elif self.dobd:
+        fragment_name = 'BToHNLEMuX_HNLToEMuPi_SoftQCD_b_mHNL{mass:.2f}_ctau{ctau:.1f}mm_TuneCP5_13TeV_pythia8-evtgen_cfi_Bd.py'.format(
+            mass = point.mass,
+            ctau = point.ctau,
+            )
+      elif self.dobs:
+        fragment_name = 'BToHNLEMuX_HNLToEMuPi_SoftQCD_b_mHNL{mass:.2f}_ctau{ctau:.1f}mm_TuneCP5_13TeV_pythia8-evtgen_cfi_Bs.py'.format(
+            mass = point.mass,
+            ctau = point.ctau,
+            )
+      elif self.dobc:
+        fragment_name = 'BcToNMuX_NToEMuPi_SoftQCD_b_mN{mass:.2f}_ctau{ctau:.1f}mm_TuneCP5_13TeV_pythia8-evtgen_cfi.py'.format(
             mass = point.mass,
             ctau = point.ctau,
             )
       else:
-        fragment_name = 'BcToNMuX_NToEMuPi_SoftQCD_b_mN{mass:.2f}_ctau{ctau:.1f}mm_TuneCP5_13TeV_pythia8-evtgen_cfi.py'.format(
+        fragment_name = 'BToHNLEMuX_HNLToEMuPi_SoftQCD_b_mHNL{mass:.2f}_ctau{ctau:.1f}mm_TuneCP5_13TeV_pythia8-evtgen_cfi.py'.format(
             mass = point.mass,
             ctau = point.ctau,
             )
